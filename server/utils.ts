@@ -1,0 +1,143 @@
+
+import { cartsByUser, sessions } from '../pages/api/trpc/[trpc]';
+import jsonwebtoken, { SignOptions } from 'jsonwebtoken'
+import { DecodeJWT, SessionCookie, SessionMongo, UserJWT } from '../server/types';
+import { ObjectId } from 'mongodb';
+
+export const MONGO_DB = process.env.MONGO_DB;
+export const REFRESH_TOKEN_EXP_NUMBER = 43200;
+export const ACCESS_TOKEN_EXP_NUMBER = 900;
+export const REFRESHSECRET = process.env.REFRESHSECRET || "REFRESHSECRET";
+export const ACCESSSECRET = process.env.ACCESSSECRET || "ACCESSSECRET";
+export const PORT = process.env.PORT || 8000
+export const ACCESS_KEY = process.env.ACCESS_KEY || ""
+export const SECRET_KEY = process.env.SECRET_KEY || ""
+export const REGION = process.env.REGION || ""
+export const CONEKTA_API_KEY = process.env.CONEKTA_API_KEY || ""
+export const BUCKET_NAME = process.env.BUCKET_NAME || ""
+
+export const jwt = {
+  decode: (token: string): string | DecodeJWT | null => {
+    const decoded = jsonwebtoken.decode(token);
+    return decoded as string | DecodeJWT | null;
+  },
+  verify: (token: string, password: string): DecodeJWT | null => {
+    try {
+      const payload = jsonwebtoken.verify(token, password);
+      if (typeof payload === "string") {
+        throw new Error("payload is not string")
+      }
+      return payload as DecodeJWT;
+    } catch {
+      return null
+    }
+  },
+  sign: (
+    data: {
+      user: UserJWT;
+      refreshTokenExpireTime: number;
+      exp: number;
+    },
+    secret: string,
+    options?: SignOptions
+  ): string => {
+    const token = jsonwebtoken.sign(data, secret, options);
+    return token;
+  },
+};
+
+export const getTokenData = (accessToken?: string, refreshToken?: string): {
+  payload: DecodeJWT,
+  accessToken: string,
+  refreshToken: string,
+} | null => {
+  if (!refreshToken) {
+    return null
+  }
+  if (accessToken) {
+    const payload = jwt.verify(accessToken, ACCESSSECRET)
+    if (payload && typeof payload !== "string") {
+      return { payload, accessToken, refreshToken }
+    }
+  }
+  const payload = jwt.verify(refreshToken, REFRESHSECRET);
+  if (payload) {
+    const now = new Date();
+    now.setMilliseconds(0);
+    const accessTokenExpireTime = now.getTime() / 1000 + ACCESS_TOKEN_EXP_NUMBER;
+    const newAccessToken = jwt.sign(
+      {
+        user: {
+          _id: payload.user._id,
+          cart_id: payload.user.cart_id,
+          is_admin: payload.user.is_admin,
+        },
+        refreshTokenExpireTime: payload.exp,
+        exp: accessTokenExpireTime > payload.exp ? payload.exp : accessTokenExpireTime,
+      },
+      ACCESSSECRET
+    );
+    return { payload, accessToken: newAccessToken, refreshToken }
+  } else {
+    return null
+  }
+}
+
+export const getSessionData = async (sessionToken?: string): Promise<{ session: SessionCookie; sessionBase64: string }> => {
+  try {
+    if (!sessionToken) {
+      throw new Error("No session token")
+    }
+    const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString('utf-8'))
+    if (session) {
+      return { session: session, sessionBase64: sessionToken }
+    }
+    throw new Error("No value")
+  } catch (e) {
+    const session_id = new ObjectId()
+    const cart_id = new ObjectId()
+    const session: SessionMongo = {
+      _id: session_id,
+      name: null,
+      apellidos: null,
+      email: null,
+      cart_id,
+      phone: null,
+      conekta_id: null,
+      country: null,
+      street: null,
+      colonia: null,
+      zip: null,
+      city: null,
+      state: null,
+      phone_prefix: null,
+    }
+    await Promise.all([
+      sessions.insertOne(session),
+      cartsByUser.insertOne({
+        _id: cart_id,
+        user_id: session_id,
+        expireDate: null
+      })
+    ])
+    return {
+      sessionBase64: Buffer.from(JSON.stringify(session)).toString('base64'),
+      session: {
+        _id: session_id.toHexString(),
+        name: null,
+        apellidos: null,
+        email: null,
+        cart_id: cart_id.toHexString(),
+        phone: null,
+        conekta_id: null,
+        country: null,
+        street: null,
+        colonia: null,
+        zip: null,
+        city: null,
+        state: null,
+        phone_prefix: null,
+      }
+    }
+  }
+}
