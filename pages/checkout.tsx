@@ -182,7 +182,6 @@ export default function Checkout() {
                             localStorage.setItem("checkout_id", data)
                             router.push('/payment')
                         }
-
                     },
                 })
             }}>Pagar</button>
