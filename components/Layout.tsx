@@ -6,6 +6,9 @@ import Link from "next/link"
 import fourb from '../public/fourb.png'
 import Image from 'next/image'
 import { useRouter } from "next/router"
+import { ModalClose } from "./ModalClose"
+import { title } from "process"
+import { ModalField } from "./ModalField"
 
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     const router = useRouter()
@@ -73,87 +76,100 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                 {showRegister ? <Modal onClose={() => {
                     setShowRegister(false)
                 }}>
-                    <form action="https://{{domain}}/register" onSubmit={(e) => {
-                        e.preventDefault()
-                        register.mutate(registerForm)
-                    }} className={css["auth-form"]} method="POST" id="form-register">
-                        <span className={css["close"]}>x</span>
-                        <h2 className={css["title"]}>Registrarse</h2>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="name">Nombre</label>
-                            <input
-                                type="text"
-                                id="name"
-                                name="name"
-                                required
-                                onChange={(e) => {
-                                    setRegisterForm(({ name, ...rest }) => ({ ...rest, name: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="apellidos">Apellidos</label>
-                            <input
-                                type="text"
-                                id="apellidos"
-                                name="apellidos"
-                                required
-                                onChange={(e) => {
-                                    setRegisterForm(({ apellidos, ...rest }) => ({ ...rest, apellidos: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="email">Email</label>
-                            <input
-                                type="text"
-                                id="email"
-                                name="email"
-                                required
-                                onChange={(e) => {
-                                    setRegisterForm(({ email, ...rest }) => ({ ...rest, email: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="phone">Teléfono</label>
-                            <div style={{ display: 'flex', flexDirection: 'row' }}>
-                                <select name="phonePrefix" required onChange={(e) => {
-                                    setRegisterForm(({ phonePrefix, ...rest }) => ({ ...rest, phonePrefix: e.target.value }))
-                                }}>
-                                    <option value="+52">🇲🇽 Mexico (+52)</option>
-                                </select>
-                                <input style={{ flex: 1 }} type="text" id="phone" name="phone" required onChange={(e) => {
-                                    setRegisterForm(({ phone, ...rest }) => ({ ...rest, phone: e.target.value }))
-                                }} />
+                    <ModalClose onClose={() => {
+                       setShowRegister(false) 
+                    }} title={"Registrarse"}>
+                        <form className={css["auth-form"]}>
+                            <div className={css["input-container-modal"]}>
+                                <ModalField
+                                    id="name"
+                                    label={"Nombre"}
+                                    required
+                                    name="name"
+                                    type="text"
+                                    value={registerForm.name}
+                                    onChange={(e) => {
+                                        setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                    }}
+                                />
                             </div>
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="password">Contraseña</label>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                required
-                                onChange={(e) => {
-                                    setRegisterForm(({ password, ...rest }) => ({ ...rest, password: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="password">Confirmar Contraseña</label>
-                            <input
-                                type="password"
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                required
-                                onChange={(e) => {
-                                    setRegisterForm(({ confirmPassword, ...rest }) => ({ ...rest, confirmPassword: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <button className={css["fourb-button"]} type="submit">Registrarse</button>
-                    </form>
+                            <div className={css["input-container-modal"]}>
+                                <ModalField
+                                    id="apellidos"
+                                    label={"Apellidos"}
+                                    required
+                                    name="apellidos"
+                                    type="text"
+                                    value={registerForm.apellidos}
+                                    onChange={(e) => {
+                                        setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                    }}
+                                />
+                            </div>
+                            <div className={css["input-container-modal"]}>
+                                <ModalField
+                                    id="email"
+                                    label={"Email"}
+                                    required
+                                    name="email"
+                                    type="text"
+                                    value={registerForm.email}
+                                    onChange={(e) => {
+                                        setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                    }}
+                                />
+                            </div>
+                            <div className={css["input-container-modal"]}>
+                                <label htmlFor="phone">Teléfono</label>
+                                <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                    <select name="phonePrefix" required onChange={(e) => {
+                                        setRegisterForm(({ phonePrefix, ...rest }) => ({ ...rest, phonePrefix: e.target.value }))
+                                    }}>
+                                        <option value="+52">🇲🇽 Mexico (+52)</option>
+                                    </select>
+                                    <input style={{ flex: 1 }} type="text" id="phone" name="phone" required onChange={(e) => {
+                                        setRegisterForm(({ phone, ...rest }) => ({ ...rest, phone: e.target.value }))
+                                    }} />
+                                </div>
+                            </div>
+                            <div className={css["input-container-modal"]}>
+                                <ModalField
+                                    id="password"
+                                    label={"Contraseña"}
+                                    required
+                                    name="password"
+                                    type="password"
+                                    value={registerForm.password}
+                                    onChange={(e) => {
+                                        setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                    }}
+                                />
+                            </div>
+                            <div className={css["input-container-modal"]}>
+                                <ModalField
+                                    id="confirmPassword"
+                                    label={"Confirmar Contraseña"}
+                                    required
+                                    name="confirmPassword"
+                                    type="password"
+                                    value={registerForm.confirmPassword}
+                                    onChange={(e) => {
+                                        setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                    }}
+                                />
+                            </div>
+                        </form>
+                        <button
+                            className={css["fourb-button"]}
+                            onClick={(e) => {
+                                e.preventDefault()
+                                register.mutate(registerForm)
+                            }}
+                            type="submit"
+                        >
+                            Registrarse
+                        </button>
+                    </ModalClose>
                 </Modal> : null}
                 {showLogin ? <Modal onClose={() => {
                     setShowLogin(false)
@@ -261,7 +277,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                         tag: 'talla10',
                         text: 'Talla 10',
                     },
-                ].map(link => 
+                ].map(link =>
                     <Link
                         key={link.tag}
                         href={'/search?tag=' + link.tag}

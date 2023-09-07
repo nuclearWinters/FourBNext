@@ -18,7 +18,7 @@ import { randomUUID } from 'crypto';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 
-const client = await MongoClient.connect(MONGO_DB || "mongodb://localhost:27017", {})
+const client = await MongoClient.connect(MONGO_DB || "mongodb://mongo-fourb:27017", {})
 const db = client.db("fourb");
 export const users = db.collection<UserMongo>("users")
 export const cartsByUser = db.collection<CartsByUserMongo>("carts_by_user")
@@ -1125,7 +1125,7 @@ const appRouter = router({
         .input(z.object({
             fileType: z.string().nonempty()
         }))
-        .query(async ({ input }): Promise<{
+        .mutation(async ({ input }): Promise<{
             uploadUrl: string
             key: string
         }> => {

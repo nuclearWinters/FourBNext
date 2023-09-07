@@ -204,7 +204,7 @@ button {
 .img-uploaded {
   width: 100px;
   height: 100px;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .images-container {
@@ -212,4 +212,31 @@ button {
   flex-wrap: wrap;
   flex-direction: row;
   gap: 10px;
+}
+
+.img-table {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+
+.img-title {
+  border-bottom: 1px solid rgb(0,0,0,0.2);
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+}
+
+.closeImgButton {
+  font-weight: bold;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  cursor: pointer;
+  padding: 6px 10px;
+  background: white;
+  border-radius: 100%;
+  border: 1px solid rgba(0,0,0,0.5);
+  box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+  height: 30px;
+  width: 30px;
 }

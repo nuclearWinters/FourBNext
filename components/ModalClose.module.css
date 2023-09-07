@@ -1,0 +1,21 @@
+.container {
+    background: white;
+    overflow: scroll;
+    max-width: 80vw;
+    max-height: 80vh;
+    padding: 24px 24px 24px 32px;
+    overflow-x: "hidden";
+    overflow-y: "scroll";
+}
+
+.closeButton {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+}
