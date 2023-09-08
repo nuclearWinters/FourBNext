@@ -36,7 +36,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                 : <img className={css.mainImage} src={product.img[0]} />
             }
         </div>
-        <div style={{ flex: 3, marginLeft: 40 }}>
+        <div className={css.infoBox}>
             <h1 className={css.name}>
                 {product.name}{product.use_small_and_big ? checkedBig ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}
             </h1>

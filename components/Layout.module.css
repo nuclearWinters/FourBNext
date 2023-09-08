@@ -172,3 +172,43 @@
     flex-direction: row;
     gap: 10px;
 }
+
+.menu {
+    display: none;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.cart {
+    display: none;
+}
+
+@media only screen and (max-width: 700px) {
+    .header-button {
+        display: none;
+    }
+    .fourb-logo {
+        margin: 0px;
+        max-width: unset;
+    }
+    .fourbHeaderContainer {
+        flex-direction: row;
+    }
+    .fourb-header {
+        padding: 0px;
+        gap: 10px;
+    }
+    .menu {
+        display: flex;
+        width: 52px;
+    }
+    .cart {
+        display: flex;
+        margin-right: 16px;
+    }
+    .formSearch {
+        display: flex;
+        flex: 1;
+    }
+}

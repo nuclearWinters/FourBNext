@@ -8,6 +8,8 @@ import Image from 'next/image'
 import { useRouter } from "next/router"
 import { ModalClose } from "./ModalClose"
 import { ModalField } from "./ModalField"
+import ellipsis from '../public/ellipsis-vertical.svg'
+import cart from '../public/cart.svg'
 
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     const router = useRouter()
@@ -56,6 +58,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     return <>
         <div className={css.fourbHeaderContainer}>
             <div className={css["fourb-header"]}>
+                <button className={css.menu}><Image src={ellipsis} alt="" width={20} /></button>
                 <Link href={`/`}>
                     <Image height={46} width={80} className={css["fourb-logo"]} src={fourb} alt="" />
                 </Link>
@@ -213,8 +216,9 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                     </ModalClose>
                 </Modal> : null}
             </div>
-            <div className={css["fourb-header"]}>
+            <div className={css["fourb-header"]} style={{ width: '100%' }}>
                 <form
+                    className={css.formSearch}
                     onSubmit={(e) => {
                         e.preventDefault()
                         router.push('/search?search=' + input)
@@ -224,6 +228,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                         setInput(e.target.value)
                     }} />
                 </form>
+                <Link className={css.cart} href={"/cart"}><Image src={cart} alt="" width={30} /></Link>
                 {[
                     {
                         tag: 'arete',

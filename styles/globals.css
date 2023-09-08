@@ -119,11 +119,11 @@ button {
 
 @keyframes button-loading-spinner {
   from {
-      transform: rotate(0turn);
+    transform: rotate(0turn);
   }
 
   to {
-      transform: rotate(1turn);
+    transform: rotate(1turn);
   }
 }
 
@@ -223,7 +223,7 @@ button {
 }
 
 .img-title {
-  border-bottom: 1px solid rgb(0,0,0,0.2);
+  border-bottom: 1px solid rgb(0, 0, 0, 0.2);
   margin-bottom: 10px;
   padding-bottom: 10px;
 }
@@ -237,7 +237,7 @@ button {
   padding: 6px 10px;
   background: white;
   border-radius: 100%;
-  border: 1px solid rgba(0,0,0,0.5);
+  border: 1px solid rgba(0, 0, 0, 0.5);
   box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
   height: 30px;
   width: 30px;
@@ -245,4 +245,14 @@ button {
 
 .searchProduct {
   padding: 4px 8px;
+}
+
+@media only screen and (max-width: 700px) {
+  .searchProduct {
+    margin-left: 20px;
+    flex: 1;
+  }
+  .input-container {
+    width: auto;
+  }
 }
