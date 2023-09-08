@@ -10,7 +10,6 @@ import cross from '../public/cross.svg'
 
 export default function InventoryAdmin() {
     const [search, setSearch] = useState('')
-    const addProduct = trpc.addProduct.useMutation()
     const searchProducts = trpc.inventory.useInfiniteQuery(
         { limit: 20, search },
         { getNextPageParam: (lastPage) => lastPage.nextCursor, }
@@ -22,9 +21,9 @@ export default function InventoryAdmin() {
     const [form, setForm] = useState({
         name: '',
         code: '',
-        price: '0',
+        price: '0.00',
         use_discount: false,
-        discount_price: '0',
+        discount_price: '0.00',
         use_small_and_big: false,
         incrementBig: '0',
         incrementSmall: '0',
@@ -48,6 +47,40 @@ export default function InventoryAdmin() {
         checkboxTalla10: false,
     })
     const signedUrl = trpc.signedUrl.useMutation()
+    const addProduct = trpc.addProduct.useMutation({
+        onSuccess: () => {
+            setForm({
+                name: '',
+                code: '',
+                price: '0.00',
+                use_discount: false,
+                discount_price: '0.00',
+                use_small_and_big: false,
+                incrementBig: '0',
+                incrementSmall: '0',
+                increment: '0',
+                img: [] as string[],
+                img_small: [] as string[],
+                img_big: [] as string[],
+                checkboxArete: false,
+                checkboxCollar: false,
+                checkboxAnillo: false,
+                checkboxPulsera: false,
+                checkboxPiercing: false,
+                checkboxTobillera: false,
+                checkboxOro10K: false,
+                checkboxAjustable: false,
+                checkboxTalla5: false,
+                checkboxTalla6: false,
+                checkboxTalla7: false,
+                checkboxTalla8: false,
+                checkboxTalla9: false,
+                checkboxTalla10: false,
+            })
+            setShowCreate(false)
+            searchProducts.refetch()
+        }
+    })
     return <div>
         <button type="button" className="fourb-button" onClick={() => {
             setShowCreate(true)
@@ -114,18 +147,16 @@ export default function InventoryAdmin() {
                             required
                             name="price"
                             type="number"
-                            value={toCurrency(String(form.price), '.')}
+                            value={form.price}
                             onChange={(e) => {
-                                setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                setForm(state => ({ ...state, [e.target.name]: toCurrency(e.target.value, '.') }))
                             }}
-                            onWheel={() => false}
                             pattern="\d*"
                             step="any"
                         />
                         <ModalCheckbox
                             id="use_discount"
                             label="Usar descuento"
-                            required
                             name="use_discount"
                             type="checkbox"
                             checked={form.use_discount}
@@ -140,11 +171,10 @@ export default function InventoryAdmin() {
                                 required
                                 name="discount_price"
                                 type="number"
-                                value={toCurrency(String(form.discount_price), '.')}
+                                value={form.discount_price}
                                 onChange={(e) => {
-                                    setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                    setForm(state => ({ ...state, [e.target.name]: toCurrency(e.target.value, '.') }))
                                 }}
-                                onWheel={() => false}
                                 pattern="\d*"
                                 step="any"
                             />
@@ -152,7 +182,6 @@ export default function InventoryAdmin() {
                         <ModalCheckbox
                             id="use_small_and_big"
                             label="Usar opcion pequeña y grande"
-                            required
                             name="use_small_and_big"
                             type="checkbox"
                             checked={form.use_small_and_big}
@@ -213,7 +242,6 @@ export default function InventoryAdmin() {
                                             onChange={(e) => {
                                                 setForm(state => ({ ...state, [e.target.name]: e.target.value }))
                                             }}
-                                            onWheel={() => false}
                                         />
                                     </div>
                                     <div className="img-title">
@@ -243,7 +271,7 @@ export default function InventoryAdmin() {
                                         <div className="input-container images-container">
                                             {form.img_small.map((img) => {
                                                 return <div style={{ position: 'relative', marginTop: 20 }} key={img}>
-                                                    <button 
+                                                    <button
                                                         className="closeImgButton"
                                                         type="button"
                                                         onClick={() => {
@@ -266,7 +294,6 @@ export default function InventoryAdmin() {
                                             onChange={(e) => {
                                                 setForm(state => ({ ...state, [e.target.name]: e.target.value }))
                                             }}
-                                            onWheel={() => false}
                                         />
                                     </div>
                                 </>
@@ -329,7 +356,6 @@ export default function InventoryAdmin() {
                                             onChange={(e) => {
                                                 setForm(state => ({ ...state, [e.target.name]: e.target.value }))
                                             }}
-                                            onWheel={() => false}
                                             pattern="\d*"
                                             step="any"
                                         />
@@ -342,85 +368,85 @@ export default function InventoryAdmin() {
                             <div style={{ display: 'flex', flexWrap: 'wrap', }}>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxArete`} name="checkboxArete" checked={form.checkboxArete} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxArete`}>Arete</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxCollar`} name="checkboxCollar" checked={form.checkboxCollar} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxCollar`}>Collar</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxAnillo`} name="checkboxAnillo" checked={form.checkboxAnillo} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxAnillo`}>Anillo</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxPulsera`} name="checkboxPulsera" checked={form.checkboxPulsera} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxPulsera`}>Pulsera</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxPiercing`} name="checkboxPiercing" checked={form.checkboxPiercing} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxPiercing`}>Piercing</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxTobillera`} name="checkboxTobillera" checked={form.checkboxTobillera} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxTobillera`}>Tobillera</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxOro10K`} name="checkboxOro10K" checked={form.checkboxOro10K} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxOro10K`}>ORO 10 K</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxAjustable`} name="checkboxAjustable" checked={form.checkboxAjustable} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxAjustable`}>Ajustable</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxTalla5`} name="checkboxTalla5" checked={form.checkboxTalla5} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxTalla5`}>Talla 5</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id="checkboxTalla6" name="checkboxTalla6" checked={form.checkboxTalla6} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxTalla6`}>Talla 6</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id="checkboxTalla7" name="checkboxTalla7" checked={form.checkboxTalla7} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxTalla7`}>Talla 7</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxTalla8`} name="checkboxTalla8" checked={form.checkboxTalla8} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxTalla8`}>Talla 8</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxTalla9`} name="checkboxTalla9" checked={form.checkboxTalla9} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxTalla9`}>Talla 9</label>
                                 </div>
                                 <div style={{ width: '25%' }}>
                                     <input type="checkbox" id={`checkboxTalla10`} name="checkboxTalla10" checked={form.checkboxTalla10} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                     }} />
                                     <label htmlFor={`checkboxTalla10`}>Talla 10</label>
                                 </div>
@@ -431,13 +457,13 @@ export default function InventoryAdmin() {
                 </div>
             </ModalClose>
         </Modal> : null}
-        <div>
+        <div style={{ margin: '0px 30px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                     <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>
-                        <th style={{ paddingBottom: 10, textAlign: 'left' }}></th>
-                        <th style={{ paddingBottom: 10, textAlign: 'left' }}>Name</th>
-                        <th style={{ paddingBottom: 10, textAlign: 'left' }}>Code</th>
+                        <th style={{ paddingBottom: 10, textAlign: 'left' }}>Imagen</th>
+                        <th style={{ paddingBottom: 10, textAlign: 'left' }}>Nombre</th>
+                        <th style={{ paddingBottom: 10, textAlign: 'left' }}>Codigo</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Precio</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Con descuento</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Precio descuento</th>
@@ -464,29 +490,33 @@ export default function InventoryAdmin() {
                                         <td>{product.code}</td>
                                         <td>${toCurrency(String(product.price), '.')}</td>
                                         <td>
-                                            <input type="checkbox" checked={product.use_discount} />
+                                            <input type="checkbox" checked={product.use_discount} readOnly />
                                         </td>
                                         <td>${toCurrency(String(product.discount_price), '.')}</td>
                                         <td>
-                                            <input type="checkbox" checked={product.use_small_and_big} />
+                                            <input type="checkbox" checked={product.use_small_and_big} readOnly />
                                         </td>
                                         <td>{product.available}</td>
                                         <td>{product.total}</td>
                                         <td>{product.tags.join(',')}</td>
-                                        <td><EditProduct product={product} /></td>
+                                        <td><EditProduct product={product} onSuccessEdit={() => {
+                                            searchProducts.refetch()
+                                        }} /></td>
                                     </tr>
                                     {product.use_small_and_big ? <tr>
                                         <td colSpan={12}>
-                                            <table style={{ marginLeft: 40 }}>
+                                            <table style={{ marginLeft: 40,  borderCollapse: 'collapse' }}>
                                                 <thead>
-                                                    <tr>
-                                                        <th></th>
-                                                        <th>Disponible</th>
-                                                        <th>Total</th>
+                                                    <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>
+                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Version</th>
+                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Imagen</th>
+                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Disponible</th>
+                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     <tr>
+                                                        <td>Grande</td>
                                                         <td>
                                                             <img className="img-table" alt="" width="100%" src={product.img_big[0]} />
                                                         </td>
@@ -494,6 +524,7 @@ export default function InventoryAdmin() {
                                                         <td>{product.total_big}</td>
                                                     </tr>
                                                     <tr>
+                                                        <td>Chica</td>
                                                         <td>
                                                             <img className="img-table" alt="" width="100%" src={product.img_small[0]} />
                                                         </td>

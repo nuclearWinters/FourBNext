@@ -50,8 +50,6 @@ button {
 }
 
 .auth-form {
-  width: 80%;
-  height: 80%;
   display: flex;
   flex-direction: column;
   background: white;
@@ -194,7 +192,7 @@ button {
   width: 320px;
   height: 320px;
   margin-bottom: 16px;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .price-discounted {
@@ -239,4 +237,8 @@ button {
   box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
   height: 30px;
   width: 30px;
+}
+
+.searchProduct {
+  padding: 4px 8px;
 }

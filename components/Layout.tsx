@@ -77,7 +77,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                     setShowRegister(false)
                 }}>
                     <ModalClose onClose={() => {
-                       setShowRegister(false) 
+                        setShowRegister(false)
                     }} title={"Registrarse"}>
                         <form className={css["auth-form"]}>
                             <div className={css["input-container-modal"]}>
@@ -158,55 +158,60 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                                     }}
                                 />
                             </div>
+                            <button
+                                className={css["fourb-button"]}
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    register.mutate(registerForm)
+                                }}
+                                type="submit"
+                            >
+                                Registrarse
+                            </button>
                         </form>
-                        <button
-                            className={css["fourb-button"]}
-                            onClick={(e) => {
-                                e.preventDefault()
-                                register.mutate(registerForm)
-                            }}
-                            type="submit"
-                        >
-                            Registrarse
-                        </button>
                     </ModalClose>
                 </Modal> : null}
                 {showLogin ? <Modal onClose={() => {
                     setShowLogin(false)
                 }}>
-                    <form onSubmit={async (e) => {
-                        e.preventDefault()
-                        logIn.mutate({ email: loginForm.email, password: loginForm.password });
-                    }} className={css["auth-form"]}>
-                        <span className={css["close"]}>x</span>
-                        <h2 className={css["title"]}>Iniciar sesión</h2>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="email">Email</label>
-                            <input
-                                type="text"
-                                id="email"
-                                name="email"
-                                required
-                                onChange={(e) => {
-                                    setLoginForm(({ password }) => ({ password, email: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="password">Contraseña</label>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                required
-                                onChange={(e) => {
-                                    setLoginForm(({ email }) => ({ email, password: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        {logIn.error?.message ? <div>{logIn.error.message}</div> : null}
-                        <button className={css["fourb-button"]} type="submit">Iniciar Sesión</button>
-                    </form>
+                    <ModalClose onClose={() => {
+                        setShowLogin(false)
+                    }} title={"Iniciar sesión"}>
+                        <form
+                            onSubmit={async (e) => {
+                                e.preventDefault()
+                                logIn.mutate({ email: loginForm.email, password: loginForm.password });
+                            }}
+                            className={css["auth-form"]}
+                        >
+                            <div className={css["input-container-modal"]}>
+                                <label htmlFor="email">Email</label>
+                                <input
+                                    type="text"
+                                    id="email"
+                                    name="email"
+                                    required
+                                    onChange={(e) => {
+                                        setLoginForm(({ password }) => ({ password, email: e.target.value }))
+                                    }}
+                                />
+                            </div>
+                            <div className={css["input-container-modal"]}>
+                                <label htmlFor="password">Contraseña</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    required
+                                    onChange={(e) => {
+                                        setLoginForm(({ email }) => ({ email, password: e.target.value }))
+                                    }}
+                                />
+                            </div>
+                            {logIn.error?.message ? <div>{logIn.error.message}</div> : null}
+                            <button className={css["fourb-button"]} type="submit">Iniciar Sesión</button>
+                        </form>
+                    </ModalClose>
                 </Modal> : null}
             </div>
             <div className={css["fourb-header"]}>
@@ -216,7 +221,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                         router.push('/search?search=' + input)
                     }}
                 >
-                    <input name="search" placeholder="Busqueda..." value={input} onChange={e => {
+                    <input className="searchProduct" name="search" placeholder="Busqueda..." value={input} onChange={e => {
                         setInput(e.target.value)
                     }} />
                 </form>

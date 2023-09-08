@@ -31,8 +31,8 @@ export const ProductList: FC<{
             {product.use_small_and_big
                 ? (
                     <>
-                        <img style={{ display: product.available_big ? "flex" : "none" }} className="img-product" src={product.img_big[0]} />
-                        <img style={{ display: product.available_big ? "none" : "flex" }} className="img-product" src={product.img_small[0]} />
+                        <img style={{ display: checked === "big" ? "flex" : "none" }} className="img-product" src={product.img_big[0]} />
+                        <img style={{ display: checked === "big" ? "none" : "flex" }} className="img-product" src={product.img_small[0]} />
                     </>
                 )
                 : <img className="img-product" src={product.img[0]} />

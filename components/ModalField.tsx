@@ -8,6 +8,6 @@ interface Props extends DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>,
 export const ModalField: FC<Props> = ({ label, ...props }) => {
     return <div className={css.container}>
         <label htmlFor={props.id} className={css.label}>{label}</label>
-        <input className={css.input} {...props} />
+        <input className={css.input} onWheel={(e) => e.currentTarget.blur()} {...props} />
     </div>
 }

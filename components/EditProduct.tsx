@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FC, useState } from "react"
-import { toCurrency } from "../utils/config";
+import { toCurrency, trpc } from "../utils/config";
 import { Modal } from "./Modal";
 import { ModalClose } from "./ModalClose";
 import { ModalField } from "./ModalField";
@@ -28,8 +28,10 @@ export const EditProduct: FC<{
         total_big: number;
         use_small_and_big: boolean;
     }
+    onSuccessEdit: () => void
 }> = ({
-    product
+    product,
+    onSuccessEdit,
 }) => {
         const [showModal, setShowModal] = useState(false)
         const onCloseCallback = () => {
@@ -37,10 +39,27 @@ export const EditProduct: FC<{
         }
         const [form, setForm] = useState({
             ...product,
-            increment: 0,
-            incrementSmall: 0,
-            incrementBig: 0,
+            discount_price: toCurrency(String(product.discount_price), '.'),
+            price: toCurrency(String(product.price), '.'),
+            increment: '0',
+            incrementSmall: '0',
+            incrementBig: '0',
+            checkboxArete: product.tags.includes('arete'),
+            checkboxCollar: product.tags.includes('collar'),
+            checkboxAnillo: product.tags.includes('anillo'),
+            checkboxPulsera: product.tags.includes('pulser'),
+            checkboxPiercing: product.tags.includes('piercing'),
+            checkboxTobillera: product.tags.includes('tobillera'),
+            checkboxOro10K: product.tags.includes('oro10k'),
+            checkboxAjustable: product.tags.includes('ajustable'),
+            checkboxTalla5: product.tags.includes('talla5'),
+            checkboxTalla6: product.tags.includes('talla6'),
+            checkboxTalla7: product.tags.includes('talla7'),
+            checkboxTalla8: product.tags.includes('talla8'),
+            checkboxTalla9: product.tags.includes('talla9'),
+            checkboxTalla10: product.tags.includes('talla10'),
         })
+        const editProduct = trpc.editProduct.useMutation()
         return <div>
             <button className="fourb-button" onClick={() => {
                 setShowModal(true)
@@ -50,7 +69,43 @@ export const EditProduct: FC<{
             {showModal ? <Modal onClose={onCloseCallback}>
                 <ModalClose onClose={onCloseCallback} title={"Editar producto"}>
                     <div className="product-card">
-                        <form>
+                        <form onSubmit={(e) => {
+                            e.preventDefault()
+                            editProduct.mutate({
+                                id: product._id,
+                                name: form.name,
+                                code: form.code,
+                                increment: Number(form.increment),
+                                incrementBig: Number(form.incrementBig),
+                                incrementSmall: Number(form.incrementSmall),
+                                img: form.img,
+                                imgSmall: form.img_small,
+                                imgBig: form.img_big,
+                                useDiscount: form.use_discount,
+                                useSmallAndBig: form.use_small_and_big,
+                                discountPrice: Number(form.discount_price) * 100,
+                                price: Number(form.price) * 100,
+                                checkboxArete: form.tags.includes('arete'),
+                                checkboxCollar: form.tags.includes('collar'),
+                                checkboxAnillo: form.tags.includes('anillo'),
+                                checkboxPulsera: form.tags.includes('pulsera'),
+                                checkboxPiercing: form.tags.includes('piercing'),
+                                checkboxTobillera: form.tags.includes('tobillera'),
+                                checkboxOro10K: form.tags.includes('oro10k'),
+                                checkboxAjustable: form.tags.includes('ajustable'),
+                                checkboxTalla5: form.tags.includes('talla5'),
+                                checkboxTalla6: form.tags.includes('talla6'),
+                                checkboxTalla7: form.tags.includes('talla7'),
+                                checkboxTalla8: form.tags.includes('talla8'),
+                                checkboxTalla9: form.tags.includes('talla9'),
+                                checkboxTalla10: form.tags.includes('talla10'),
+                            }, {
+                                onSuccess: () => {
+                                    setShowModal(false)
+                                    onSuccessEdit()
+                                }
+                            })
+                        }}>
                             <ModalField
                                 id="name"
                                 label="Nombre"
@@ -79,18 +134,16 @@ export const EditProduct: FC<{
                                 required
                                 name="price"
                                 type="number"
-                                value={toCurrency(String(form.price), '.')}
+                                value={form.price}
                                 onChange={(e) => {
-                                    setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                    setForm(state => ({ ...state, [e.target.name]: toCurrency(e.target.value, '.') }))
                                 }}
-                                onWheel={() => false}
                                 pattern="\d*"
                                 step="any"
                             />
                             <ModalCheckbox
                                 id="use_discount"
                                 label="Usar descuento"
-                                required
                                 name="use_discount"
                                 type="checkbox"
                                 checked={form.use_discount}
@@ -105,11 +158,10 @@ export const EditProduct: FC<{
                                     required
                                     name="discount_price"
                                     type="number"
-                                    value={toCurrency(String(form.discount_price), '.')}
+                                    value={form.discount_price}
                                     onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                        setForm(state => ({ ...state, [e.target.name]: toCurrency(e.target.value, '.') }))
                                     }}
-                                    onWheel={() => false}
                                     pattern="\d*"
                                     step="any"
                                 />
@@ -117,7 +169,6 @@ export const EditProduct: FC<{
                             <ModalCheckbox
                                 id="use_small_and_big"
                                 label="Usar opcion pequeña y grande"
-                                required
                                 name="use_small_and_big"
                                 type="checkbox"
                                 checked={form.use_small_and_big}
@@ -151,7 +202,6 @@ export const EditProduct: FC<{
                                                 onChange={(e) => {
                                                     setForm(state => ({ ...state, [e.target.name]: e.target.value }))
                                                 }}
-                                                onWheel={() => false}
                                             />
                                         </div>
                                         <div className="img-title">
@@ -160,7 +210,7 @@ export const EditProduct: FC<{
                                         <div style={{ marginLeft: 20 }}>
                                             <input name="image-small" multiple type="file" accept="png,jpg,jpeg" />
                                             <div className="input-container images-container">
-                                                {product?.img_small?.map?.((img, index) => {
+                                                {product.img_small.map((img, index) => {
                                                     return <div style={{ position: 'relative', marginTop: 20 }} key={index}>
                                                         <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
                                                         <img className="img-uploaded" alt="" width="100%" src={img} />
@@ -177,7 +227,6 @@ export const EditProduct: FC<{
                                                 onChange={(e) => {
                                                     setForm(state => ({ ...state, [e.target.name]: e.target.value }))
                                                 }}
-                                                onWheel={() => false}
                                             />
                                         </div>
                                     </>
@@ -193,8 +242,8 @@ export const EditProduct: FC<{
                                         </div>
                                         <div className="input-container images-container">
                                             <input name="image" multiple type="file" accept="png,jpg,jpeg" />
-                                            {product?.img?.map?.((img) => {
-                                                return <div style={{ position: 'relative' }}>
+                                            {product.img.map((img, index) => {
+                                                return <div style={{ position: 'relative' }} key={index}>
                                                     <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
                                                     <img className="img-uploaded" alt="" width="100%" src={img} />
                                                 </div>
@@ -210,7 +259,6 @@ export const EditProduct: FC<{
                                             onChange={(e) => {
                                                 setForm(state => ({ ...state, [e.target.name]: e.target.value }))
                                             }}
-                                            onWheel={() => false}
                                             pattern="\d*"
                                             step="any"
                                         />
@@ -221,59 +269,87 @@ export const EditProduct: FC<{
                                 <label htmlFor="discount">Tags</label>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', }}>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxArete`} name="checkboxArete" checked={product.tags.includes("arete")} />
+                                        <input type="checkbox" id={`checkboxArete`} name="checkboxArete" checked={form.checkboxArete} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxArete`}>Arete</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxCollar`} name="checkboxCollar" checked={product.tags.includes("collar")} />
+                                        <input type="checkbox" id={`checkboxCollar`} name="checkboxCollar" checked={form.checkboxCollar} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxCollar`}>Collar</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxAnillo`} name="checkboxAnillo" checked={product.tags.includes("anillo")} />
+                                        <input type="checkbox" id={`checkboxAnillo`} name="checkboxAnillo" checked={form.checkboxAnillo} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxAnillo`}>Anillo</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxPulsera`} name="checkboxPulsera" checked={product.tags.includes("pulsera")} />
+                                        <input type="checkbox" id={`checkboxPulsera`} name="checkboxPulsera" checked={form.checkboxPulsera} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxPulsera`}>Pulsera</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxPiercing`} name="checkboxPiercing" checked={product.tags.includes("piercing")} />
+                                        <input type="checkbox" id={`checkboxPiercing`} name="checkboxPiercing" checked={form.checkboxPiercing} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxPiercing`}>Piercing</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTobillera`} name="checkboxTobillera" checked={product.tags.includes("tobillera")} />
+                                        <input type="checkbox" id={`checkboxTobillera`} name="checkboxTobillera" checked={form.checkboxTobillera} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxTobillera`}>Tobillera</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxOro10K`} name="checkboxOro10K" checked={product.tags.includes("oro10k")} />
+                                        <input type="checkbox" id={`checkboxOro10K`} name="checkboxOro10K" checked={form.checkboxOro10K} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxOro10K`}>ORO 10 K</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxAjustable`} name="checkboxAjustable" checked={product.tags.includes("ajustable")} />
+                                        <input type="checkbox" id={`checkboxAjustable`} name="checkboxAjustable" checked={form.checkboxAjustable} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxAjustable`}>Ajustable</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTalla5`} name="checkboxTalla5" checked={product.tags.includes("talla5")} />
+                                        <input type="checkbox" id={`checkboxTalla5`} name="checkboxTalla5" checked={form.checkboxTalla5} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxTalla5`}>Talla 5</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id="checkboxTalla6" name="checkboxTalla6" checked={product.tags.includes("talla6")} />
+                                        <input type="checkbox" id="checkboxTalla6" name="checkboxTalla6" checked={form.checkboxTalla6} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxTalla6`}>Talla 6</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id="checkboxTalla7" name="checkboxTalla7" checked={product.tags.includes("talla7")} />
+                                        <input type="checkbox" id="checkboxTalla7" name="checkboxTalla7" checked={form.checkboxTalla7} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxTalla7`}>Talla 7</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTalla8`} name="checkboxTalla8" checked={product.tags.includes("talla8")} />
+                                        <input type="checkbox" id={`checkboxTalla8`} name="checkboxTalla8" checked={form.checkboxTalla8} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxTalla8`}>Talla 8</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTalla9`} name="checkboxTalla9" checked={product.tags.includes("talla9")} />
+                                        <input type="checkbox" id={`checkboxTalla9`} name="checkboxTalla9" checked={form.checkboxTalla9} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxTalla9`}>Talla 9</label>
                                     </div>
                                     <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTalla10`} name="checkboxTalla10" checked={product.tags.includes("tall10")} />
+                                        <input type="checkbox" id={`checkboxTalla10`} name="checkboxTalla10" checked={form.checkboxTalla10} onChange={(e) => {
+                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                        }} />
                                         <label htmlFor={`checkboxTalla10`}>Talla 10</label>
                                     </div>
                                 </div>
