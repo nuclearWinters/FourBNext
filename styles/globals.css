@@ -99,6 +99,8 @@ button {
   margin: auto;
   display: block;
   margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
 }
 
 .loading {

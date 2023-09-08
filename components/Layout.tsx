@@ -7,7 +7,6 @@ import fourb from '../public/fourb.png'
 import Image from 'next/image'
 import { useRouter } from "next/router"
 import { ModalClose } from "./ModalClose"
-import { title } from "process"
 import { ModalField } from "./ModalField"
 
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {

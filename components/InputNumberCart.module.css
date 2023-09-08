@@ -1,0 +1,80 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    margin-bottom: 20px;
+}
+
+.label {
+    font-size: 16px;
+    padding-bottom: 6px;
+}
+
+.quantityField {
+    position: relative;
+    height: 38px;
+    left: -6px;
+    text-align: center;
+    width: 62px;
+    display: inline-block;
+    font-size: 13px;
+    margin: 0 0 5px;
+    resize: vertical;
+    -moz-appearance: textfield;
+    -webkit-appearance: none;
+    border: 1px solid #eeeeee;
+    box-sizing: border-box;
+    margin: 0;
+    outline: none;
+    padding: 10px;
+}
+
+.quantityField::-webkit-outer-spin-button,
+.quantityField::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
+.inputGroup {
+    clear: both;
+    margin: 15px 0;
+    position: relative;
+}
+
+.buttonMinus {
+    background-color: #eeeeee;
+    min-width: 38px;
+    width: auto;
+    transition: all 300ms ease;
+    font-weight: bold;
+    height: 38px;
+    padding: 0;
+    width: 38px;
+    position: relative;
+    -webkit-appearance: button;
+    cursor: pointer;
+    border: 1px solid #eeeeee;
+    box-sizing: border-box;
+    margin: 0;
+    outline: none;
+    padding: 10px;
+}
+
+.buttonPlus {
+    background-color: #eeeeee;
+    min-width: 38px;
+    width: auto;
+    transition: all 300ms ease;
+    font-weight: bold;
+    height: 38px;
+    padding: 0;
+    width: 38px;
+    position: relative;
+    -webkit-appearance: button;
+    cursor: pointer;
+    left: -6px;
+    border: 1px solid #eeeeee;
+    box-sizing: border-box;
+    margin: 0;
+    outline: none;
+    padding: 10px;
+}

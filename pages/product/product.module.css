@@ -6,25 +6,43 @@
   background: black;
   color: white;
   font-size: 16px;
-  margin: auto;
   display: block;
   margin-bottom: 10px;
 }
 
 .name {
-    font-size: 40;
+    font-size: 40px;
     font-weight: 400;
+    margin-bottom: 20px;
 }
 
 .code {
     font-size: 14px;
     font-weight: 400;
     opacity: 0.8;
+    margin-bottom: 15px;
 }
 
 .price {
     font-size: 20px;
     font-weight: 400;
+    letter-spacing: 1.4px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.originalPrice {
+    font-size: 18px;
+    font-weight: 400;
+    text-decoration-line: line-through;
+    color: rgba(18, 18, 18, 0.75);
+}
+
+.discount {
+    font-size: 20px;
+    font-weight: 400;
+    margin-left: 10px;
 }
 
 .mainImage {
@@ -53,4 +71,27 @@
     font-size: 20px;
     cursor: pointer;
     border-radius: 100px;
+}
+
+.qtyWarning {
+    color: rgba(18, 18, 18, 0.75);
+    letter-spacing: 1.3px;
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+.oferta {
+    background-color: rgb(197, 166, 226);
+    border-radius: 100px;
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-left: 10px;
+    letter-spacing: unset;
+}
+
+.paymentInfo {
+    font-size: 12px;
+    color: rgba(18, 18, 18, 0.75);
+    font-weight: 700;
+    margin-bottom: 15px;
 }

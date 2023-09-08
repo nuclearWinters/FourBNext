@@ -7,6 +7,7 @@ import { ModalClose } from "../components/ModalClose";
 import { ModalField } from "../components/ModalField";
 import { ModalCheckbox } from "../components/ModalCheckbox";
 import cross from '../public/cross.svg'
+import Link from "next/link";
 
 export default function InventoryAdmin() {
     const [search, setSearch] = useState('')
@@ -472,6 +473,7 @@ export default function InventoryAdmin() {
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Total</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Tags</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}></th>
+                        <th style={{ paddingBottom: 10, textAlign: 'left' }}></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -502,6 +504,7 @@ export default function InventoryAdmin() {
                                         <td><EditProduct product={product} onSuccessEdit={() => {
                                             searchProducts.refetch()
                                         }} /></td>
+                                        <td><Link href={`/product/${product._id}`} className="fourb-button">VER</Link></td>
                                     </tr>
                                     {product.use_small_and_big ? <tr>
                                         <td colSpan={12}>
