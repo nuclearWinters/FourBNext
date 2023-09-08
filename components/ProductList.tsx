@@ -40,7 +40,7 @@ export const ProductList: FC<{
             <div className="name">{product.name}</div>
             <div className="price">
                 <span className={product.use_discount ? "price-discounted" : ""}>${(product.price / 100).toFixed(2)}</span>
-                {product.use_discount ? <span>${(product.discount_price / 100).toFixed(2)}</span> : null}
+                {product.use_discount ? <span> ${(product.discount_price / 100).toFixed(2)}</span> : null}
             </div>
         </Link>
         {product.use_small_and_big ? (

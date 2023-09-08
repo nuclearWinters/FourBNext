@@ -25,7 +25,7 @@ export const CheckoutList: FC<{
         <div className="price">
             <span>Precio: </span>
             <span className={product.use_discount ? "price-discounted" : ""}>${(product.price / 100).toFixed(2)}</span>
-            {product.use_discount ? <span>${(product.discount_price / 100).toFixed(2)}</span> : null}
+            {product.use_discount ? <span> ${(product.discount_price / 100).toFixed(2)}</span> : null}
         </div>
         <img className="img-product" src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
         <div className="price">Cantidad: {product.qty || product.qty_big || product.qty_small}</div>

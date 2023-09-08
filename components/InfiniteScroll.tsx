@@ -6,7 +6,6 @@ export const InfiniteScroll: FC<{
     loading: boolean
     hasMore: boolean
 }> = ({ next, children, loading, hasMore }) => {
-    const ref = useRef(null)
     const moreProductsLeft = useRef(true)
     useEffect(() => {
         moreProductsLeft.current = hasMore
@@ -40,8 +39,8 @@ export const InfiniteScroll: FC<{
             window.removeEventListener("scroll", handleInfiniteScroll);
         }
     }, [])
-    return <div ref={ref}>
+    return <>
         {children}
         {loading ? <div className="loading" /> : null}
-    </div>
+    </>
 }
