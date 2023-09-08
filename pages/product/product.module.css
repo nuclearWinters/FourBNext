@@ -95,3 +95,15 @@
     font-weight: 700;
     margin-bottom: 15px;
 }
+
+.productContainer {
+    display: flex;
+    margin: 10px 80px 80px 80px;
+}
+
+@media only screen and (max-width: 700px) {
+    .productContainer {
+        flex-direction: column;
+        background-color: red;
+    }
+}

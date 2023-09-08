@@ -24,7 +24,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
         router.push('/cart')
     } })
     const qtyParsed = Number(qty) < 1 ? 1 : Number(qty)
-    return <div style={{ display: "flex", margin: '10px 80px 80px 80px' }}>
+    return <div className={css.productContainer} style={{ flex: 1}}>
         <div style={{ flex: 4 }}>
             {product.use_small_and_big
                 ? (

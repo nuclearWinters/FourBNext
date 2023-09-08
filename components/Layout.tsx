@@ -1,7 +1,7 @@
 import { FC, ReactNode, useState } from "react"
 import { trpc } from "../utils/config"
 import { Modal } from "./Modal"
-import css from './layout.module.css'
+import css from './Layout.module.css'
 import Link from "next/link"
 import fourb from '../public/fourb.png'
 import Image from 'next/image'
