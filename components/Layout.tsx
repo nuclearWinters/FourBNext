@@ -10,6 +10,7 @@ import { ModalClose } from "./ModalClose"
 import { ModalField } from "./ModalField"
 import ellipsis from '../public/ellipsis-vertical.svg'
 import cart from '../public/cart.svg'
+import search from '../public/search.svg'
 
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     const router = useRouter()
@@ -58,7 +59,6 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     return <>
         <div className={css.fourbHeaderContainer}>
             <div className={css["fourb-header"]}>
-                <button className={css.menu}><Image src={ellipsis} alt="" width={20} /></button>
                 <Link href={`/`}>
                     <Image height={46} width={80} className={css["fourb-logo"]} src={fourb} alt="" />
                 </Link>
@@ -215,6 +215,25 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                         </form>
                     </ModalClose>
                 </Modal> : null}
+            </div>
+            <div className={css["fourb-header-mobile"]} style={{ width: '100%' }}>
+                <button className={css.menu}><Image src={ellipsis} alt="" width={20} /></button>
+                <Link className={css.linkMobile} href={`/`}>
+                    <Image className={css.fourbLogoMobile} src={fourb} alt="" />
+                </Link>
+                <form
+                    className={css.formSearchMobile}
+                    onSubmit={(e) => {
+                        e.preventDefault()
+                        router.push('/search?search=' + input)
+                    }}
+                >
+                    <Image className={css.searchIconMobile} src={search} alt="" />
+                    <input size={1} className={css.searchProductMobile} name="search" placeholder="Busqueda..." value={input} onChange={e => {
+                        setInput(e.target.value)
+                    }} />
+                </form>
+                <Link className={css.cartMobile} href={"/cart"}><Image src={cart} alt="" width={30} /></Link>
             </div>
             <div className={css["fourb-header"]} style={{ width: '100%' }}>
                 <form

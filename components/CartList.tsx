@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { FC, useState } from "react"
 import { trpc } from "../utils/config";
+import css from './CartList.module.css'
+import trash from '../public/trash-can.svg'
+import Image from "next/image";
+import { InputNumberCart } from "./InputNumberCart";
 
 export const CartList: FC<{
     product: {
@@ -31,38 +35,71 @@ export const CartList: FC<{
             alert("Producto eliminado en el carrito")
         }
     });
-    const [input, setInput] = useState(product.qty || product.qty_big || product.qty_small)
-    return <div className="product-card">
-        <div className="name">{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
-        <div className="price">
-            <span>Precio: </span>
-            <span className={product.use_discount ? "price-discounted" : ""}>${(product.price / 100).toFixed(2)}</span>
-            {product.use_discount ? <span> ${(product.discount_price / 100).toFixed(2)}</span> : null}
-        </div>
-        <img className="img-product" src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
-        <div className="input-container">
-            <label htmlFor={`${product._id}-quantity`}>Cantidad</label>
-            <input type="number" id={`${product._id}-quantity`} value={input} min="1" onChange={(e) => {
-                setInput(Number(e.target.value))
-            }} />
-        </div>
-        <div className="price">Total: ${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)}</div>
-        <Link href={`/product/${product.product_id}`} className="fourb-button">VER</Link>
-        <button className="fourb-button" onClick={() => {
-            updateOneCart.mutate({
-                item_by_cart_id: product._id,
-                product_id: product.product_id,
-                qty: product.qty ? input : 0,
-                qtyBig: product.qty_big ? input : 0,
-                qtySmall: product.qty_small ? input : 0,
-            })
-        }}>
-            Actualizar cantidad
-        </button>
-        <button className="fourb-button" onClick={() => {
-            removeOneCart.mutate({ item_by_cart_id: product._id })
-        }}>
-            Eliminar producto
-        </button>
-    </div>
+    const [input, setInput] = useState(String(product.qty || product.qty_big || product.qty_small))
+    return <tr className={css.productCard}>
+        <td className={css.imageColumn} style={{ verticalAlign: 'top' }}>
+            <Link href={`/product/${product.product_id}`}>
+                <img className={css.imgProduct} src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
+            </Link>
+        </td>
+        <td className={css.columnResponsive}>
+            <Link href={`/product/${product.product_id}`} className={css.infoBox}>
+                <div className={css.name}>{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
+                <div className={css.price}>
+                    <span className={product.use_discount ? css.priceDiscounted : ""}>${(product.price / 100).toFixed(2)} MXN</span>
+                    {product.use_discount ? <span>${(product.discount_price / 100).toFixed(2)} MXN</span> : null}
+                </div>
+                <div className={css.price}>{`(${product.qty || product.qty_big || product.qty_small }) en el carrito`}</div>
+            </Link>
+            <div style={{ display: 'flex', alignItems: 'center' }} className={css.inputBox}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <InputNumberCart
+                        label={"Cantidad"}
+                        required
+                        type="number"
+                        value={input}
+                        onChange={(e) => {
+                            setInput(e.target.value)
+                        }}
+                        onBlur={() => {
+                            if (Number(input) < 1) {
+                                setInput("1")
+                            }
+                        }}
+                        onMinus={() => {
+                            if (Number(input) < 2) {
+                                return
+                            }
+                            setInput(state => String(Number(state) - 1))
+                        }}
+                        onPlus={() => {
+                            setInput(state => String(Number(state) + 1))
+                        }}
+                    />
+                    <button className="fourb-button" onClick={() => {
+                        updateOneCart.mutate({
+                            item_by_cart_id: product._id,
+                            product_id: product.product_id,
+                            qty: product.qty ? Number(input) : 0,
+                            qtyBig: product.qty_big ? Number(input) : 0,
+                            qtySmall: product.qty_small ? Number(input) : 0,
+                        })
+                    }}>
+                        Actualizar
+                    </button>
+                </div>
+                <button
+                    style={{ width: 20, height: 30, display: 'flex', padding: 0, alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                    onClick={() => {
+                        removeOneCart.mutate({ item_by_cart_id: product._id })
+                    }}
+                >
+                    <Image src={trash} alt="" width={20} height={30} />
+                </button>
+            </div>
+        </td>
+        <td className={css.columnFlex} style={{ verticalAlign: 'top' }}>
+            <div style={{ paddingTop: 10 }} className="price">${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)} MXN</div>
+        </td>
+    </tr>
 }

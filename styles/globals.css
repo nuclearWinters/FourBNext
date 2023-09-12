@@ -86,6 +86,8 @@ button {
 
 .title {
   text-align: center;
+  font-size: 30px;
+  font-weight: normal;
 }
 
 .fourb-button {
@@ -243,8 +245,16 @@ button {
   width: 30px;
 }
 
+.payBox {
+  width: 500px;
+}
+
 .searchProduct {
   padding: 4px 8px;
+}
+
+.table {
+  margin: 0px 30px;
 }
 
 @media only screen and (max-width: 700px) {
@@ -255,4 +265,11 @@ button {
   .input-container {
     width: auto;
   }
+  .payBox {
+    width: 90%;
+  }
+  .table {
+    margin: 0px
+  }
 }
+

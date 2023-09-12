@@ -30,14 +30,18 @@
     flex-direction: column;
 }
 
+.fourb-header-mobile {
+    display: none;
+}
+
 .fourb-header {
     background: white;
-    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 20px;
-    padding: 0px 20px;
+    padding: 10px 20px;
+    flex-wrap: wrap;
 }
 
 .fourb-logo {
@@ -184,6 +188,47 @@
     display: none;
 }
 
+.formSearchMobile {
+    margin: 0px;
+    border-radius: 4px;
+    display: flex;
+    position: relative;
+    display: flex;
+    flex: 1;
+}
+
+.searchProductMobile {
+    padding: 6px;
+    padding-left: 20px;
+    min-width: unset;
+    display: flex;
+    flex: 1;
+}
+
+.searchIconMobile {
+   position: absolute;
+   top: 8px;
+   left: 4px;
+   width: 16px;
+   size: 1;
+}
+
+.cartMobile {
+    display: flex;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+.linkMobile {
+    display: flex;
+}
+
+.fourbLogoMobile {
+    width: 60px;
+    object-fit: contain;
+    margin-right: 10px;
+}
+
 @media only screen and (max-width: 700px) {
     .header-button {
         display: none;
@@ -210,5 +255,18 @@
     .formSearch {
         display: flex;
         flex: 1;
+    }
+    .fourb-header {
+        display: none;
+    }
+    .fourb-header-mobile {
+        display: none;
+        background: white;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0px;
+        padding: 0px 0px;
     }
 }

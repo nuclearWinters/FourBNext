@@ -5,16 +5,39 @@ import { CartList } from "../components/CartList";
 
 export default function Cart() {
     const products = trpc.getCart.useQuery();
+    const total = products.data?.reduce((curr, product) => {
+        const total = ((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100
+        return curr + total
+    }, 0)
     return <div>
         <h2 className="title">
-            Carro de compras
+            Mi carrito
         </h2>
         {products.isLoading ? <div className="loading" /> : null}
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {products.data?.length ? products.data?.map((product) => {
-                return <CartList product={product} key={product._id} />
-            }) : <Link href={"/"} className="fourb-button">Añadir productos al carrito</Link>}
+        {products.data?.length ? (
+            <div className="table">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ marginBottom: 10 }}>
+                            <th style={{ paddingBottom: 10, textAlign: 'left' }}></th>
+                            <th style={{ paddingBottom: 10, textAlign: 'center' }}></th>
+                            <th style={{ paddingBottom: 10, textAlign: 'left' }}></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {products.data?.map((product) => {
+                            return <CartList product={product} key={product._id} />
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        ) : <Link href={"/"} className="fourb-button">Añadir productos al carrito</Link>}
+        <div className="payBox" style={{ display: "flex", justifyContent: 'center', margin: 'auto', background: '#f9fafb', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', padding: 20, flex: 1, justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 16, fontWeight: 500 }}>Total</div>
+                <div style={{ fontSize: 16, fontWeight: 500 }}>$ {total?.toFixed(2)}</div>
+            </div>
+            <Link href={'/checkout'} className="fourb-button" style={{ width: '100%' }}>Pagar</Link>
         </div>
-        <Link href={'/checkout'} className="fourb-button">Pagar</Link>
     </div>
 }
