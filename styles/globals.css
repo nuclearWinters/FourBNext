@@ -152,6 +152,24 @@ button {
   padding: 10px 20px;
 }
 
+.input-container-checkout {
+  display: flex;
+  flex-direction: column;
+  width: 60%;
+  margin-left: auto;
+  margin-right: 40px;
+  font-size: 20px;
+  padding-bottom: 20px;
+}
+
+.input-container-checkout label {
+  margin-bottom: 6px;
+}
+
+.input-container-checkout input {
+  font-size: 20px;
+}
+
 .link,
 .link:hover,
 .link:focus,
@@ -193,8 +211,8 @@ button {
   margin-bottom: 10px;
   display: block;
   margin: auto;
-  width: 320px;
-  height: 320px;
+  width: 240px;
+  height: 240px;
   margin-bottom: 16px;
   object-fit: cover;
 }
@@ -246,7 +264,7 @@ button {
 }
 
 .payBox {
-  width: 500px;
+  width: 400px;
 }
 
 .searchProduct {
@@ -255,6 +273,10 @@ button {
 
 .table {
   margin: 0px 30px;
+}
+
+.checkoutList {
+  flex-direction: row-reverse;
 }
 
 @media only screen and (max-width: 700px) {
@@ -267,9 +289,24 @@ button {
   }
   .payBox {
     width: 90%;
+    margin: auto;
   }
   .table {
     margin: 0px
+  }
+  .checkoutList {
+    flex-direction: column;
+  }
+  .checkout {
+    width: 100%;
+  }
+  .input-container-checkout {
+    margin: auto;
+    flex: 1;
+    width: 90%;
+  }
+  .input-container-checkout #phone {
+    width: 50px;
   }
 }
 

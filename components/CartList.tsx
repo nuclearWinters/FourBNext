@@ -7,6 +7,7 @@ import Image from "next/image";
 import { InputNumberCart } from "./InputNumberCart";
 
 export const CartList: FC<{
+    refetch: () => void;
     product: {
         code: string;
         name: string;
@@ -24,15 +25,17 @@ export const CartList: FC<{
         qty_big: number;
         qty_small: number;
     }
-}> = ({ product }) => {
+}> = ({ product, refetch }) => {
     const updateOneCart = trpc.updateOneCart.useMutation({
         onSuccess: () => {
             alert("Producto actualizado en el carrito")
+            refetch()
         }
     });
     const removeOneCart = trpc.removeOneCart.useMutation({
         onSuccess: () => {
             alert("Producto eliminado en el carrito")
+            refetch()
         }
     });
     const [input, setInput] = useState(String(product.qty || product.qty_big || product.qty_small))

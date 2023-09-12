@@ -26,7 +26,7 @@ export default function Cart() {
                     </thead>
                     <tbody>
                         {products.data?.map((product) => {
-                            return <CartList product={product} key={product._id} />
+                            return <CartList product={product} key={product._id} refetch={() => { products.refetch() }} />
                         })}
                     </tbody>
                 </table>

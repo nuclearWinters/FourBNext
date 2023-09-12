@@ -20,16 +20,18 @@ export const CheckoutList: FC<{
         qty_small: number;
     }
 }> = ({ product }) => {
-    return <div id={`${product._id}-product`} className="product-card">
-        <div className="name">{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
-        <div className="price">
-            <span>Precio: </span>
-            <span className={product.use_discount ? "price-discounted" : ""}>${(product.price / 100).toFixed(2)}</span>
-            {product.use_discount ? <span> ${(product.discount_price / 100).toFixed(2)}</span> : null}
+    return <Link href={`/product/${product.product_id}`} id={`${product._id}-product`} className="product-card" style={{ flexDirection: 'row', display: 'flex' }}>
+        <div style={{ position: 'relative' }}>
+            <img style={{ width: 80, objectFit: 'cover', height: 80 }} src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
+            <div style={{ position: 'absolute', top: -10, left: -10, background: 'white', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid black', borderRadius: '100px', fontWeight: 'bold' }}>{product.qty || product.qty_big || product.qty_small}</div>
         </div>
-        <img className="img-product" src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
-        <div className="price">Cantidad: {product.qty || product.qty_big || product.qty_small}</div>
-        <div className="price">Total: ${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)}</div>
-        <Link href={`/product/${product.product_id}`} className="fourb-button">VER</Link>
-    </div>
+        <div style={{ marginLeft: 16 }}>
+            <div>{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
+            <div style={{ paddingTop: 4 }}>
+                <span className={product.use_discount ? "price-discounted" : ""}>${(product.price / 100).toFixed(2)}</span>
+                {product.use_discount ? <span> ${(product.discount_price / 100).toFixed(2)}</span> : null}
+            </div>
+            <div style={{ paddingTop: 4 }}>Total: <strong>${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)}</strong></div>
+        </div>
+    </Link>
 }
