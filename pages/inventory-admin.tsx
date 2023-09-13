@@ -144,6 +144,9 @@ export default function InventoryAdmin() {
         <button type="button" className="fourb-button" onClick={() => {
             setShowCreate(true)
         }}>Crear</button>
+        <input style={{ border: '1px solid black', width: 200, margin: 'auto', display: 'block', marginBottom: 10 }} size={1} className={"searchProduct"} name="search" placeholder="Buscar en el inventario..." value={search} onChange={e => {
+            setSearch(e.target.value)
+        }} />
         {showCreate ? <Modal onClose={onCloseCallback}>
             <ModalClose onClose={onCloseCallback} title={"Crear producto"}>
                 <div className="product-card">
