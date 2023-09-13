@@ -33,12 +33,13 @@ export default function Payment() {
             Pago
         </h2>
         {cart.isLoading ? <div className="loading" /> : null}
-        <div id="total">Total: ${(Number(total) / 100).toFixed(2)}</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }} id="products">
+        <div id="total" style={{ textAlign: 'center', marginTop: 20, fontWeight: 'bold', fontSize: 20 }}>Total: ${(Number(total) / 100).toFixed(2)}</div>
+        <form>
+            <div id="example" style={{ maxWidth: 500, width: '100%', margin: '0 auto' }} />
+        </form>
+        <div id="total" style={{ textAlign: 'center', marginTop: 20, fontWeight: 'bold', fontSize: 20 }}>Productos</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', flexDirection: 'column', maxWidth: '600px', margin: 'auto' }} id="products">
             {cart.data?.map(product => <CheckoutList product={product} key={product._id} />)}
         </div>
-        <form>
-            <div id="example" style={{ width: 500, margin: '0 auto' }} />
-        </form>
     </div>
 }

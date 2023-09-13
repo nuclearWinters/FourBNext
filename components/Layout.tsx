@@ -62,17 +62,17 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                 <Link href={`/`}>
                     <Image height={46} width={80} className={css["fourb-logo"]} src={fourb} alt="" />
                 </Link>
-                <Link href="/cart" className={css["header-button"]}>Carro de compras</Link>
-                {isAdmin ? <Link href={'/inventory-admin'} className={css["header-button"]}>Inventario</Link> : null}
-                {logged ? null : <button className={css["header-button"]} onClick={() => {
+                <Link href="/cart" className={css["header-button-top"]}>Carro de compras</Link>
+                {isAdmin ? <Link href={'/inventory-admin'} className={css["header-button-top"]}>Inventario</Link> : null}
+                {logged ? null : <button className={css["header-button-top"]} onClick={() => {
                     setShowLogin(true)
                 }}>Iniciar Sesión</button>}
-                {logged ? null : <button className={css["header-button"]} onClick={() => {
+                {logged ? null : <button className={css["header-button-top"]} onClick={() => {
                     setShowRegister(true)
                 }}>Registrarse</button>}
-                {logged ? <Link href={'/account'} className={css["header-button"]}>Cuenta</Link> : null}
-                {logged ? <Link href={'/history'} className={css["header-button"]}>Historial</Link> : null}
-                {logged ? <button className={css["header-button"]} onClick={() => {
+                {logged ? <Link href={'/account'} className={css["header-button-top"]}>Cuenta</Link> : null}
+                {logged ? <Link href={'/history'} className={css["header-button-top"]}>Historial</Link> : null}
+                {logged ? <button className={css["header-button-top"]} onClick={() => {
                     logOut.mutate()
                 }}>Cerrar Sesión</button> : null}
                 {showRegister ? <Modal onClose={() => {
@@ -229,7 +229,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                     }}
                 >
                     <Image className={css.searchIconMobile} src={search} alt="" />
-                    <input size={1} className={css.searchProductMobile} name="search" placeholder="Busqueda..." value={input} onChange={e => {
+                    <input style={{ border: '1px solid black' }} size={1} className={css.searchProductMobile} name="search" placeholder="Busqueda..." value={input} onChange={e => {
                         setInput(e.target.value)
                     }} />
                 </form>

@@ -346,7 +346,7 @@ const appRouter = router({
                     name: { $regex: search, $options: "i" }
                 }
                 if (after) {
-                    filter._id = { $lt: new ObjectId(after) };
+                    filter._id = { $lte: new ObjectId(after) };
                 }
                 const products = await inventory.find(filter).limit(limitParsed).sort({ $natural: -1 }).toArray()
                 if (products.length > limit) {
@@ -362,7 +362,7 @@ const appRouter = router({
                     tags: { $in: [tag] }
                 }
                 if (after) {
-                    filter._id = { $lt: new ObjectId(after) };
+                    filter._id = { $lte: new ObjectId(after) };
                 }
                 const products = await inventory.find(filter).limit(limitParsed).sort({ $natural: -1 }).toArray()
                 if (products.length > limit) {
@@ -378,7 +378,7 @@ const appRouter = router({
                     use_discount: true
                 }
                 if (after) {
-                    filter._id = { $lt: new ObjectId(after) };
+                    filter._id = { $lte: new ObjectId(after) };
                 }
                 const products = await inventory.find(filter).limit(limitParsed).sort({ $natural: -1 }).toArray()
                 if (products.length > limit) {
@@ -392,7 +392,7 @@ const appRouter = router({
             } else {
                 const filter: Filter<InventoryMongo> = {}
                 if (after) {
-                    filter._id = { $lt: new ObjectId(after) };
+                    filter._id = { $lte: new ObjectId(after) };
                 }
                 const products = await inventory.find(filter).limit(limitParsed).sort({ $natural: -1 }).toArray()
                 if (products.length > limit) {
@@ -1092,22 +1092,43 @@ const appRouter = router({
             }
         }),
     purchases: publicProcedure
-        .query(async ({ ctx }): Promise<PurchasesTRPC[]> => {
+        .input(z.object({
+            limit: z.number().min(1).max(100).nullish(),
+            cursor: z.string().nullish(),
+        }))
+        .query(async ({ ctx, input }): Promise<{ items: PurchasesTRPC[], nextCursor: string | undefined }> => {
             try {
+                const limit = input.limit || 8
+                const after = input.cursor || ""
+                const limitParsed = limit + 1
+                let nextCursor: string | undefined = undefined;
                 const { userData, purchases } = ctx
                 if (!userData?.user._id) {
                     throw new Error("Inicia sesión primero")
                 }
                 const user_oid = new ObjectId(userData?.user._id)
-                const history = await purchases.find({ user_id: user_oid }).toArray()
-                return history.map(history => ({
-                    ...history,
-                    _id: history._id.toHexString(),
-                    product_id: history.product_id.toHexString(),
-                    user_id: history.user_id?.toHexString() || null,
-                    date: history.date.getTime(),
-                    session_id: history.session_id.toHexString(),
-                }))
+                const filter: Filter<PurchasesMongo> = {
+                    user_id: user_oid
+                }
+                if (after) {
+                    filter._id = { $lte: new ObjectId(after) };
+                }
+                const history = await purchases.find(filter).limit(limitParsed).sort({ $natural: -1 }).toArray()
+                if (history.length > limit) {
+                    const nextItem = history.pop();
+                    nextCursor = nextItem!._id.toHexString();
+                }
+                return {
+                    items: history.map(history => ({
+                        ...history,
+                        _id: history._id.toHexString(),
+                        product_id: history.product_id.toHexString(),
+                        user_id: history.user_id?.toHexString() || null,
+                        date: history.date.getTime(),
+                        session_id: history.session_id.toHexString(),
+                    })),
+                    nextCursor
+                }
             } catch (e) {
                 if (e instanceof Error) {
                     throw new TRPCError({

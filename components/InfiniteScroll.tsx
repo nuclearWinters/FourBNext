@@ -9,7 +9,7 @@ export const InfiniteScroll: FC<{
     const moreProductsLeft = useRef(true)
     useEffect(() => {
         moreProductsLeft.current = hasMore
-    }, [])
+    }, [hasMore])
     useEffect(() => {
         const removeInfiniteScroll = () => {
             window.removeEventListener("scroll", handleInfiniteScroll);
@@ -25,7 +25,7 @@ export const InfiniteScroll: FC<{
         };
         const handleInfiniteScroll = () => {
             throttle(async () => {
-                const endOfPage = window.innerHeight + window.pageYOffset >= document.body.offsetHeight;
+                const endOfPage = Math.ceil(window.innerHeight + window.scrollY) >= document.body.offsetHeight;
                 if (endOfPage) {
                     next();
                 }

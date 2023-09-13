@@ -194,30 +194,30 @@ export default function Checkout() {
                         }} />
                     </div>
                 </div>
-                <button className="fourb-button" type="submit" onClick={() => {
-                    checkout.mutate({
-                        name: form.name,
-                        apellidos: form.apellidos,
-                        street: form.street,
-                        country: form.country,
-                        colonia: form.colonia,
-                        zip: form.zip,
-                        city: form.city,
-                        state: form.state,
-                        phone: form.phone,
-                        phone_prefix: form.phonePrefix,
-                        email: form.email,
-                        address_id: form.address_id,
-                    }, {
-                        onSuccess(data) {
-                            if (data) {
-                                localStorage.setItem("checkout_id", data)
-                                router.push('/payment')
-                            }
-                        },
-                    })
-                }}>Pagar</button>
             </form>
         </div>
+        <button style={{ padding: '10px 80px' }} className="fourb-button" type="submit" onClick={() => {
+            checkout.mutate({
+                name: form.name,
+                apellidos: form.apellidos,
+                street: form.street,
+                country: form.country,
+                colonia: form.colonia,
+                zip: form.zip,
+                city: form.city,
+                state: form.state,
+                phone: form.phone,
+                phone_prefix: form.phonePrefix,
+                email: form.email,
+                address_id: form.address_id,
+            }, {
+                onSuccess(data) {
+                    if (data) {
+                        localStorage.setItem("checkout_id", data)
+                        router.push('/payment')
+                    }
+                },
+            })
+        }}>Pagar</button>
     </div>
 }

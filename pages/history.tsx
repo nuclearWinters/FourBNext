@@ -1,41 +1,68 @@
 import Link from "next/link"
 import { trpc } from "../utils/config"
+import { useRouter } from "next/router"
+import { Fragment } from "react"
+import { InfiniteScroll } from "../components/InfiniteScroll"
 
 export default function History() {
-    const purchases = trpc.purchases.useQuery()
-    const addOneCart = trpc.addOneToCart.useMutation()
+    const router = useRouter()
+    const purchases = trpc.purchases.useInfiniteQuery(
+        { limit: 8 },
+        { getNextPageParam: (lastPage) => lastPage.nextCursor, }
+    )
+    const addOneCart = trpc.addOneToCart.useMutation({
+        onSuccess: () => {
+            router.push('/cart')
+        }
+    })
     return <div>
-        <h2 className="title">Compras recientes</h2>
+        <h2 className="title" style={{ marginBottom: 10 }}>Compras recientes</h2>
         {purchases.isLoading ? <div className="loading" id="loading" /> : null}
-        <div id="purchases" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
-            {purchases.data?.map(product => (
-                <div key={product._id}>
-                    <div className="product-card">
-                        <div className="name">{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
-                        <div className="price">
-                            Precio unitario: ${((product.use_discount ? product.discount_price : product.price) / 100).toFixed(2)}
-                        </div>
-                        <img className="img-product" src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
-                        <div className="price">
-                            Cantidad: {product.qty || product.qty_big || product.qty_small}
-                        </div>
-                        <div className="price">
-                            Total: ${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)}
-                        </div>
-                        <Link href={`/product/${product.product_id}`} className="fourb-button">VER</Link>
-                        <button className="fourb-button" onClick={() => {
-                            addOneCart.mutate({ 
-                                product_id: product.product_id,
-                                qty: product.qty ? 1 : 0,
-                                qtyBig: product.qty_big ? 1 : 0,
-                                qtySmall: product.qty_small ? 1 : 0,
-                             })
-                        }}>
-                            AÑADIR AL CARRITO
-                        </button>
-                    </div>
-                </div>
-            ))}
+        <div id="purchases" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', flexDirection: "column", maxWidth: 800, margin: 'auto' }}>
+            <InfiniteScroll
+                loading={purchases.isFetchingNextPage}
+                next={purchases.fetchNextPage}
+                hasMore={!!purchases.hasNextPage}
+            >
+                {purchases.data?.pages.map((page, index) => (
+                    <Fragment key={index}>
+                        {page.items.map(product => (
+                            <div key={product._id} style={{ borderTop: '1px solid rgba(0,0,0,0.2)' }}>
+                                <div className="product-card" style={{ flexDirection: 'row', display: 'flex' }}>
+                                    <Link href={`/product/${product.product_id}`}><img className="img-product" src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} /></Link>
+                                    <div>
+                                        <div style={{ fontWeight: 'bold' }} className="name">{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
+                                        <div className="price">
+                                            Precio unitario: <strong>${((product.use_discount ? product.discount_price : product.price) / 100).toFixed(2)}</strong>
+                                        </div>
+                                        <div className="price">
+                                            Cantidad: <strong>{product.qty || product.qty_big || product.qty_small}</strong>
+                                        </div>
+                                        <div className="price">
+                                            Total: <strong>${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)}</strong>
+                                        </div>
+                                        <button
+                                            style={{ marginLeft: 20 }}
+                                            className="fourb-button"
+                                            onClick={() => {
+                                                addOneCart.mutate({
+                                                    product_id: product.product_id,
+                                                    qty: product.qty ? 1 : 0,
+                                                    qtyBig: product.qty_big ? 1 : 0,
+                                                    qtySmall: product.qty_small ? 1 : 0,
+                                                })
+                                            }}
+                                        >
+                                            Comprar otra vez
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </Fragment>
+                ))}
+            </InfiniteScroll>
         </div>
+        {purchases.isLoading ? <div className="loading" /> : null}
     </div >
 }

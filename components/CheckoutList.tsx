@@ -8,7 +8,6 @@ export const CheckoutList: FC<{
         product_id: string;
         qty: number;
         _id: string;
-        cart_id: string;
         price: number;
         img: string[];
         discount_price: number;
@@ -21,11 +20,11 @@ export const CheckoutList: FC<{
     }
 }> = ({ product }) => {
     return <Link href={`/product/${product.product_id}`} id={`${product._id}-product`} className="product-card" style={{ flexDirection: 'row', display: 'flex' }}>
-        <div style={{ position: 'relative' }}>
-            <img style={{ width: 80, objectFit: 'cover', height: 80 }} src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
+        <div style={{ position: 'relative', color: 'black' }}>
+            <img style={{ width: 80, objectFit: 'cover', height: 80, minWidth: 80 }} src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
             <div style={{ position: 'absolute', top: -10, left: -10, background: 'white', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid black', borderRadius: '100px', fontWeight: 'bold' }}>{product.qty || product.qty_big || product.qty_small}</div>
         </div>
-        <div style={{ marginLeft: 16 }}>
+        <div style={{ marginLeft: 16, color: 'black' }}>
             <div>{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
             <div style={{ paddingTop: 4 }}>
                 <span className={product.use_discount ? "price-discounted" : ""}>${(product.price / 100).toFixed(2)}</span>
