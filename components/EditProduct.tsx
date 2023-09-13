@@ -7,6 +7,8 @@ import { ModalField } from "./ModalField";
 import { ModalCheckbox } from "./ModalCheckbox";
 import cross from '../public/cross.svg'
 import Image from "next/image";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { getItemStyle, reorder } from "../pages/inventory-admin";
 
 export const EditProduct: FC<{
     product: {
@@ -33,6 +35,7 @@ export const EditProduct: FC<{
     product,
     onSuccessEdit,
 }) => {
+        const signedUrl = trpc.signedUrl.useMutation()
         const [showModal, setShowModal] = useState(false)
         const onCloseCallback = () => {
             setShowModal(false)
@@ -60,6 +63,48 @@ export const EditProduct: FC<{
             checkboxTalla10: product.tags.includes('talla10'),
         })
         const editProduct = trpc.editProduct.useMutation()
+        const onDragEnd = (result: any) => {
+            if (!result.destination) {
+                return;
+            }
+            const items = reorder(
+                form.img,
+                result.source.index,
+                result.destination.index
+            );
+            setForm(state => ({
+                ...state,
+                img: items,
+            }))
+        }
+        const onDragEndSmall = (result: any) => {
+            if (!result.destination) {
+                return;
+            }
+            const items = reorder(
+                form.img_small,
+                result.source.index,
+                result.destination.index
+            );
+            setForm(state => ({
+                ...state,
+                img_small: items,
+            }))
+        }
+        const onDragEndBig = (result: any) => {
+            if (!result.destination) {
+                return;
+            }
+            const items = reorder(
+                form.img_big,
+                result.source.index,
+                result.destination.index
+            );
+            setForm(state => ({
+                ...state,
+                img_big: items,
+            }))
+        }
         return <div>
             <button className="fourb-button" onClick={() => {
                 setShowModal(true)
@@ -183,14 +228,64 @@ export const EditProduct: FC<{
                                             Version grande
                                         </div>
                                         <div style={{ marginLeft: 20 }}>
-                                            <input name="image-big" multiple type="file" accept="png,jpg,jpeg" />
+                                            <input name="image-big" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
+                                                const files = event.target.files
+                                                if (files) {
+                                                    for (const file of files) {
+                                                        if (file.type) {
+                                                            try {
+                                                                const data = await signedUrl.mutateAsync({ fileType: file.type })
+                                                                const url = new URL(data.uploadUrl);
+                                                                await fetch(data.uploadUrl, {
+                                                                    method: "PUT",
+                                                                    body: file,
+                                                                })
+                                                                setForm(state => ({ ...state, img_big: [...state.img_big, url.origin + url.pathname] }))
+                                                            } catch (e) {
+                                                                alert('Error while uploading')
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }} />
                                             <div className="input-container images-container">
-                                                {product.img_big.map((img, index) => {
-                                                    return <div style={{ position: 'relative', marginTop: 20 }} key={index}>
-                                                        <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
-                                                        <img className="img-uploaded" alt="" width={"100%"} src={img} />
-                                                    </div>
-                                                })}
+                                                <DragDropContext onDragEnd={onDragEndBig}>
+                                                    <Droppable droppableId="droppable" direction="horizontal">
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    padding: 8,
+                                                                    overflow: 'auto',
+                                                                }}
+                                                                {...provided.droppableProps}
+                                                            >
+                                                                {form.img_big.map((item, index) => (
+                                                                    <Draggable key={item} draggableId={item} index={index}>
+                                                                        {(provided, snapshot) => (
+                                                                            <div
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                style={getItemStyle(
+                                                                                    snapshot.isDragging,
+                                                                                    provided.draggableProps.style
+                                                                                )}
+                                                                            >
+                                                                                <div style={{ position: 'relative' }} key={index}>
+                                                                                    <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
+                                                                                    <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ))}
+                                                                {provided.placeholder}
+                                                            </div>
+                                                        )}
+                                                    </Droppable>
+                                                </DragDropContext>
                                             </div>
                                             <ModalField
                                                 id="incrementBig"
@@ -208,14 +303,64 @@ export const EditProduct: FC<{
                                             Version chica
                                         </div>
                                         <div style={{ marginLeft: 20 }}>
-                                            <input name="image-small" multiple type="file" accept="png,jpg,jpeg" />
+                                            <input name="image-small" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
+                                                const files = event.target.files
+                                                if (files) {
+                                                    for (const file of files) {
+                                                        if (file.type) {
+                                                            try {
+                                                                const data = await signedUrl.mutateAsync({ fileType: file.type })
+                                                                const url = new URL(data.uploadUrl);
+                                                                await fetch(data.uploadUrl, {
+                                                                    method: "PUT",
+                                                                    body: file,
+                                                                })
+                                                                setForm(state => ({ ...state, img_small: [...state.img_small, url.origin + url.pathname] }))
+                                                            } catch (e) {
+                                                                alert('Error while uploading')
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }} />
                                             <div className="input-container images-container">
-                                                {product.img_small.map((img, index) => {
-                                                    return <div style={{ position: 'relative', marginTop: 20 }} key={index}>
-                                                        <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
-                                                        <img className="img-uploaded" alt="" width="100%" src={img} />
-                                                    </div>
-                                                })}
+                                                <DragDropContext onDragEnd={onDragEndSmall}>
+                                                    <Droppable droppableId="droppable" direction="horizontal">
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    padding: 8,
+                                                                    overflow: 'auto',
+                                                                }}
+                                                                {...provided.droppableProps}
+                                                            >
+                                                                {form.img_small.map((item, index) => (
+                                                                    <Draggable key={item} draggableId={item} index={index}>
+                                                                        {(provided, snapshot) => (
+                                                                            <div
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                style={getItemStyle(
+                                                                                    snapshot.isDragging,
+                                                                                    provided.draggableProps.style
+                                                                                )}
+                                                                            >
+                                                                                <div style={{ position: 'relative', marginTop: 20 }} key={index}>
+                                                                                    <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
+                                                                                    <img className="img-uploaded" alt="" width="100%" src={item} />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ))}
+                                                                {provided.placeholder}
+                                                            </div>
+                                                        )}
+                                                    </Droppable>
+                                                </DragDropContext>
                                             </div>
                                             <ModalField
                                                 id="incrementSmall"
@@ -240,14 +385,69 @@ export const EditProduct: FC<{
                                         <div className="img-title">
                                             Imagenes
                                         </div>
-                                        <div className="input-container images-container">
-                                            <input name="image" multiple type="file" accept="png,jpg,jpeg" />
-                                            {product.img.map((img, index) => {
-                                                return <div style={{ position: 'relative' }} key={index}>
-                                                    <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
-                                                    <img className="img-uploaded" alt="" width="100%" src={img} />
-                                                </div>
-                                            })}
+
+                                        <div style={{ marginLeft: 20 }}>
+                                            <div className="input-container images-container">
+                                                <input name="image" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
+                                                    const files = event.target.files
+                                                    if (files) {
+                                                        for (const file of files) {
+                                                            if (file.type) {
+                                                                try {
+                                                                    const data = await signedUrl.mutateAsync({ fileType: file.type })
+                                                                    const url = new URL(data.uploadUrl);
+                                                                    await fetch(data.uploadUrl, {
+                                                                        method: "PUT",
+                                                                        body: file,
+                                                                    })
+                                                                    setForm(state => ({ ...state, img: [...state.img, url.origin + url.pathname] }))
+                                                                } catch (e) {
+                                                                    alert('Error while uploading')
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }} />
+                                            </div>
+                                            <div className="input-container images-container">
+                                                <DragDropContext onDragEnd={onDragEnd}>
+                                                    <Droppable droppableId="droppable" direction="horizontal">
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    padding: 8,
+                                                                    overflow: 'auto',
+                                                                }}
+                                                                {...provided.droppableProps}
+                                                            >
+                                                                {form.img.map((item, index) => (
+                                                                    <Draggable key={item} draggableId={item} index={index}>
+                                                                        {(provided, snapshot) => (
+                                                                            <div
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                style={getItemStyle(
+                                                                                    snapshot.isDragging,
+                                                                                    provided.draggableProps.style
+                                                                                )}
+                                                                            >
+                                                                                <div style={{ position: 'relative' }} key={index}>
+                                                                                    <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
+                                                                                    <img className="img-uploaded" alt="" width="100%" src={item} />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ))}
+                                                                {provided.placeholder}
+                                                            </div>
+                                                        )}
+                                                    </Droppable>
+                                                </DragDropContext>
+                                            </div>
                                         </div>
                                         <ModalField
                                             id="increment"

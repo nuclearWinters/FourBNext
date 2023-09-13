@@ -10,7 +10,7 @@ import cross from '../public/cross.svg'
 import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd';
 
-const reorder = (list: string[], startIndex: number, endIndex: number) => {
+export const reorder = (list: string[], startIndex: number, endIndex: number) => {
     const result = Array.from(list);
     const [removed] = result.splice(startIndex, 1);
     result.splice(endIndex, 0, removed);
@@ -18,11 +18,10 @@ const reorder = (list: string[], startIndex: number, endIndex: number) => {
     return result;
 };
 
-const getItemStyle = (isDragging: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined): CSSProperties => ({
+export const getItemStyle = (isDragging: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined): CSSProperties => ({
     userSelect: 'none',
     padding: 8,
     margin: `0 8px 0 0`,
-    opacity: isDragging ? 0.5 : 1,
     ...draggableStyle,
 });
 
