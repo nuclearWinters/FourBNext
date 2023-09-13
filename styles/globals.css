@@ -227,6 +227,7 @@ button {
   width: 100px;
   height: 100px;
   object-fit: cover;
+  min-width: 100px;
 }
 
 .images-container {
@@ -261,6 +262,7 @@ button {
   box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
   height: 30px;
   width: 30px;
+  min-width: 30px;
 }
 
 .payBox {

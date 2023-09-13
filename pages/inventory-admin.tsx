@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react"
+import { CSSProperties, Fragment, useState } from "react"
 import { toCurrency, trpc } from "../utils/config"
 import { EditProduct } from "../components/EditProduct";
 import Image from "next/image";
@@ -8,6 +8,23 @@ import { ModalField } from "../components/ModalField";
 import { ModalCheckbox } from "../components/ModalCheckbox";
 import cross from '../public/cross.svg'
 import Link from "next/link";
+import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd';
+
+const reorder = (list: string[], startIndex: number, endIndex: number) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+
+    return result;
+};
+
+const getItemStyle = (isDragging: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined): CSSProperties => ({
+    userSelect: 'none',
+    padding: 8,
+    margin: `0 8px 0 0`,
+    opacity: isDragging ? 0.5 : 1,
+    ...draggableStyle,
+});
 
 export default function InventoryAdmin() {
     const [search, setSearch] = useState('')
@@ -82,6 +99,48 @@ export default function InventoryAdmin() {
             searchProducts.refetch()
         }
     })
+    const onDragEnd = (result: any) => {
+        if (!result.destination) {
+            return;
+        }
+        const items = reorder(
+            form.img,
+            result.source.index,
+            result.destination.index
+        );
+        setForm(state => ({
+            ...state,
+            img: items,
+        }))
+    }
+    const onDragEndSmall = (result: any) => {
+        if (!result.destination) {
+            return;
+        }
+        const items = reorder(
+            form.img_small,
+            result.source.index,
+            result.destination.index
+        );
+        setForm(state => ({
+            ...state,
+            img_small: items,
+        }))
+    }
+    const onDragEndBig = (result: any) => {
+        if (!result.destination) {
+            return;
+        }
+        const items = reorder(
+            form.img_big,
+            result.source.index,
+            result.destination.index
+        );
+        setForm(state => ({
+            ...state,
+            img_big: items,
+        }))
+    }
     return <div>
         <button type="button" className="fourb-button" onClick={() => {
             setShowCreate(true)
@@ -209,7 +268,7 @@ export default function InventoryAdmin() {
                                                                 method: "PUT",
                                                                 body: file,
                                                             })
-                                                            setForm(state => ({ ...state, img_big: [...state.img, url.origin + url.pathname] }))
+                                                            setForm(state => ({ ...state, img_big: [...state.img_big, url.origin + url.pathname] }))
                                                         } catch (e) {
                                                             alert('Error while uploading')
                                                         }
@@ -218,20 +277,50 @@ export default function InventoryAdmin() {
                                             }
                                         }} />
                                         <div className="input-container images-container">
-                                            {form.img_big.map((img) => {
-                                                return <div style={{ position: 'relative', marginTop: 20 }} key={img}>
-                                                    <button
-                                                        className="closeImgButton"
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setForm(state => ({ ...state, img: state.img_big.filter(currImg => img !== currImg) }))
-                                                        }}
-                                                    >
-                                                        <Image src={cross} alt="" height={10} />
-                                                    </button>
-                                                    <img className="img-uploaded" alt="" width={"100%"} src={img} />
-                                                </div>
-                                            })}
+                                            <DragDropContext onDragEnd={onDragEndBig}>
+                                                <Droppable droppableId="droppable" direction="horizontal">
+                                                    {(provided) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            style={{
+                                                                display: 'flex',
+                                                                padding: 8,
+                                                                overflow: 'auto',
+                                                            }}
+                                                            {...provided.droppableProps}
+                                                        >
+                                                            {form.img_big.map((item, index) => (
+                                                                <Draggable key={item} draggableId={item} index={index}>
+                                                                    {(provided, snapshot) => (
+                                                                        <div
+                                                                            ref={provided.innerRef}
+                                                                            {...provided.draggableProps}
+                                                                            {...provided.dragHandleProps}
+                                                                            style={getItemStyle(
+                                                                                snapshot.isDragging,
+                                                                                provided.draggableProps.style
+                                                                            )}
+                                                                        ><div style={{ position: 'relative' }} key={item}>
+                                                                                <button
+                                                                                    className="closeImgButton"
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setForm(state => ({ ...state, img_big: state.img_big.filter(currImg => item !== currImg) }))
+                                                                                    }}
+                                                                                >
+                                                                                    <Image src={cross} alt="" height={10} />
+                                                                                </button>
+                                                                                <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            ))}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                            </DragDropContext>
                                         </div>
                                         <ModalField
                                             id="incrementBig"
@@ -261,7 +350,7 @@ export default function InventoryAdmin() {
                                                                 method: "PUT",
                                                                 body: file,
                                                             })
-                                                            setForm(state => ({ ...state, img_small: [...state.img, url.origin + url.pathname] }))
+                                                            setForm(state => ({ ...state, img_small: [...state.img_small, url.origin + url.pathname] }))
                                                         } catch (e) {
                                                             alert('Error while uploading')
                                                         }
@@ -270,20 +359,51 @@ export default function InventoryAdmin() {
                                             }
                                         }} />
                                         <div className="input-container images-container">
-                                            {form.img_small.map((img) => {
-                                                return <div style={{ position: 'relative', marginTop: 20 }} key={img}>
-                                                    <button
-                                                        className="closeImgButton"
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setForm(state => ({ ...state, img: state.img_small.filter(currImg => img !== currImg) }))
-                                                        }}
-                                                    >
-                                                        <Image src={cross} alt="" height={10} />
-                                                    </button>
-                                                    <img className="img-uploaded" alt="" width="100%" src={img} />
-                                                </div>
-                                            })}
+                                            <DragDropContext onDragEnd={onDragEndSmall}>
+                                                <Droppable droppableId="droppable" direction="horizontal">
+                                                    {(provided) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            style={{
+                                                                display: 'flex',
+                                                                padding: 8,
+                                                                overflow: 'auto',
+                                                            }}
+                                                            {...provided.droppableProps}
+                                                        >
+                                                            {form.img_small.map((item, index) => (
+                                                                <Draggable key={item} draggableId={item} index={index}>
+                                                                    {(provided, snapshot) => (
+                                                                        <div
+                                                                            ref={provided.innerRef}
+                                                                            {...provided.draggableProps}
+                                                                            {...provided.dragHandleProps}
+                                                                            style={getItemStyle(
+                                                                                snapshot.isDragging,
+                                                                                provided.draggableProps.style
+                                                                            )}
+                                                                        >
+                                                                            <div style={{ position: 'relative' }} key={item}>
+                                                                                <button
+                                                                                    className="closeImgButton"
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setForm(state => ({ ...state, img_small: state.img_small.filter(currImg => item !== currImg) }))
+                                                                                    }}
+                                                                                >
+                                                                                    <Image src={cross} alt="" height={10} />
+                                                                                </button>
+                                                                                <img className="img-uploaded" alt="" width="100%" src={item} />
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            ))}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                            </DragDropContext>
                                         </div>
                                         <ModalField
                                             id="incrementSmall"
@@ -332,20 +452,51 @@ export default function InventoryAdmin() {
                                             }} />
                                         </div>
                                         <div className="input-container images-container">
-                                            {form.img.map((img) => {
-                                                return <div style={{ position: 'relative', marginTop: 20 }} key={img}>
-                                                    <button
-                                                        className="closeImgButton"
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setForm(state => ({ ...state, img: state.img.filter(currImg => img !== currImg) }))
-                                                        }}
-                                                    >
-                                                        <Image src={cross} alt="" height={10} />
-                                                    </button>
-                                                    <img className="img-uploaded" alt="" width="100%" src={img} />
-                                                </div>
-                                            })}
+                                            <DragDropContext onDragEnd={onDragEnd}>
+                                                <Droppable droppableId="droppable" direction="horizontal">
+                                                    {(provided) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            style={{
+                                                                display: 'flex',
+                                                                padding: 8,
+                                                                overflow: 'auto',
+                                                            }}
+                                                            {...provided.droppableProps}
+                                                        >
+                                                            {form.img.map((item, index) => (
+                                                                <Draggable key={item} draggableId={item} index={index}>
+                                                                    {(provided, snapshot) => (
+                                                                        <div
+                                                                            ref={provided.innerRef}
+                                                                            {...provided.draggableProps}
+                                                                            {...provided.dragHandleProps}
+                                                                            style={getItemStyle(
+                                                                                snapshot.isDragging,
+                                                                                provided.draggableProps.style
+                                                                            )}
+                                                                        >
+                                                                            <div style={{ position: 'relative' }} key={item}>
+                                                                                <button
+                                                                                    className="closeImgButton"
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setForm(state => ({ ...state, img: state.img.filter(currImg => item !== currImg) }))
+                                                                                    }}
+                                                                                >
+                                                                                    <Image src={cross} alt="" height={10} />
+                                                                                </button>
+                                                                                <img className="img-uploaded" alt="" width="100%" src={item} />
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            ))}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                            </DragDropContext>
                                         </div>
                                         <ModalField
                                             id="increment"
@@ -508,7 +659,7 @@ export default function InventoryAdmin() {
                                     </tr>
                                     {product.use_small_and_big ? <tr>
                                         <td colSpan={12}>
-                                            <table style={{ marginLeft: 40,  borderCollapse: 'collapse' }}>
+                                            <table style={{ marginLeft: 40, borderCollapse: 'collapse' }}>
                                                 <thead>
                                                     <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>
                                                         <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Version</th>
