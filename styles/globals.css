@@ -164,10 +164,20 @@ button {
 
 .input-container-checkout label {
   margin-bottom: 6px;
+  font-size: 16px;
 }
 
 .input-container-checkout input {
-  font-size: 20px;
+  font-size: 18px;
+  border: 1px solid black;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.input-container-checkout select {
+  font-size: 18px;
+  border: 1px solid black;
+  border-radius: 4px;
 }
 
 .link,
@@ -179,15 +189,19 @@ button {
 }
 
 .name {
+  font-weight: bold;
   font-size: 16px;
   margin-bottom: 12px;
   padding-left: 10px;
+  color: black;
 }
 
 .price {
   font-size: 18px;
   margin-bottom: 12px;
   padding-left: 10px;
+  color: black;
+  font-weight: 400;
 }
 
 .input-container-modal {
@@ -217,10 +231,16 @@ button {
   object-fit: cover;
 }
 
+a:hover {
+  color: black;
+  text-decoration: underline;
+}
+
 .price-discounted {
   text-decoration-line: line-through;
   font-size: 16px;
   color: dimgray;
+  font-weight: 400;
 }
 
 .img-uploaded {
@@ -271,6 +291,12 @@ button {
 
 .searchProduct {
   padding: 4px 8px;
+  border: 1px solid black;
+  font-size: 13px;
+}
+
+.searchProduct::placeholder {
+  color: dimgray;
 }
 
 .table {
@@ -312,3 +338,7 @@ button {
   }
 }
 
+
+.checkboxes label {
+  margin-left: 4px;
+}

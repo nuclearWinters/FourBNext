@@ -467,7 +467,7 @@ export const EditProduct: FC<{
                             }
                             <div className="input-container">
                                 <label htmlFor="discount">Tags</label>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', }}>
+                                <div className="checkboxes" style={{ display: 'flex', flexWrap: 'wrap', }}>
                                     <div style={{ width: '25%' }}>
                                         <input type="checkbox" id={`checkboxArete`} name="checkboxArete" checked={form.checkboxArete} onChange={(e) => {
                                             setForm(state => ({ ...state, [e.target.name]: e.target.checked }))

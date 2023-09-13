@@ -48,11 +48,11 @@ export const ProductList: FC<{
                 <input id={`checkbox-big-${product._id}`} name="big" checked={checked === 'big'} type="checkbox" onChange={() => {
                     setChecked('big')
                 }} />
-                <label htmlFor={`checkbox-big-${product._id}`}>Grande</label>
-                <input id={`checkbox-small-${product._id}`} name="small" checked={checked === 'small'} type="checkbox" onChange={() => {
+                <label style={{ marginLeft: 4 }} className='productLabel' htmlFor={`checkbox-big-${product._id}`}>Grande</label>
+                <input style={{ marginLeft: 6 }} id={`checkbox-small-${product._id}`} name="small" checked={checked === 'small'} type="checkbox" onChange={() => {
                     setChecked('small')
                 }} />
-                <label htmlFor={`checkbox-small-${product._id}`}>Pequeño</label>
+                <label style={{ marginLeft: 4 }} className='productLabel' htmlFor={`checkbox-small-${product._id}`}>Pequeño</label>
             </div>
         ) : null}
         <button className="fourb-button" onClick={async () => {

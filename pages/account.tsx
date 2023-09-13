@@ -52,7 +52,7 @@ export default function Account() {
                     setFormByName(e.target.name, e.target.value)
                 }} />
             </div>
-            <div className="input-container">
+            <div className="input-container" style={{ opacity: 0.6, pointerEvents: 'none' }}>
                 <label htmlFor="email">Email</label>
                 <input id="email" type="text" name="email" required value={form.email} onChange={(e) => {
                     setFormByName(e.target.name, e.target.value)

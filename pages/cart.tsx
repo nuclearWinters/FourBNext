@@ -32,7 +32,7 @@ export default function Cart() {
                         </tbody>
                     </table>
                 </div>
-                <div className="payBox" style={{ display: "flex", justifyContent: 'center', margin: 'auto', background: '#f9fafb', flexDirection: 'column' }}>
+                <div className="payBox" style={{ display: "flex", justifyContent: 'center', margin: 'auto', background: '#e7ebee', flexDirection: 'column' }}>
                     <div style={{ display: 'flex', padding: 20, flex: 1, justifyContent: 'space-between' }}>
                         <div style={{ fontSize: 16, fontWeight: 500 }}>Total</div>
                         <div style={{ fontSize: 16, fontWeight: 500 }}>$ {total?.toFixed(2)}</div>

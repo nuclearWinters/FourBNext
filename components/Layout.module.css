@@ -23,6 +23,7 @@
     border: none;
     cursor: pointer;
     font-size: 16px;
+    font-weight: 500;
 }
 
 .header-button-top {
@@ -114,6 +115,7 @@
 
 .input-container input {
     font-size: 20px;
+    color: black;
 }
 
 .product-card {
@@ -156,7 +158,9 @@
 }
 
 .input-container-modal input {
-    font-size: 14px;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 4px;
 }
 
 .img-product {
@@ -256,6 +260,9 @@
     .menu {
         display: flex;
         width: 52px;
+        justify-content: center;
+        align-items: center;
+        height: 60px;
     }
     .cart {
         display: flex;

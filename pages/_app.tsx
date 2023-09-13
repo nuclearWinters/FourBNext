@@ -8,6 +8,7 @@ const MyApp: FC<{ Component: FC<any>, pageProps: any }> = ({ Component, pageProp
   return (
     <>
       <Script type="module" crossOrigin="anonymous" src="https://assets.conekta.com/component/2.0.2/assets/component.min.js"></Script>
+      <link rel="stylesheet" href="https://assets.conekta.com/component/2.0.2/assets/style.css"></link>
       <Layout>
         <Component {...pageProps} />
       </Layout>

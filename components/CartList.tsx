@@ -55,7 +55,7 @@ export const CartList: FC<{
                 <div className={css.price}>{`(${product.qty || product.qty_big || product.qty_small }) en el carrito`}</div>
             </Link>
             <div style={{ display: 'flex', alignItems: 'center' }} className={css.inputBox}>
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', marginTop: 10 }}>
                     <InputNumberCart
                         label={"Cantidad"}
                         required

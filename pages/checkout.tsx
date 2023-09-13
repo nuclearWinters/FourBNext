@@ -94,7 +94,7 @@ export default function Checkout() {
                 {products.data?.map((product) => {
                     return <CheckoutList product={product} key={product._id} />
                 })}
-                <div className="payBox" style={{ display: "flex", background: '#f9fafb', flexDirection: 'column' }}>
+                <div className="payBox" style={{ display: "flex", background: '#e7ebee', flexDirection: 'column', marginBottom: 30 }}>
                     <div style={{ display: 'flex', padding: 20, flex: 1, justifyContent: 'space-between' }}>
                         <div style={{ fontSize: 16, fontWeight: 500 }}>Total</div>
                         <div style={{ fontSize: 16, fontWeight: 500 }}>$ {total?.toFixed(2)}</div>
@@ -124,7 +124,7 @@ export default function Checkout() {
                             setFormByName(e.target.name, e.target.value)
                         }}>
                             {addresses.map(address => (
-                                <option value={address._id}>{address.full_address}</option>
+                                <option value={address._id} key={address._id}>{address.full_address}</option>
                             ))}
                         </select>
                     </div>

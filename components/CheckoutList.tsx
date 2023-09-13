@@ -25,12 +25,12 @@ export const CheckoutList: FC<{
             <div style={{ position: 'absolute', top: -10, left: -10, background: 'white', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid black', borderRadius: '100px', fontWeight: 'bold' }}>{product.qty || product.qty_big || product.qty_small}</div>
         </div>
         <div style={{ marginLeft: 16, color: 'black' }}>
-            <div>{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
-            <div style={{ paddingTop: 4 }}>
+            <div className="name">{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
+            <div className="price" style={{ paddingTop: 4 }}>
                 <span className={product.use_discount ? "price-discounted" : ""}>${(product.price / 100).toFixed(2)}</span>
                 {product.use_discount ? <span> ${(product.discount_price / 100).toFixed(2)}</span> : null}
             </div>
-            <div style={{ paddingTop: 4 }}>Total: <strong>${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)}</strong></div>
+            <div className="price" style={{ paddingTop: 4 }}>Total: <strong>${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)}</strong></div>
         </div>
     </Link>
 }
