@@ -21,8 +21,8 @@ export default function Search() {
                     next={searchProducts.fetchNextPage}
                     hasMore={!!searchProducts.hasNextPage}
                 >
-                {searchProducts.data?.pages.map(pages => {
-                    return <Fragment key={pages.nextCursor}>{pages.items.map(product => (
+                {searchProducts.data?.pages.map((pages, index) => {
+                    return <Fragment key={index}>{pages.items.map(product => (
                         <ProductList product={product} key={product._id} />
                     ))}
                     </Fragment>
