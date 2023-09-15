@@ -26,7 +26,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
         email: string;
         password: string;
         confirmPassword: string
-        phonePrefix: string
+        phonePrefix: '+52'
         phone: string
     }>({
         name: '',
@@ -34,7 +34,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
         password: '',
         email: '',
         confirmPassword: '',
-        phonePrefix: '',
+        phonePrefix: '+52',
         phone: '',
     })
     const [loginForm, setLoginForm] = useState<{ email: string; password: string; }>({ email: '', password: '' })
@@ -125,7 +125,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                                 <label htmlFor="phone">Teléfono</label>
                                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                                     <select name="phonePrefix" required onChange={(e) => {
-                                        setRegisterForm(({ phonePrefix, ...rest }) => ({ ...rest, phonePrefix: e.target.value }))
+                                        setRegisterForm(({ phonePrefix, ...rest }) => ({ ...rest, phonePrefix: e.target.value as '+52' }))
                                     }}>
                                         <option value="+52">🇲🇽 Mexico (+52)</option>
                                     </select>

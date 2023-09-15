@@ -3,6 +3,7 @@ import jsonwebtoken, { SignOptions } from 'jsonwebtoken'
 import { DecodeJWT, SessionJWT, UserJWT } from '../server/types';
 import { ObjectId } from 'mongodb';
 
+export const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || ""
 export const MONGO_DB = process.env.MONGO_DB;
 export const REFRESH_TOKEN_EXP_NUMBER = 43200;
 export const ACCESS_TOKEN_EXP_NUMBER = 900;

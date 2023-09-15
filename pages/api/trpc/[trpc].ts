@@ -6,7 +6,7 @@ import * as trpcNext from '@trpc/server/adapters/next';
 import { z } from 'zod';
 import { publicProcedure, router } from '../../../server/trpc';
 import { Filter, MongoClient, ObjectId } from 'mongodb';
-import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, MONGO_DB, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, getSessionData, getSessionToken, getTokenData, jwt, sessionToBase64 } from '../../../server/utils';
+import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, MONGO_DB, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, SENDGRID_API_KEY, getSessionData, getSessionToken, getTokenData, jwt, sessionToBase64 } from '../../../server/utils';
 import { CartsByUserMongo, InventoryMongo, ItemsByCartMongo, PurchasesMongo, ReservedInventoryMongo, UserMongo } from '../../../server/types';
 import bcrypt from "bcryptjs"
 import cookie from "cookie"
@@ -16,6 +16,9 @@ import { Configuration, CustomersApi, OrdersApi } from 'conekta';
 import { isAxiosError } from 'axios';
 import { randomUUID } from 'crypto';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import sgMail from '@sendgrid/mail';
+
+sgMail.setApiKey(SENDGRID_API_KEY);
 
 const client = await MongoClient.connect(MONGO_DB || "mongodb://mongo-fourb:27017", {})
 const db = client.db("fourb");
@@ -310,8 +313,16 @@ const appRouter = router({
                 }
                 await users.insertOne(userData)
                 res.setHeader("Access-Token", accessToken)
+                await sgMail.send({
+                    to: 'armandonarcizoruedaperez@gmail.com',
+                    from: 'asistencia@fourb.mx',
+                    subject: 'Sending with Twilio SendGrid is Fun',
+                    text: 'and easy to do anywhere, even with Node.js',
+                    html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+                });
                 return
             } catch (e) {
+                console.log(e)
                 if (e instanceof Error) {
                     throw new TRPCError({
                         code: 'BAD_REQUEST',
@@ -457,8 +468,7 @@ const appRouter = router({
                         returnDocument: "after"
                     }
                 )
-                const { value } = product
-                if (!value) {
+                if (!product) {
                     throw new Error("Not enough inventory or product not found")
                 }
                 const expireDate = new Date()
@@ -498,17 +508,17 @@ const appRouter = router({
                             qty_small: qtySmall,
                         },
                         $setOnInsert: {
-                            name: value.name,
+                            name: product.name,
                             product_id: product_oid,
                             cart_id: cart_oid,
-                            price: value.price,
-                            discount_price: value.discount_price,
-                            use_discount: value.use_discount,
-                            img: value.img,
-                            code: value.code,
-                            img_big: value.img_big,
-                            img_small: value.img_small,
-                            use_small_and_big: value.use_small_and_big,
+                            price: product.price,
+                            discount_price: product.discount_price,
+                            use_discount: product.use_discount,
+                            img: product.img,
+                            code: product.code,
+                            img_big: product.img_big,
+                            img_small: product.img_small,
+                            use_small_and_big: product.use_small_and_big,
                         }
                     },
                     {
@@ -605,7 +615,7 @@ const appRouter = router({
                     cart_id: cart_oid,
                     product_id: product_oid,
                 })
-                if (!reserved.value) {
+                if (!reserved) {
                     throw new Error("Item not reserved.")
                 }
                 const filter: Filter<InventoryMongo> = {
@@ -613,33 +623,32 @@ const appRouter = router({
                 }
                 if (qty) {
                     filter.available = {
-                        $gte: qty - reserved.value.qty,
+                        $gte: qty - reserved.qty,
                     }
                 }
                 if (qtyBig) {
                     filter.available_big = {
-                        $gte: qtyBig - reserved.value.qty_big,
+                        $gte: qtyBig - reserved.qty_big,
                     }
                 }
                 if (qtySmall) {
                     filter.available_small = {
-                        $gte: qtySmall - reserved.value.qty_small,
+                        $gte: qtySmall - reserved.qty_small,
                     }
                 }
                 const product = await inventory.findOneAndUpdate(
                     filter,
                     {
                         $inc: {
-                            available: reserved.value.qty - qty,
-                            available_big: reserved.value.qty_big - qtyBig,
-                            available_small: reserved.value.qty_small - qtySmall,
+                            available: reserved.qty - qty,
+                            available_big: reserved.qty_big - qtyBig,
+                            available_small: reserved.qty_small - qtySmall,
                         },
                     },
                     {
                         returnDocument: "after"
                     })
-                const { value } = product
-                if (!value) {
+                if (!product) {
                     throw new Error("Not enough inventory or product not found")
                 }
                 const item_by_cart_oid = new ObjectId(item_by_cart_id)
@@ -727,29 +736,28 @@ const appRouter = router({
                         cart_id: cart_oid
                     },
                 )
-                if (!result.value) {
+                if (!result) {
                     throw new Error("Item in cart was not deleted.")
                 }
                 const reservation = await reservedInventory.findOneAndDelete(
                     {
-                        product_id: result.value.product_id,
+                        product_id: result.product_id,
                         cart_id: cart_oid,
                     })
-                if (!reservation.value) {
+                if (!reservation) {
                     throw new Error("Item in reservation was not deleted.")
                 }
                 const product = await inventory.findOneAndUpdate({
-                    _id: result.value.product_id,
+                    _id: result.product_id,
                 },
                     {
                         $inc: {
-                            available: reservation.value.qty,
-                            available_small: reservation.value.qty_small,
-                            available_big: reservation.value.qty_big,
+                            available: reservation.qty,
+                            available_small: reservation.qty_small,
+                            available_big: reservation.qty_big,
                         },
                     })
-                const { value } = product
-                if (!value) {
+                if (!product) {
                     throw new Error("Inventory not modified.")
                 }
                 return
@@ -923,14 +931,14 @@ const appRouter = router({
                                 {
                                     returnDocument: "after"
                                 })
-                            if (!result.value) {
+                            if (!result) {
                                 throw new Error("No user updated")
                             }
                             const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
                             const order = await orderClient.createOrder({
                                 currency: "MXN",
                                 customer_info: {
-                                    customer_id: result.value.conekta_id,
+                                    customer_id: result.conekta_id,
                                 },
                                 line_items: products.map(product => ({
                                     name: product.name,
@@ -973,14 +981,14 @@ const appRouter = router({
                                 {
                                     returnDocument: "after"
                                 })
-                            if (!result.value) {
+                            if (!result) {
                                 throw new Error("No user updated")
                             }
                             const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
                             const order = await orderClient.createOrder({
                                 currency: "MXN",
                                 customer_info: {
-                                    customer_id: result.value.conekta_id,
+                                    customer_id: result.conekta_id,
                                 },
                                 line_items: products.map(product => ({
                                     name: product.name,
@@ -1651,8 +1659,7 @@ const appRouter = router({
                         returnDocument: "after",
                     }
                 )
-                const { value } = result
-                if (!value) {
+                if (!result) {
                     throw new Error("Not enough inventory or product not found")
                 }
                 return
