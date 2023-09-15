@@ -1668,7 +1668,11 @@ const appRouter = router({
                     message: 'An unexpected error occurred, please try again later.',
                 });
             }
-        })
+        }),
+    webhook: publicProcedure.mutation(async ({ ctx }): Promise<void> => {
+        console.log('body:', ctx.req.body)
+        return
+    })
 });
 
 export type AppRouter = typeof appRouter;
@@ -1692,6 +1696,7 @@ export default trpcNext.createNextApiHandler({
         }
         const sessionData = getSessionData(sessionToken)
         return ({
+            req,
             res,
             sessionData: sessionData,
             userData: tokenData?.payload,

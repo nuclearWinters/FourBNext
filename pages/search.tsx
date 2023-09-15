@@ -3,6 +3,7 @@ import { Fragment } from 'react';
 import { ProductList } from '../components/ProductList';
 import { useSearchParams } from 'next/navigation'
 import { InfiniteScroll } from '../components/InfiniteScroll';
+import Head from 'next/head';
 
 export default function Search() {
     const urlParams = useSearchParams()
@@ -15,18 +16,21 @@ export default function Search() {
     );
     return (
         <div>
+            <Head>
+                <title>Busqueda - FourB</title>
+            </Head>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <InfiniteScroll
                     loading={searchProducts.isFetchingNextPage}
                     next={searchProducts.fetchNextPage}
                     hasMore={!!searchProducts.hasNextPage}
                 >
-                {searchProducts.data?.pages.map((pages, index) => {
-                    return <Fragment key={index}>{pages.items.map(product => (
-                        <ProductList product={product} key={product._id} />
-                    ))}
-                    </Fragment>
-                })}
+                    {searchProducts.data?.pages.map((pages, index) => {
+                        return <Fragment key={index}>{pages.items.map(product => (
+                            <ProductList product={product} key={product._id} />
+                        ))}
+                        </Fragment>
+                    })}
                 </InfiniteScroll>
             </div>
             {searchProducts.isLoading ? <div className="loading" /> : null}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { trpc } from "../utils/config";
 import { CartList } from "../components/CartList";
+import Head from "next/head";
 
 
 export default function Cart() {
@@ -10,6 +11,9 @@ export default function Cart() {
         return curr + total
     }, 0)
     return <div>
+        <Head>
+            <title>Carrito - FourB</title>
+        </Head>
         <h2 className="title">
             Mi carrito
         </h2>

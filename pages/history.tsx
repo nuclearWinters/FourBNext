@@ -3,6 +3,7 @@ import { trpc } from "../utils/config"
 import { useRouter } from "next/router"
 import { Fragment } from "react"
 import { InfiniteScroll } from "../components/InfiniteScroll"
+import Head from "next/head"
 
 export default function History() {
     const router = useRouter()
@@ -16,6 +17,9 @@ export default function History() {
         }
     })
     return <div>
+        <Head>
+            <title>Historial - FourB</title>
+        </Head>
         <h2 className="title" style={{ marginBottom: 10 }}>Compras recientes</h2>
         {purchases.isLoading ? <div className="loading" id="loading" /> : null}
         <div id="purchases" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', flexDirection: "column", maxWidth: 800, margin: 'auto' }}>

@@ -9,6 +9,7 @@ import { ModalCheckbox } from "../components/ModalCheckbox";
 import cross from '../public/cross.svg'
 import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd';
+import Head from "next/head";
 
 export const reorder = (list: string[], startIndex: number, endIndex: number) => {
     const result = Array.from(list);
@@ -141,6 +142,9 @@ export default function InventoryAdmin() {
         }))
     }
     return <div>
+        <Head>
+            <title>Inventario - FourB</title>
+        </Head>
         <button type="button" className="fourb-button" onClick={() => {
             setShowCreate(true)
         }}>Crear</button>

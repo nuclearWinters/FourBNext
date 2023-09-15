@@ -6,6 +6,8 @@ import { InventoryMongo } from "../../server/types";
 import { trpc } from "../../utils/config";
 import { useRouter } from "next/router";
 import { InputNumberCart } from "../../components/InputNumberCart";
+import Head from "next/head";
+import Script from "next/script";
 
 type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -27,6 +29,31 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
     })
     const qtyParsed = Number(qty) < 1 ? 1 : Number(qty)
     return <div className={css.productContainer} style={{ flex: 1, flexDirection: 'column' }}>
+        <Head>
+            <title>{product.name} - FourB</title>
+        </Head>
+        <Script
+            type="application/ld+json"
+            strategy="beforeInteractive"
+            dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                    "@context": "https://schema.org/",
+                    "@type": "Product",
+                    "name": product.name,
+                    "description": "",
+                    "image": product.use_small_and_big ? [...product.img_big, ...product.img_small] : product.img,
+                    "sku": product.code,
+                    "offers": {
+                        "@type": "AggregateOffer",
+                        "offerCount": product.use_small_and_big ? product.available_big + product.available_small : product.available,
+                        "lowPrice": product.use_discount ? product.discount_price : product.price,
+                        "highPrice": product.price,
+                        "priceCurrency": "MXN"
+                      }
+                })
+            }}
+        >
+        </Script>
         <div className={css.productBox} style={{ flex: 1, display: 'flex' }}>
             <div style={{ flex: 4 }}>
                 {product.use_small_and_big

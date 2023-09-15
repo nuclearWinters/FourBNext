@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { trpc } from "../utils/config"
+import Head from "next/head"
 
 export default function Account() {
     const [form, setForm] = useState({
@@ -29,7 +30,10 @@ export default function Account() {
         setForm(state => ({ ...state, [name]: value }))
     }
     return <div>
-        <h2 className="title">Account</h2>
+        <Head>
+            <title>Cuenta - FourB</title>
+        </Head>
+        <h2 className="title">Cuenta</h2>
         <form onSubmit={(e) => {
             e.preventDefault()
             editUser.mutate({

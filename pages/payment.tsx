@@ -4,6 +4,7 @@ import { CheckoutList } from '../components/CheckoutList'
 import facebook from '../public/facebook.svg'
 import instagram from '../public/instagram.svg'
 import Image from 'next/image'
+import Head from 'next/head'
 
 export default function Payment() {
     const cart = trpc.getCart.useQuery()
@@ -42,6 +43,9 @@ export default function Payment() {
         return curr + (product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)
     }, 0)
     return <div>
+        <Head>
+            <title>Pago - FourB</title>
+        </Head>
         <h2 className="title">
             Pago
         </h2>

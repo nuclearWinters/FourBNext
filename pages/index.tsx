@@ -1,12 +1,16 @@
 import Link from 'next/link';
 import { trpc } from '../utils/config';
 import { ProductList } from '../components/ProductList';
+import Head from 'next/head';
 
 export default function Home() {
   const lastProducts = trpc.inventory.useQuery({ limit: 8 });
   const discountProducts = trpc.inventory.useQuery({ limit: 8, discounts: true });
   return (
     <div>
+      <Head>
+        <title>Inicio - FourB</title>
+      </Head>
       <div style={{
         backgroundImage: "url('./banner.webp')",
         height: 184,
@@ -76,7 +80,7 @@ export default function Home() {
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
         {discountProducts.data?.items.map(product => (
-           <ProductList product={product} key={product._id} />
+          <ProductList product={product} key={product._id} />
         ))}
       </div>
       {discountProducts.isLoading ? <div className="loading" /> : null}

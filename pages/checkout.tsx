@@ -3,6 +3,7 @@ import { CheckoutList } from "../components/CheckoutList";
 import { trpc } from "../utils/config";
 import { useRouter } from "next/router";
 import { ModalCheckbox } from "../components/ModalCheckbox";
+import Head from "next/head";
 
 export default function Checkout() {
     const router = useRouter()
@@ -92,6 +93,9 @@ export default function Checkout() {
         return curr + total
     }, 0)
     return <div>
+        <Head>
+            <title>Revision - FourB</title>
+        </Head>
         <h2 className="title">
             Revisión
         </h2>

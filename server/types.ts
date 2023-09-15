@@ -1,5 +1,5 @@
 import { Collection, ObjectId } from "mongodb";
-import { NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 
 export interface UserMongo {
     _id?: ObjectId;
@@ -136,6 +136,7 @@ export interface ReservedInventoryMongo {
 }
 
 export interface ContextLocals {
+    req: NextApiRequest,
     res: NextApiResponse
     sessionData: SessionJWT
     userData?: DecodeJWT;
