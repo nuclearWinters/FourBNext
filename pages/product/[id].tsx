@@ -28,9 +28,10 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
         }
     })
     const qtyParsed = Number(qty) < 1 ? 1 : Number(qty)
+    const title = `${product.name} - FOURB`
     return <div className={css.productContainer} style={{ flex: 1, flexDirection: 'column' }}>
         <Head>
-            <title>{product.name} - FourB</title>
+            <title>{title}</title>
         </Head>
         <Script
             type="application/ld+json"
@@ -142,13 +143,13 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
             {!product.use_small_and_big ? product.img.map(img => (
-                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} />
+                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
             )) : null}
             {product.use_small_and_big && checkedBig ? product.img_big.map(img => (
-                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} />
+                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
             )) : null}
             {product.use_small_and_big && checkedSmall ? product.img_small.map(img => (
-                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} />
+                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
             )) : null}
         </div>
     </div>

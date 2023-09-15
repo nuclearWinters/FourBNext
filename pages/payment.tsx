@@ -44,7 +44,7 @@ export default function Payment() {
     }, 0)
     return <div>
         <Head>
-            <title>Pago - FourB</title>
+            <title>Pago - FOURB</title>
         </Head>
         <h2 className="title">
             Pago

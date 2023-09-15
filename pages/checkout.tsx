@@ -94,7 +94,7 @@ export default function Checkout() {
     }, 0)
     return <div>
         <Head>
-            <title>Revision - FourB</title>
+            <title>Revision - FOURB</title>
         </Head>
         <h2 className="title">
             Revisión

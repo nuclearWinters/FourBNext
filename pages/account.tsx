@@ -31,7 +31,7 @@ export default function Account() {
     }
     return <div>
         <Head>
-            <title>Cuenta - FourB</title>
+            <title>Cuenta - FOURB</title>
         </Head>
         <h2 className="title">Cuenta</h2>
         <form onSubmit={(e) => {

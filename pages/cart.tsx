@@ -12,7 +12,7 @@ export default function Cart() {
     }, 0)
     return <div>
         <Head>
-            <title>Carrito - FourB</title>
+            <title>Carrito - FOURB</title>
         </Head>
         <h2 className="title">
             Mi carrito

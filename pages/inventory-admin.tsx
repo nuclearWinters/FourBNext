@@ -143,7 +143,7 @@ export default function InventoryAdmin() {
     }
     return <div>
         <Head>
-            <title>Inventario - FourB</title>
+            <title>Inventario - FOURB</title>
         </Head>
         <button type="button" className="fourb-button" onClick={() => {
             setShowCreate(true)

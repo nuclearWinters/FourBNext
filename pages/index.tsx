@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Inicio - FourB</title>
+        <title>Inicio - FOURB</title>
       </Head>
       <div style={{
         backgroundImage: "url('./banner.webp')",

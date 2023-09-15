@@ -17,7 +17,7 @@ export default function Search() {
     return (
         <div>
             <Head>
-                <title>Busqueda - FourB</title>
+                <title>Busqueda - FOURB</title>
             </Head>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <InfiniteScroll

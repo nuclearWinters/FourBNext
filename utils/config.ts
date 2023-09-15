@@ -18,7 +18,7 @@ function getBaseUrl() {
   }
 
   // assume localhost
-  return `https://fourb.localhost`;
+  return `https://${VIRTUAL_HOST}`;
 }
 
 export const customLink: TRPCLink<AppRouter> = () => {

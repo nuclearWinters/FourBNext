@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /account
+Disallow: /history
+Disallow: /cart
+Disallow: /checkout
+Disallow: /payment
+Disallow: /inventory-admin
+
+Sitemap: https://fourb.mx/sitemap.xml

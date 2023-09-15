@@ -18,7 +18,7 @@ export default function History() {
     })
     return <div>
         <Head>
-            <title>Historial - FourB</title>
+            <title>Historial - FOURB</title>
         </Head>
         <h2 className="title" style={{ marginBottom: 10 }}>Compras recientes</h2>
         {purchases.isLoading ? <div className="loading" id="loading" /> : null}
