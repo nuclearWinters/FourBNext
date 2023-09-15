@@ -6,8 +6,8 @@ import * as trpcNext from '@trpc/server/adapters/next';
 import { z } from 'zod';
 import { publicProcedure, router } from '../../../server/trpc';
 import { Filter, MongoClient, ObjectId } from 'mongodb';
-import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, MONGO_DB, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, getSessionData, getTokenData, jwt } from '../../../server/utils';
-import { CartsByUserMongo, InventoryMongo, ItemsByCartMongo, PurchasesMongo, ReservedInventoryMongo, SessionMongo, UserMongo } from '../../../server/types';
+import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, MONGO_DB, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, getSessionData, getSessionToken, getTokenData, jwt, sessionToBase64 } from '../../../server/utils';
+import { CartsByUserMongo, InventoryMongo, ItemsByCartMongo, PurchasesMongo, ReservedInventoryMongo, UserMongo } from '../../../server/types';
 import bcrypt from "bcryptjs"
 import cookie from "cookie"
 import { TRPCError } from '@trpc/server';
@@ -17,7 +17,6 @@ import { isAxiosError } from 'axios';
 import { randomUUID } from 'crypto';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-
 const client = await MongoClient.connect(MONGO_DB || "mongodb://mongo-fourb:27017", {})
 const db = client.db("fourb");
 export const users = db.collection<UserMongo>("users")
@@ -25,7 +24,6 @@ export const cartsByUser = db.collection<CartsByUserMongo>("carts_by_user")
 export const inventory = db.collection<InventoryMongo>("inventory")
 export const itemsByCart = db.collection<ItemsByCartMongo>("items_by_cart")
 export const reservedInventory = db.collection<ReservedInventoryMongo>("reserved_inventory")
-export const sessions = db.collection<SessionMongo>("sessions")
 export const purchases = db.collection<PurchasesMongo>("purchases")
 
 type Modify<T, R> = Omit<T, keyof R> & R;
@@ -40,7 +38,7 @@ export type UserTRPC = Modify<UserMongo, {
         full_address: string;
         country: string;
         street: string;
-        colonia: string;
+        neighborhood: string;
         zip: string;
         city: string;
         state: string;
@@ -65,7 +63,6 @@ export type PurchasesTRPC = Modify<PurchasesMongo, {
     _id: string
     product_id: string
     user_id: string | null
-    session_id: string
     date: number
 }>
 
@@ -122,7 +119,7 @@ const appRouter = router({
                         full_address: "",
                         country: session.country || "",
                         street: session.street || "",
-                        colonia: session.colonia || "",
+                        neighborhood: session.neighborhood || "",
                         zip: session.zip || "",
                         city: session.city || "",
                         state: session.state || "",
@@ -142,13 +139,28 @@ const appRouter = router({
             try {
                 const email = input.email
                 const password = input.password
-                const { users, res } = ctx
+                const { users, res, itemsByCart, sessionData } = ctx
                 const user = await users.findOne({
                     email,
                 })
                 if (!user) throw new Error("El usuario no existe.");
                 const hash = await bcrypt.compare(password, user.password);
                 if (!hash) throw new Error("La contraseña no coincide.");
+                await itemsByCart.updateMany(
+                    {
+                        cart_id: new ObjectId(sessionData.cart_id)
+                    },
+                    {
+                        $set: {
+                            cart_id: new ObjectId(user.cart_id)
+                        }
+                    }
+                )
+                const session = sessionToBase64({
+                    ...sessionData,
+                    cart_id: user.cart_id.toHexString(),
+                })
+                res.setHeader("Session-Token", session)
                 const now = new Date();
                 now.setMilliseconds(0);
                 const nowTime = now.getTime() / 1000;
@@ -179,7 +191,7 @@ const appRouter = router({
                     ACCESSSECRET
                 );
                 const refreshTokenExpireDate = new Date(refreshTokenExpireTime * 1000);
-                res.setHeader("accessToken", accessToken)
+                res.setHeader("Access-Token", accessToken)
                 res.setHeader("Set-Cookie", cookie.serialize("refreshToken", refreshToken, {
                     httpOnly: true,
                     expires: refreshTokenExpireDate,
@@ -206,7 +218,7 @@ const appRouter = router({
             expires: new Date(),
             secure: false,
         }))
-        res.setHeader("accessToken", "")
+        res.setHeader("Access-Token", "")
         return
     }),
     register: publicProcedure
@@ -234,8 +246,8 @@ const appRouter = router({
                 const apellidos = input.apellidos
                 const phonePrefix = input.phonePrefix
                 const phone = input.phone
-                const { users, cartsByUser, res } = ctx
-                const cart_id = new ObjectId();
+                const { users, res, sessionData } = ctx
+                const cart_id = new ObjectId(sessionData.cart_id);
                 const user_id = new ObjectId();
                 const user = await users.findOne({ email });
                 if (user) throw new Error("El email ya esta siendo usado.");
@@ -296,15 +308,8 @@ const appRouter = router({
                     phone_prefix: phonePrefix,
                     is_admin: false,
                 }
-                await Promise.all([
-                    users.insertOne(userData),
-                    cartsByUser.insertOne({
-                        _id: cart_id,
-                        user_id,
-                        expireDate: null
-                    }),
-                ])
-                res.setHeader("accessToken", accessToken)
+                await users.insertOne(userData)
+                res.setHeader("Access-Token", accessToken)
                 return
             } catch (e) {
                 if (e instanceof Error) {
@@ -414,7 +419,7 @@ const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { inventory, itemsByCart, reservedInventory, cartsByUser, sessionData, userData } = ctx
+                const { inventory, itemsByCart, reservedInventory, cartsByUser, sessionData, userData, res } = ctx
                 const product_id = input.product_id
                 const qty = input.qty || 0
                 const qtyBig = input.qtyBig || 0
@@ -450,17 +455,19 @@ const appRouter = router({
                     },
                     {
                         returnDocument: "after"
-                    })
+                    }
+                )
                 const { value } = product
                 if (!value) {
                     throw new Error("Not enough inventory or product not found")
                 }
                 const expireDate = new Date()
                 expireDate.setDate(expireDate.getDate() + 7)
-                const reserved = await reservedInventory.updateOne({
-                    cart_id: cart_oid,
-                    product_id: product_oid,
-                },
+                const reserved = await reservedInventory.updateOne(
+                    {
+                        cart_id: cart_oid,
+                        product_id: product_oid,
+                    },
                     {
                         $inc: {
                             qty,
@@ -474,7 +481,8 @@ const appRouter = router({
                     },
                     {
                         upsert: true
-                    })
+                    }
+                )
                 if (!(reserved.modifiedCount || reserved.upsertedCount)) {
                     throw new Error("Item not reserved.")
                 }
@@ -510,14 +518,32 @@ const appRouter = router({
                 if (!(result.modifiedCount || result.upsertedCount)) {
                     throw new Error("Item not added to cart.")
                 }
-                await cartsByUser.updateOne({
-                    _id: cart_oid,
-                },
+                await cartsByUser.updateOne(
+                    {
+                        _id: cart_oid,
+                    },
                     {
                         $set: {
-                            expireDate
+                            expire_date: expireDate
+                        },
+                        $setOnInsert: {
+                            _id: cart_oid,
+                            pay_in_cash: false,
+                            user_id: userData?.user.cart_id ? new ObjectId(userData?.user.cart_id) : null,
+                            status: 'waiting',
                         }
+                    },
+                    {
+                        upsert: true
+                    }
+                )
+                if (userData?.user.cart_id) {
+                    const session = sessionToBase64({
+                        ...sessionData,
+                        cart_id: cart_oid.toHexString(),
                     })
+                    res.setHeader("Session-Token", session)
+                }
                 return
             } catch (e) {
                 if (e instanceof Error) {
@@ -646,14 +672,25 @@ const appRouter = router({
                 if (!newReserved.insertedId) {
                     throw new Error("Item not reserved.")
                 }
-                await cartsByUser.updateOne({
-                    _id: cart_oid,
-                },
+                await cartsByUser.updateOne(
+                    {
+                        _id: cart_oid,
+                    },
                     {
                         $set: {
-                            expireDate
-                        }
-                    })
+                            expire_date: expireDate
+                        },
+                        $setOnInsert: {
+                            _id: cart_oid,
+                            pay_in_cash: false,
+                            user_id: userData?.user.cart_id ? new ObjectId(userData?.user.cart_id) : null,
+                            status: 'waiting',
+                        },
+                    },
+                    {
+                        upsert: true
+                    }
+                )
                 return
             } catch (e) {
                 if (e instanceof Error) {
@@ -730,136 +767,243 @@ const appRouter = router({
             }
         }),
     checkoutPhase: publicProcedure
-        .input(z.object({
-            name: z.string().nonempty(),
-            apellidos: z.string().nonempty(),
-            street: z.string().nonempty(),
-            email: z.string(),
-            country: z.string().nonempty(),
-            colonia: z.string().nonempty(),
-            zip: z.string().nonempty(),
-            city: z.string().nonempty(),
-            state: z.string().nonempty(),
-            phone: z.string().nonempty(),
-            address_id: z.string(),
-            phone_prefix: z.literal('+52'),
-        }))
+        .input(
+            z.union([
+                z.object({
+                    delivery: z.literal('store'),
+                    phone_prefix: z.literal('+52'),
+                    phone: z.string().nonempty(),
+                    name: z.string().nonempty(),
+                    apellidos: z.string().nonempty(),
+                    payment_method: z.enum(["cash", "conekta"]),
+                    email: z.string(),
+                }),
+                z.object({
+                    name: z.string().nonempty(),
+                    apellidos: z.string().nonempty(),
+                    street: z.string().nonempty(),
+                    email: z.string(),
+                    country: z.string().nonempty(),
+                    neighborhood: z.string().nonempty(),
+                    zip: z.string().nonempty(),
+                    city: z.string().nonempty(),
+                    state: z.string().nonempty(),
+                    phone: z.string().nonempty(),
+                    address_id: z.string(),
+                    phone_prefix: z.literal('+52'),
+                    payment_method: z.enum(["cash", "conekta"]),
+                    delivery: z.enum(["city", "national"]),
+                }),
+            ]))
         .mutation(async ({ ctx, input }): Promise<string | undefined> => {
             try {
-                const { itemsByCart, sessions, users, userData, sessionData, res } = ctx
-                const { name, apellidos, street, email, country, colonia, zip, city, state, phone, address_id, phone_prefix } = input
+                const { itemsByCart, users, userData, sessionData, res, cartsByUser } = ctx
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
-                if (address_id && userData) {
-                    const address_oid = new ObjectId(address_id)
-                    const user_oid = new ObjectId(userData.user._id)
-                    const result = await users.findOneAndUpdate({
-                        _id: user_oid,
-                        "addresses._id": address_oid,
-                    },
-                        {
-                            $set: {
-                                default_address: address_oid,
-                                "addresses.$.full_address": `${street}, ${colonia}, ${zip} ${city} ${state}, ${country} (${name} ${apellidos})`,
-                                "addresses.$.country": country,
-                                "addresses.$.street": street,
-                                "addresses.$.colonia": colonia,
-                                "addresses.$.zip": zip,
-                                "addresses.$.city": city,
-                                "addresses.$.state": state,
-                                "addresses.$.phone": phone,
-                                "addresses.$.name": name,
-                                "addresses.$.apellidos": apellidos,
-                            },
-                        },
-                        {
-                            returnDocument: "after"
+                if (input.delivery === "store") {
+                    const { name, apellidos, phone, phone_prefix, payment_method, email } = input
+                    if (payment_method === "cash") {
+                        const session = sessionToBase64({
+                            ...sessionData,
+                            email,
+                            phone,
+                            phone_prefix,
+                            apellidos,
+                            name,
                         })
-                    if (!result.value) {
-                        throw new Error("No user updated")
-                    }
-                    const user = result.value
-                    const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
-                    const order = await orderClient.createOrder({
-                        currency: "MXN",
-                        customer_info: {
-                            customer_id: result.value.conekta_id,
-                        },
-                        line_items: products.map(product => ({
-                            name: product.name,
-                            unit_price: product.use_discount ? product.discount_price : product.price,
-                            quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
-                        })),
-                        checkout: {
-                            type: 'Integration',
-                            allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
-                        }
-                    })
-                    return order?.data?.checkout?.id
-                } else if (userData) {
-                    const address_id = new ObjectId()
-                    const user_oid = new ObjectId(userData.user._id)
-                    const result = await users.findOneAndUpdate({
-                        _id: user_oid,
-                    },
-                        {
-                            $set: {
-                                default_address: address_id,
+                        res.setHeader("Session-Token", session)
+                        await cartsByUser.updateOne(
+                            {
+                                _id: cart_oid
                             },
-                            $push: {
-                                addresses: {
-                                    _id: address_id,
-                                    full_address: `${street}, ${colonia}, ${zip} ${city} ${state}, ${country} (${name} ${apellidos})`,
-                                    country,
-                                    street,
-                                    colonia,
-                                    zip,
-                                    city,
-                                    state,
-                                    phone,
-                                    name,
-                                    apellidos,
-                                    phone_prefix,
+                            {
+                                $set: {
+                                    pay_in_cash: true,
                                 }
-                            },
-                        },
-                        {
-                            returnDocument: "after"
-                        })
-                    if (!result.value) {
-                        throw new Error("No user updated")
-                    }
-                    const user = result.value
-                    const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
-                    const order = await orderClient.createOrder({
-                        currency: "MXN",
-                        customer_info: {
-                            customer_id: result.value.conekta_id,
-                        },
-                        line_items: products.map(product => ({
-                            name: product.name,
-                            unit_price: product.use_discount ? product.discount_price : product.price,
-                            quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
-                        })),
-                        checkout: {
-                            type: 'Integration',
-                            allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
+                            }
+                        )
+                        return ''
+                    } else {
+                        if (userData) {
+                            const user_oid = new ObjectId(userData.user._id)
+                            const result = await users.findOne({
+                                _id: user_oid
+                            })
+                            if (!result) {
+                                throw new Error("No user updated")
+                            }
+                            const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                            const order = await orderClient.createOrder({
+                                currency: "MXN",
+                                customer_info: {
+                                    customer_id: result.conekta_id,
+                                },
+                                line_items: products.map(product => ({
+                                    name: product.name,
+                                    unit_price: product.use_discount ? product.discount_price : product.price,
+                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                })),
+                                checkout: {
+                                    type: 'Integration',
+                                    allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
+                                }
+                            })
+                            return order?.data?.checkout?.id
+                        } else {
+                            if (!email) {
+                                throw new Error("Email is required and must be a string")
+                            }
+                            const conekta_id = sessionData.conekta_id ?? (await customerClient.createCustomer({ phone, name: `${name} ${apellidos}`, email })).data.id
+                            const session = sessionToBase64({
+                                ...sessionData,
+                                conekta_id,
+                                phone,
+                                name,
+                                apellidos,
+                                email,
+                                phone_prefix
+                            })
+                            res.setHeader("Session-Token", session)
+                            const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                            const order = await orderClient.createOrder({
+                                currency: "MXN",
+                                customer_info: {
+                                    customer_id: conekta_id,
+                                },
+                                line_items: products.map(product => ({
+                                    name: product.name,
+                                    unit_price: product.use_discount ? product.discount_price : product.price,
+                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                })),
+                                checkout: {
+                                    type: 'Integration',
+                                    allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
+                                }
+                            })
+                            return order?.data?.checkout?.id
                         }
-                    })
-                    return order?.data?.checkout?.id
-                } else {
-                    if (!email) {
-                        throw new Error("Email is required and must be a string")
                     }
-                    const session_oid = new ObjectId(sessionData._id)
-                    const result = await sessions.findOneAndUpdate({
-                        _id: session_oid,
-                    },
-                        {
-                            $set: {
+                } else {
+                    const { name, apellidos, street, email, country, neighborhood, zip, city, state, phone, address_id, phone_prefix, payment_method } = input
+                    if (payment_method === "cash") {
+                        await cartsByUser.updateOne(
+                            {
+                                _id: cart_oid
+                            },
+                            {
+                                $set: {
+                                    pay_in_cash: true
+                                }
+                            }
+                        )
+                        return ''
+                    } else {
+                        if (address_id && userData) {
+                            const address_oid = new ObjectId(address_id)
+                            const user_oid = new ObjectId(userData.user._id)
+                            const result = await users.findOneAndUpdate({
+                                _id: user_oid,
+                                "addresses._id": address_oid,
+                            },
+                                {
+                                    $set: {
+                                        default_address: address_oid,
+                                        "addresses.$.full_address": `${street}, ${neighborhood}, ${zip} ${city} ${state}, ${country} (${name} ${apellidos})`,
+                                        "addresses.$.country": country,
+                                        "addresses.$.street": street,
+                                        "addresses.$.neighborhood": neighborhood,
+                                        "addresses.$.zip": zip,
+                                        "addresses.$.city": city,
+                                        "addresses.$.state": state,
+                                        "addresses.$.phone": phone,
+                                        "addresses.$.name": name,
+                                        "addresses.$.apellidos": apellidos,
+                                        "addresses.$.phone_prefix": phone_prefix,
+                                    },
+                                },
+                                {
+                                    returnDocument: "after"
+                                })
+                            if (!result.value) {
+                                throw new Error("No user updated")
+                            }
+                            const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                            const order = await orderClient.createOrder({
+                                currency: "MXN",
+                                customer_info: {
+                                    customer_id: result.value.conekta_id,
+                                },
+                                line_items: products.map(product => ({
+                                    name: product.name,
+                                    unit_price: product.use_discount ? product.discount_price : product.price,
+                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                })),
+                                checkout: {
+                                    type: 'Integration',
+                                    allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
+                                }
+                            })
+                            return order?.data?.checkout?.id
+                        } else if (userData) {
+                            const address_id = new ObjectId()
+                            const user_oid = new ObjectId(userData.user._id)
+                            const result = await users.findOneAndUpdate({
+                                _id: user_oid,
+                            },
+                                {
+                                    $set: {
+                                        default_address: address_id,
+                                    },
+                                    $push: {
+                                        addresses: {
+                                            _id: address_id,
+                                            full_address: `${street}, ${neighborhood}, ${zip} ${city} ${state}, ${country} (${name} ${apellidos})`,
+                                            country,
+                                            street,
+                                            neighborhood,
+                                            zip,
+                                            city,
+                                            state,
+                                            phone,
+                                            name,
+                                            apellidos,
+                                            phone_prefix,
+                                        }
+                                    },
+                                },
+                                {
+                                    returnDocument: "after"
+                                })
+                            if (!result.value) {
+                                throw new Error("No user updated")
+                            }
+                            const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                            const order = await orderClient.createOrder({
+                                currency: "MXN",
+                                customer_info: {
+                                    customer_id: result.value.conekta_id,
+                                },
+                                line_items: products.map(product => ({
+                                    name: product.name,
+                                    unit_price: product.use_discount ? product.discount_price : product.price,
+                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                })),
+                                checkout: {
+                                    type: 'Integration',
+                                    allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
+                                }
+                            })
+                            return order?.data?.checkout?.id
+                        } else {
+                            if (!email) {
+                                throw new Error("Email is required and must be a string")
+                            }
+                            const conekta_id = sessionData.conekta_id ?? (await customerClient.createCustomer({ phone, name: `${name} ${apellidos}`, email })).data.id
+                            const session = sessionToBase64({
+                                ...sessionData,
                                 email,
                                 country,
                                 street,
-                                colonia,
+                                neighborhood,
                                 zip,
                                 city,
                                 state,
@@ -867,45 +1011,28 @@ const appRouter = router({
                                 name,
                                 apellidos,
                                 phone_prefix,
-                            },
-                        },
-                        {
-                            returnDocument: "after"
-                        })
-                    if (!result.value) {
-                        throw new Error("No session updated")
-                    }
-                    const conekta_id = result.value.conekta_id ?? (await customerClient.createCustomer({ phone, name: `${name} ${apellidos}`, email })).data.id
-                    if (!result.value.conekta_id) {
-                        await sessions.updateOne({
-                            _id: session_oid,
-                        },
-                            {
-                                $set: {
-                                    conekta_id,
+                                conekta_id,
+                            })
+                            res.setHeader("Session-Token", session)
+                            const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                            const order = await orderClient.createOrder({
+                                currency: "MXN",
+                                customer_info: {
+                                    customer_id: conekta_id,
+                                },
+                                line_items: products.map(product => ({
+                                    name: product.name,
+                                    unit_price: product.use_discount ? product.discount_price : product.price,
+                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                })),
+                                checkout: {
+                                    type: 'Integration',
+                                    allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
                                 }
                             })
-                    }
-                    const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
-                    const order = await orderClient.createOrder({
-                        currency: "MXN",
-                        customer_info: {
-                            customer_id: conekta_id,
-                        },
-                        line_items: products.map(product => ({
-                            name: product.name,
-                            unit_price: product.use_discount ? product.discount_price : product.price,
-                            quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
-                        })),
-                        checkout: {
-                            type: 'Integration',
-                            allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
+                            return order?.data?.checkout?.id
                         }
-                    })
-                    result.value.conekta_id = conekta_id
-                    const session = Buffer.from(JSON.stringify(result.value)).toString('base64')
-                    res.setHeader("sessionToken", session)
-                    return order?.data?.checkout?.id
+                    }
                 }
             } catch (e) {
                 if (isAxiosError(e)) {
@@ -928,40 +1055,33 @@ const appRouter = router({
     confirmationPhase: publicProcedure
         .mutation(async ({ ctx }): Promise<void> => {
             try {
-                const { users, cartsByUser, sessions, purchases, itemsByCart, sessionData, userData, res } = ctx
+                const { users, cartsByUser, purchases, itemsByCart, sessionData, userData, res } = ctx
                 const new_cart_id = new ObjectId()
                 const previous_cart_id = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
-                const session_oid = new ObjectId(sessionData._id)
                 if (userData) {
                     const user_oid = new ObjectId(userData.user._id)
-                    await Promise.all([users.updateOne({
-                        _id: user_oid
-                    }, {
-                        $set: {
-                            cart_id: new_cart_id
-                        }
-                    }),
-                    cartsByUser.bulkWrite([
-                        {
-                            updateOne: {
-                                filter: {
-                                    _id: previous_cart_id
-                                },
-                                update: {
-                                    $set: {
-                                        expireDate: null
-                                    }
-                                }
+                    await Promise.all([
+                        users.updateOne(
+                            {
+                                _id: user_oid
                             },
-                            insertOne: {
-                                document: {
-                                    _id: new_cart_id,
-                                    user_id: user_oid,
-                                    expireDate: null
+                            {
+                                $set: {
+                                    cart_id: new_cart_id
                                 }
                             }
-                        }
-                    ])
+                        ),
+                        cartsByUser.updateOne(
+                            {
+                                _id: previous_cart_id
+                            },
+                            {
+                                $set: {
+                                    expire_date: null,
+                                    status: 'paid',
+                                }
+                            }
+                        )
                     ])
                     const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
                     const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
@@ -974,7 +1094,6 @@ const appRouter = router({
                         discount_price: product.discount_price,
                         use_discount: product.use_discount,
                         user_id: user_oid,
-                        session_id: session_oid,
                         date: new Date(),
                         img: product.img,
                         code: product.code,
@@ -1013,45 +1132,25 @@ const appRouter = router({
                         expires: refreshTokenExpireDate,
                         secure: false,
                     }))
-                    res.setHeader("accessToken", newAccessToken)
+                    res.setHeader("Access-Token", newAccessToken)
                     return
                 } else {
-                    const [session] = await Promise.all([
-                        sessions.findOneAndUpdate(
-                            {
-                                _id: session_oid
-                            },
-                            {
-                                $set: {
-                                    cart_id: new_cart_id
-                                }
-                            },
-                            {
-                                returnDocument: "after"
+                    const session = sessionToBase64({
+                        ...sessionData,
+                        cart_id: new_cart_id.toHexString(),
+                    })
+                    res.setHeader("Session-Token", session)
+                    await cartsByUser.updateOne(
+                        {
+                            _id: previous_cart_id
+                        },
+                        {
+                            $set: {
+                                expire_date: null,
+                                status: 'paid',
                             }
-                        ),
-                        cartsByUser.bulkWrite([
-                            {
-                                updateOne: {
-                                    filter: {
-                                        _id: previous_cart_id
-                                    },
-                                    update: {
-                                        $set: {
-                                            expireDate: null
-                                        }
-                                    }
-                                },
-                                insertOne: {
-                                    document: {
-                                        _id: new_cart_id,
-                                        user_id: session_oid,
-                                        expireDate: null
-                                    }
-                                }
-                            }
-                        ])
-                    ])
+                        }
+                    )
                     const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
                     const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
                         name: product.name,
@@ -1063,7 +1162,6 @@ const appRouter = router({
                         discount_price: product.discount_price,
                         use_discount: product.use_discount,
                         user_id: null,
-                        session_id: session_oid,
                         date: new Date(),
                         img: product.img,
                         code: product.code,
@@ -1072,10 +1170,6 @@ const appRouter = router({
                         img_small: product.img_small,
                     }))
                     await purchases.insertMany(purchasedProducts)
-                    if (session.value) {
-                        const sessionToken = Buffer.from(JSON.stringify(session.value)).toString('base64')
-                        res.setHeader("sessionToken", sessionToken)
-                    }
                     return
                 }
             } catch (e) {
@@ -1125,7 +1219,6 @@ const appRouter = router({
                         product_id: history.product_id.toHexString(),
                         user_id: history.user_id?.toHexString() || null,
                         date: history.date.getTime(),
-                        session_id: history.session_id.toHexString(),
                     })),
                     nextCursor
                 }
@@ -1556,7 +1649,8 @@ const appRouter = router({
                     },
                     {
                         returnDocument: "after",
-                    })
+                    }
+                )
                 const { value } = result
                 if (!value) {
                     throw new Error("Not enough inventory or product not found")
@@ -1581,26 +1675,31 @@ export type AppRouter = typeof appRouter;
 
 export default trpcNext.createNextApiHandler({
     router: appRouter,
+    middleware(req, res, next) {
+        const sessionToken = req.headers['session-token'] as string
+        const validSessionToken = getSessionToken(sessionToken)
+        req.headers['session-token'] = validSessionToken
+        res.setHeader("Session-Token", validSessionToken)
+        next()
+    },
     createContext: async ({ req, res }) => {
         const refreshToken = req.cookies.refreshToken
-        const accessToken = req.headers.authorization
-        const sessionToken = req.headers.sessiontoken as string | undefined
+        const accessToken = req.headers['authorization']
+        const sessionToken = req.headers['session-token'] as string
         const tokenData = getTokenData(accessToken, refreshToken)
         if (tokenData?.accessToken) {
-            res.setHeader("accessToken", tokenData?.accessToken)
+            res.setHeader("Access-Token", tokenData?.accessToken)
         }
-        const sessionData = await getSessionData(sessionToken)
-        res.setHeader("sessionToken", sessionData.sessionBase64)
+        const sessionData = getSessionData(sessionToken)
         return ({
             res,
-            sessionData: sessionData.session,
+            sessionData: sessionData,
             userData: tokenData?.payload,
             users,
             cartsByUser,
             inventory,
             itemsByCart,
             reservedInventory,
-            sessions,
             purchases,
         })
     },

@@ -236,6 +236,10 @@ a:hover {
   text-decoration: underline;
 }
 
+a.fourb-button {
+  color: white;
+}
+
 .price-discounted {
   text-decoration-line: line-through;
   font-size: 16px;
@@ -337,7 +341,6 @@ a:hover {
     width: 50px;
   }
 }
-
 
 .checkboxes label {
   margin-left: 4px;

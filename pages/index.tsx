@@ -23,6 +23,7 @@ export default function Home() {
           letterSpacing: 4,
           background: "rgba(0,0,0,0.3)",
           padding: 10,
+          textAlign: 'center',
         }}
         >
           NUEVAS JOYITAS
@@ -36,6 +37,7 @@ export default function Home() {
             fontSize: 20,
             padding: 10,
             cursor: "pointer",
+            textAlign: 'center',
           }}
         >
           Ver colección

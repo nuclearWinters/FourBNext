@@ -1,16 +1,19 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CheckoutList } from "../components/CheckoutList";
 import { trpc } from "../utils/config";
 import { useRouter } from "next/router";
+import { ModalCheckbox } from "../components/ModalCheckbox";
 
 export default function Checkout() {
     const router = useRouter()
+    const [paymentMethod, setPaymentMethod] = useState<'conekta' | 'cash'>('conekta')
+    const [delivery, setDelivery] = useState<"store" | "city" | "national">('city')
     const [form, setForm] = useState({
         name: '',
         apellidos: '',
         street: '',
         country: '',
-        colonia: '',
+        neighborhood: '',
         zip: '',
         city: '',
         state: '',
@@ -19,61 +22,65 @@ export default function Checkout() {
         email: '',
         address_id: '',
     })
+    const mounted = useRef(false)
     const products = trpc.getCart.useQuery();
     const checkout = trpc.checkoutPhase.useMutation();
     const user = trpc.getUser.useQuery(undefined, {
         onSuccess: (values) => {
-            const isLogged = !!values._id
-            if (isLogged) {
-                const defaultAddress = values.addresses.find(address => address._id === values.default_address)
-                if (defaultAddress) {
-                    setForm({
-                        name: values.name,
-                        apellidos: values.apellidos,
-                        street: defaultAddress.street,
-                        country: defaultAddress.country,
-                        colonia: defaultAddress.colonia,
-                        zip: defaultAddress.zip,
-                        city: defaultAddress.city,
-                        state: defaultAddress.state,
-                        phonePrefix: "+52",
-                        phone: defaultAddress.phone,
-                        email: '',
-                        address_id: values.default_address,
-                    })
+            if (!mounted.current) {
+                const isLogged = !!values._id
+                if (isLogged) {
+                    const defaultAddress = values.addresses.find(address => address._id === values.default_address)
+                    if (defaultAddress) {
+                        setForm({
+                            name: values.name,
+                            apellidos: values.apellidos,
+                            street: defaultAddress.street,
+                            country: defaultAddress.country,
+                            neighborhood: defaultAddress.neighborhood,
+                            zip: defaultAddress.zip,
+                            city: defaultAddress.city,
+                            state: defaultAddress.state,
+                            phonePrefix: "+52",
+                            phone: defaultAddress.phone,
+                            email: '',
+                            address_id: values.default_address,
+                        })
+                    } else {
+                        setForm({
+                            name: values.name,
+                            apellidos: values.apellidos,
+                            street: '',
+                            country: '',
+                            neighborhood: '',
+                            zip: '',
+                            city: '',
+                            state: '',
+                            phonePrefix: "+52",
+                            phone: '',
+                            email: '',
+                            address_id: '',
+                        })
+                    }
                 } else {
                     setForm({
                         name: values.name,
                         apellidos: values.apellidos,
-                        street: '',
-                        country: '',
-                        colonia: '',
-                        zip: '',
-                        city: '',
-                        state: '',
+                        street: values.addresses[0].street,
+                        country: values.addresses[0].country,
+                        neighborhood: values.addresses[0].neighborhood,
+                        zip: values.addresses[0].zip,
+                        city: values.addresses[0].city,
+                        state: values.addresses[0].state,
                         phonePrefix: "+52",
-                        phone: '',
-                        email: '',
+                        phone: values.addresses[0].phone,
+                        email: values.email,
                         address_id: '',
                     })
                 }
-            } else {
-                setForm({
-                    name: values.name,
-                    apellidos: values.apellidos,
-                    street: values.addresses[0].street,
-                    country: values.addresses[0].country,
-                    colonia: values.addresses[0].colonia,
-                    zip: values.addresses[0].zip,
-                    city: values.addresses[0].city,
-                    state: values.addresses[0].state,
-                    phonePrefix: "+52",
-                    phone: values.addresses[0].phone,
-                    email: values.email,
-                    address_id: '',
-                })
+                mounted.current = true
             }
-        }
+        },
     });
     const addresses = user.data?.addresses || []
     const selectedAddress = addresses.find(address => address._id === form.address_id)
@@ -109,6 +116,66 @@ export default function Checkout() {
                 className="checkout"
                 id="checkout"
             >
+                <div className="input-container-checkout" >
+                    <label htmlFor="name">Escoge método de pago</label>
+                    <div style={{ flexDirection: 'row', display: 'flex' }}>
+                        <ModalCheckbox
+                            containerStyle={{ width: 'unset' }}
+                            id="conekta"
+                            label="Pagar en linea (deposito en oxxo, transferencia, tarjeta)"
+                            type="checkbox"
+                            checked={paymentMethod === "conekta"}
+                            onChange={() => {
+                                setPaymentMethod("conekta")
+                            }}
+                        />
+                        <ModalCheckbox
+                            containerStyle={{ width: 'unset' }}
+                            id="cash"
+                            label="Pago personal en efectivo"
+                            type="checkbox"
+                            checked={paymentMethod === "cash"}
+                            onChange={() => {
+                                setPaymentMethod("cash")
+                            }}
+                        />
+                    </div>
+                </div>
+                <div className="input-container-checkout" >
+                    <label htmlFor="name">Escoge método de entrega</label>
+                    <div style={{ flexDirection: 'row', display: 'flex' }}>
+                        <ModalCheckbox
+                            containerStyle={{ width: 'unset' }}
+                            id="city"
+                            label="Entrega en Chetumal"
+                            type="checkbox"
+                            checked={delivery === "city"}
+                            onChange={() => {
+                                setDelivery("city")
+                            }}
+                        />
+                        <ModalCheckbox
+                            containerStyle={{ width: 'unset' }}
+                            id="store"
+                            label="Recoger en tienda"
+                            type="checkbox"
+                            checked={delivery === "store"}
+                            onChange={() => {
+                                setDelivery("store")
+                            }}
+                        />
+                        <ModalCheckbox
+                            containerStyle={{ width: 'unset' }}
+                            id="national"
+                            label="Entrega nacional"
+                            type="checkbox"
+                            checked={delivery === "national"}
+                            onChange={() => {
+                                setDelivery("national")
+                            }}
+                        />
+                    </div>
+                </div>
                 {!user.data?._id
                     ? <div className="input-container-checkout">
                         <label htmlFor="email">Email</label>
@@ -117,7 +184,7 @@ export default function Checkout() {
                         }} />
                     </div>
                     : null}
-                {user.data?.addresses.length
+                {user.data?.default_address
                     ? <div className="input-container-checkout">
                         <label htmlFor="address_id">Addresses</label>
                         <select style={{ fontSize: 20 }} name="address_id" id="address_id" required value={selectedAddress?._id} onChange={(e) => {
@@ -142,45 +209,49 @@ export default function Checkout() {
                         setFormByName(e.target.name, e.target.value)
                     }} />
                 </div>
-                <div className="input-container-checkout">
-                    <label htmlFor="street">Dirección</label>
-                    <input id="street" name="street" type="text" required value={form.street} onChange={(e) => {
-                        setFormByName(e.target.name, e.target.value)
-                    }} />
-                </div>
-                <div className="input-container-checkout">
-                    <label htmlFor="country">País</label>
-                    <select style={{ fontSize: 20 }} id="country" name="country" required value={form.country} onChange={(e) => {
-                        setFormByName(e.target.name, e.target.value)
-                    }}>
-                        <option value="">Select</option>
-                        <option value="MX">🇲🇽 Mexico</option>
-                    </select>
-                </div>
-                <div className="input-container-checkout">
-                    <label htmlFor="colonia">Colonia</label>
-                    <input id="colonia" name="colonia" type="text" required value={form.colonia} onChange={(e) => {
-                        setFormByName(e.target.name, e.target.value)
-                    }} />
-                </div>
-                <div className="input-container-checkout">
-                    <label htmlFor="zip">Código Postal</label>
-                    <input id="zip" name="zip" type="text" required value={form.zip} onChange={(e) => {
-                        setFormByName(e.target.name, e.target.value)
-                    }} />
-                </div>
-                <div className="input-container-checkout">
-                    <label htmlFor="city">Ciudad</label>
-                    <input id="city" name="city" type="text" required value={form.city} onChange={(e) => {
-                        setFormByName(e.target.name, e.target.value)
-                    }} />
-                </div>
-                <div className="input-container-checkout">
-                    <label htmlFor="state">Estado</label>
-                    <input id="state" name="state" type="text" required value={form.state} onChange={(e) => {
-                        setFormByName(e.target.name, e.target.value)
-                    }} />
-                </div>
+                {delivery === "store" ? null : (
+                    <>
+                        <div className="input-container-checkout">
+                            <label htmlFor="street">Dirección</label>
+                            <input id="street" name="street" type="text" required value={form.street} onChange={(e) => {
+                                setFormByName(e.target.name, e.target.value)
+                            }} />
+                        </div>
+                        <div className="input-container-checkout">
+                            <label htmlFor="country">País</label>
+                            <select style={{ fontSize: 20 }} id="country" name="country" required value={form.country} onChange={(e) => {
+                                setFormByName(e.target.name, e.target.value)
+                            }}>
+                                <option value="">Select</option>
+                                <option value="MX">🇲🇽 Mexico</option>
+                            </select>
+                        </div>
+                        <div className="input-container-checkout">
+                            <label htmlFor="neighborhood">Colonia</label>
+                            <input id="neighborhood" name="neighborhood" type="text" required value={form.neighborhood} onChange={(e) => {
+                                setFormByName(e.target.name, e.target.value)
+                            }} />
+                        </div>
+                        <div className="input-container-checkout">
+                            <label htmlFor="zip">Código Postal</label>
+                            <input id="zip" name="zip" type="text" required value={form.zip} onChange={(e) => {
+                                setFormByName(e.target.name, e.target.value)
+                            }} />
+                        </div>
+                        <div className="input-container-checkout">
+                            <label htmlFor="city">Ciudad</label>
+                            <input id="city" name="city" type="text" required value={form.city} onChange={(e) => {
+                                setFormByName(e.target.name, e.target.value)
+                            }} />
+                        </div>
+                        <div className="input-container-checkout">
+                            <label htmlFor="state">Estado</label>
+                            <input id="state" name="state" type="text" required value={form.state} onChange={(e) => {
+                                setFormByName(e.target.name, e.target.value)
+                            }} />
+                        </div>
+                    </>
+                )}
                 <div className="input-container-checkout">
                     <label htmlFor="text">Telefono</label>
                     <div style={{ display: 'flex', flexDirection: 'row' }}>
@@ -202,7 +273,7 @@ export default function Checkout() {
                 apellidos: form.apellidos,
                 street: form.street,
                 country: form.country,
-                colonia: form.colonia,
+                neighborhood: form.neighborhood,
                 zip: form.zip,
                 city: form.city,
                 state: form.state,
@@ -210,12 +281,14 @@ export default function Checkout() {
                 phone_prefix: form.phonePrefix,
                 email: form.email,
                 address_id: form.address_id,
+                payment_method: paymentMethod,
+                delivery,
             }, {
                 onSuccess(data) {
                     if (data) {
                         localStorage.setItem("checkout_id", data)
-                        router.push('/payment')
                     }
+                    router.push('/payment')
                 },
             })
         }}>Pagar</button>

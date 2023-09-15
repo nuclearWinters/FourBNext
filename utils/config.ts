@@ -27,18 +27,18 @@ export const customLink: TRPCLink<AppRouter> = () => {
       const unsubscribe = next(op).subscribe({
         next(value) {
           const response = value?.context?.response as { headers?: Headers }
-          const accessToken = response?.headers?.get?.('Accesstoken')
-          const sessionToken = response?.headers?.get?.('Sessiontoken')
+          const accessToken = response?.headers?.get?.('Access-Token')
+          const sessionToken = response?.headers?.get?.('Session-Token')
           if (sessionToken) {
-            localStorage.setItem('Sessiontoken', sessionToken)
+            localStorage.setItem('Session-Token', sessionToken)
           }
-          const localAccessToken = localStorage.getItem('Accesstoken')
+          const localAccessToken = localStorage.getItem('Access-Token')
           if (!localAccessToken && accessToken) {
-            localStorage.setItem('Accesstoken', accessToken)
+            localStorage.setItem('Access-Token', accessToken)
           } else if (localAccessToken && accessToken && localAccessToken !== accessToken) {
-            localStorage.setItem('Accesstoken', accessToken)
+            localStorage.setItem('Access-Token', accessToken)
           } else if (!accessToken && localAccessToken) {
-            localStorage.removeItem('Accesstoken')
+            localStorage.removeItem('Access-Token')
             window.location.reload()
           }
           observer.next(value);
@@ -95,10 +95,12 @@ export const trpc = createTRPCNext<AppRouter>({
         customLink,
         httpBatchLink({
           url: getBaseUrl() + '/api/trpc',
-          headers: () => ({
-            Authorization: window.localStorage.getItem('Accesstoken') || "",
-            Sessiontoken: window.localStorage.getItem('Sessiontoken') || ''
-          })
+          headers: () => {
+            return ({
+              'Authorization': window.localStorage.getItem('Access-Token') || "",
+              'Session-Token': window.localStorage.getItem('Session-Token') || ''
+            })
+          }
         }),
       ],
     };

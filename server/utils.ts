@@ -1,7 +1,6 @@
 
-import { cartsByUser, sessions } from '../pages/api/trpc/[trpc]';
 import jsonwebtoken, { SignOptions } from 'jsonwebtoken'
-import { DecodeJWT, SessionCookie, SessionMongo, UserJWT } from '../server/types';
+import { DecodeJWT, SessionJWT, UserJWT } from '../server/types';
 import { ObjectId } from 'mongodb';
 
 export const MONGO_DB = process.env.MONGO_DB;
@@ -83,61 +82,67 @@ export const getTokenData = (accessToken?: string, refreshToken?: string): {
   }
 }
 
-export const getSessionData = async (sessionToken?: string): Promise<{ session: SessionCookie; sessionBase64: string }> => {
+export const sessionToBase64 = (value: SessionJWT) => {
+  return Buffer.from(JSON.stringify(value)).toString('base64')
+}
+
+export const getSessionData = (sessionToken: string): SessionJWT => {
   try {
     if (!sessionToken) {
       throw new Error("No session token")
     }
     const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString('utf-8'))
     if (session) {
-      return { session: session, sessionBase64: sessionToken }
+      return session
     }
     throw new Error("No value")
   } catch (e) {
-    const session_id = new ObjectId()
     const cart_id = new ObjectId()
-    const session: SessionMongo = {
-      _id: session_id,
+    return {
       name: null,
       apellidos: null,
       email: null,
-      cart_id,
+      cart_id: cart_id.toHexString(),
       phone: null,
       conekta_id: null,
       country: null,
       street: null,
-      colonia: null,
+      neighborhood: null,
       zip: null,
       city: null,
       state: null,
       phone_prefix: null,
     }
-    await Promise.all([
-      sessions.insertOne(session),
-      cartsByUser.insertOne({
-        _id: cart_id,
-        user_id: session_id,
-        expireDate: null
-      })
-    ])
-    return {
-      sessionBase64: Buffer.from(JSON.stringify(session)).toString('base64'),
-      session: {
-        _id: session_id.toHexString(),
-        name: null,
-        apellidos: null,
-        email: null,
-        cart_id: cart_id.toHexString(),
-        phone: null,
-        conekta_id: null,
-        country: null,
-        street: null,
-        colonia: null,
-        zip: null,
-        city: null,
-        state: null,
-        phone_prefix: null,
-      }
+  }
+}
+
+export const getSessionToken = (sessionToken: string | null): string => {
+  try {
+    if (!sessionToken) {
+      throw new Error("No session token")
     }
+    const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString('utf-8'))
+    if (session) {
+      return sessionToken
+    }
+    throw new Error("No value")
+  } catch (e) {
+    const cart_id = new ObjectId()
+    const session: SessionJWT = {
+      name: null,
+      apellidos: null,
+      email: null,
+      cart_id: cart_id.toHexString(),
+      phone: null,
+      conekta_id: null,
+      country: null,
+      street: null,
+      neighborhood: null,
+      zip: null,
+      city: null,
+      state: null,
+      phone_prefix: null,
+    }
+    return sessionToBase64(session)
   }
 }

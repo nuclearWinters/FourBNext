@@ -21,7 +21,7 @@ export interface AddressUser {
     full_address: string;
     country: string;
     street: string;
-    colonia: string;
+    neighborhood: string;
     zip: string;
     city: string;
     state: string;
@@ -36,7 +36,7 @@ export interface AddressUserJWT {
     full_address: string;
     country: string;
     street: string;
-    colonia: string;
+    neighborhood: string;
     zip: string;
     city: string;
     state: string;
@@ -45,17 +45,16 @@ export interface AddressUserJWT {
     apellidos: string;
 }
 
-export interface SessionMongo {
-    _id?: ObjectId;
+export interface SessionJWT {
     email: string | null;
-    cart_id: ObjectId;
+    cart_id: string;
     name: string | null;
     apellidos: string | null;
     phone: string | null;
     conekta_id: string | null;
     country: string | null;
     street: string | null;
-    colonia: string | null;
+    neighborhood: string | null;
     zip: string | null;
     city: string | null;
     state: string | null;
@@ -111,7 +110,6 @@ export interface PurchasesMongo {
     use_discount: boolean;
     name: string;
     user_id: ObjectId | null;
-    session_id: ObjectId;
     date: Date;
     img: string[];
     code: string;
@@ -122,8 +120,10 @@ export interface PurchasesMongo {
 
 export interface CartsByUserMongo {
     _id?: ObjectId;
-    user_id: ObjectId;
-    expireDate: Date | null;
+    user_id: ObjectId | null;
+    expire_date: Date | null;
+    pay_in_cash: boolean;
+    status: 'paid' | 'waiting'
 }
 
 export interface ReservedInventoryMongo {
@@ -137,14 +137,13 @@ export interface ReservedInventoryMongo {
 
 export interface ContextLocals {
     res: NextApiResponse
-    sessionData: SessionCookie
+    sessionData: SessionJWT
     userData?: DecodeJWT;
     users: Collection<UserMongo>;
     inventory: Collection<InventoryMongo>;
     itemsByCart: Collection<ItemsByCartMongo>;
     cartsByUser: Collection<CartsByUserMongo>;
     reservedInventory: Collection<ReservedInventoryMongo>;
-    sessions: Collection<SessionMongo>
     purchases: Collection<PurchasesMongo>
 }
 
@@ -152,23 +151,6 @@ export interface UserJWT {
     _id: string;
     cart_id: string;
     is_admin: boolean;
-}
-
-export interface SessionCookie {
-    _id: string;
-    email: string | null;
-    cart_id: string;
-    name: string | null;
-    apellidos: string | null;
-    phone: string | null;
-    conekta_id: string | null;
-    country: string | null;
-    street: string | null;
-    colonia: string | null;
-    zip: string | null;
-    city: string | null;
-    state: string | null;
-    phone_prefix: string | null;
 }
 
 export interface DecodeJWT {
