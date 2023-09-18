@@ -4,6 +4,7 @@ import { AppRouter } from '../pages/api/trpc/[trpc]';
 import { observable } from '@trpc/server/observable';
 
 export const VIRTUAL_HOST = process.env.VIRTUAL_HOST
+export const CONEKTA_PUBLIC_KEY = process.env.CONEKTA_PUBLIC_KEY
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') {

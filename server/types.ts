@@ -14,6 +14,7 @@ export interface UserMongo {
     addresses: AddressUser[]
     phone_prefix: string;
     is_admin: boolean;
+    verified_email: boolean;
 }
 
 export interface AddressUser {
@@ -124,6 +125,8 @@ export interface CartsByUserMongo {
     expire_date: Date | null;
     pay_in_cash: boolean;
     status: 'paid' | 'waiting'
+    order_id: string | null
+    email: string | null
 }
 
 export interface ReservedInventoryMongo {
@@ -152,6 +155,7 @@ export interface UserJWT {
     _id: string;
     cart_id: string;
     is_admin: boolean;
+    email: string
 }
 
 export interface DecodeJWT {

@@ -6,7 +6,7 @@ import * as trpcNext from '@trpc/server/adapters/next';
 import { z } from 'zod';
 import { publicProcedure, router } from '../../../server/trpc';
 import { Filter, MongoClient, ObjectId } from 'mongodb';
-import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, MONGO_DB, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, SENDGRID_API_KEY, getSessionData, getSessionToken, getTokenData, jwt, sessionToBase64 } from '../../../server/utils';
+import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, MONGO_DB, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, SENDGRID_API_KEY, VIRTUAL_HOST, getSessionData, getSessionToken, getTokenData, jwt, sessionToBase64 } from '../../../server/utils';
 import { CartsByUserMongo, InventoryMongo, ItemsByCartMongo, PurchasesMongo, ReservedInventoryMongo, UserMongo } from '../../../server/types';
 import bcrypt from "bcryptjs"
 import cookie from "cookie"
@@ -133,6 +133,7 @@ const appRouter = router({
                     }],
                     phone_prefix: session.phone_prefix || "",
                     is_admin: false,
+                    verified_email: false,
                 };
             }
         }),
@@ -175,6 +176,7 @@ const appRouter = router({
                             _id: user._id.toHexString(),
                             cart_id: user.cart_id.toHexString(),
                             is_admin: user.is_admin,
+                            email: user.email,
                         },
                         refreshTokenExpireTime: refreshTokenExpireTime,
                         exp: refreshTokenExpireTime,
@@ -187,6 +189,7 @@ const appRouter = router({
                             _id: user._id.toHexString(),
                             cart_id: user.cart_id.toHexString(),
                             is_admin: user.is_admin,
+                            email: user.email,
                         },
                         refreshTokenExpireTime: refreshTokenExpireTime,
                         exp: accessTokenExpireTime,
@@ -273,6 +276,7 @@ const appRouter = router({
                             _id: user_id.toHexString(),
                             cart_id: cart_id.toHexString(),
                             is_admin: false,
+                            email,
                         },
                         refreshTokenExpireTime: refreshTokenExpireTime,
                         exp: refreshTokenExpireTime,
@@ -285,6 +289,7 @@ const appRouter = router({
                             _id: user_id.toHexString(),
                             cart_id: cart_id.toHexString(),
                             is_admin: false,
+                            email,
                         },
                         refreshTokenExpireTime: refreshTokenExpireTime,
                         exp: accessTokenExpireTime,
@@ -297,7 +302,7 @@ const appRouter = router({
                     expires: refreshTokenExpireDate,
                     secure: false,
                 }))
-                const userData = {
+                const userData: UserMongo = {
                     _id: user_id,
                     email,
                     password: hash_password,
@@ -310,19 +315,20 @@ const appRouter = router({
                     addresses: [],
                     phone_prefix: phonePrefix,
                     is_admin: false,
+                    verified_email: false,
                 }
                 await users.insertOne(userData)
                 res.setHeader("Access-Token", accessToken)
+                const token = Buffer.from(user_id.toHexString()).toString('base64')
                 await sgMail.send({
-                    to: 'armandonarcizoruedaperez@gmail.com',
+                    to: email,
                     from: 'asistencia@fourb.mx',
-                    subject: 'Sending with Twilio SendGrid is Fun',
-                    text: 'and easy to do anywhere, even with Node.js',
-                    html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+                    subject: 'Confirmación de email',
+                    text: 'Haz click en este link para confirmar tu email',
+                    html: `<strong>Haz click en este <a target="_blank" href="https://${VIRTUAL_HOST}?token=${token}">link</a> para confirmar tu email</strong>`,
                 });
                 return
             } catch (e) {
-                console.log(e)
                 if (e instanceof Error) {
                     throw new TRPCError({
                         code: 'BAD_REQUEST',
@@ -541,6 +547,8 @@ const appRouter = router({
                             pay_in_cash: false,
                             user_id: userData?.user.cart_id ? new ObjectId(userData?.user.cart_id) : null,
                             status: 'waiting',
+                            email: userData?.user.email ?? sessionData.email,
+                            order_id: null,
                         }
                     },
                     {
@@ -694,6 +702,8 @@ const appRouter = router({
                             pay_in_cash: false,
                             user_id: userData?.user.cart_id ? new ObjectId(userData?.user.cart_id) : null,
                             status: 'waiting',
+                            email: userData?.user.email ?? sessionData.email,
+                            order_id: null,
                         },
                     },
                     {
@@ -826,9 +836,17 @@ const appRouter = router({
                             {
                                 $set: {
                                     pay_in_cash: true,
+                                    email: userData?.user.email ?? sessionData.email
                                 }
                             }
                         )
+                        await sgMail.send({
+                            to: email,
+                            from: 'asistencia@fourb.mx',
+                            subject: 'Por favor contáctanos y envíanos el código adjunto',
+                            text: `Envíanos un mensaje a nuestro Instagram o Facebook con este código en mano: ${cart_oid.toHexString()}`,
+                            html: `<strong>Envíanos un mensaje a nuestro <a href='https://www.instagram.com/fourb_mx/' target='_blank'>Instagram</a> o <a href='https://www.facebook.com/fourbmx/' target='_blank'>Facebook</a> con este código en mano: ${cart_oid.toHexString()}</strong>`,
+                        });
                         return ''
                     } else {
                         if (userData) {
@@ -837,7 +855,7 @@ const appRouter = router({
                                 _id: user_oid
                             })
                             if (!result) {
-                                throw new Error("No user updated")
+                                throw new Error("No user found.")
                             }
                             const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
                             const order = await orderClient.createOrder({
@@ -855,6 +873,17 @@ const appRouter = router({
                                     allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
                                 }
                             })
+                            await cartsByUser.updateOne(
+                                {
+                                    _id: cart_oid
+                                },
+                                {
+                                    $set: {
+                                        email: userData.user.email,
+                                        order_id: order.data.id,
+                                    }
+                                }
+                            )
                             return order?.data?.checkout?.id
                         } else {
                             if (!email) {
@@ -887,6 +916,17 @@ const appRouter = router({
                                     allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
                                 }
                             })
+                            await cartsByUser.updateOne(
+                                {
+                                    _id: cart_oid
+                                },
+                                {
+                                    $set: {
+                                        email,
+                                        order_id: order.data.id,
+                                    }
+                                }
+                            )
                             return order?.data?.checkout?.id
                         }
                     }
@@ -899,7 +939,8 @@ const appRouter = router({
                             },
                             {
                                 $set: {
-                                    pay_in_cash: true
+                                    pay_in_cash: true,
+                                    email: userData?.user.email ?? sessionData.email
                                 }
                             }
                         )
@@ -950,6 +991,17 @@ const appRouter = router({
                                     allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
                                 }
                             })
+                            await cartsByUser.updateOne(
+                                {
+                                    _id: cart_oid
+                                },
+                                {
+                                    $set: {
+                                        email: userData.user.email,
+                                        order_id: order.data.id,
+                                    }
+                                }
+                            )
                             return order?.data?.checkout?.id
                         } else if (userData) {
                             const address_id = new ObjectId()
@@ -1000,6 +1052,17 @@ const appRouter = router({
                                     allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
                                 }
                             })
+                            await cartsByUser.updateOne(
+                                {
+                                    _id: cart_oid
+                                },
+                                {
+                                    $set: {
+                                        email: userData.user.email,
+                                        order_id: order.data.id,
+                                    }
+                                }
+                            )
                             return order?.data?.checkout?.id
                         } else {
                             if (!email) {
@@ -1038,6 +1101,17 @@ const appRouter = router({
                                     allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
                                 }
                             })
+                            await cartsByUser.updateOne(
+                                {
+                                    _id: cart_oid
+                                },
+                                {
+                                    $set: {
+                                        email,
+                                        order_id: order.data.id,
+                                    }
+                                }
+                            )
                             return order?.data?.checkout?.id
                         }
                     }
@@ -1061,61 +1135,65 @@ const appRouter = router({
             }
         }),
     confirmationPhase: publicProcedure
-        .mutation(async ({ ctx }): Promise<void> => {
+        .input(z.object({
+            type: z.enum(['card', 'cash', 'bank_transfer']),
+        }))
+        .mutation(async ({ ctx, input }): Promise<void> => {
             try {
+                const { type } = input
                 const { users, cartsByUser, purchases, itemsByCart, sessionData, userData, res } = ctx
                 const new_cart_id = new ObjectId()
                 const previous_cart_id = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
                 if (userData) {
                     const user_oid = new ObjectId(userData.user._id)
-                    await Promise.all([
-                        users.updateOne(
-                            {
-                                _id: user_oid
-                            },
-                            {
-                                $set: {
-                                    cart_id: new_cart_id
-                                }
+                    await users.updateOne(
+                        {
+                            _id: user_oid
+                        },
+                        {
+                            $set: {
+                                cart_id: new_cart_id
                             }
-                        ),
-                        cartsByUser.updateOne(
+                        }
+                    )
+                    if (type === "card") {
+                        await cartsByUser.updateOne(
                             {
                                 _id: previous_cart_id
                             },
                             {
                                 $set: {
-                                    expire_date: null,
                                     status: 'paid',
                                 }
                             }
                         )
-                    ])
-                    const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
-                    const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
-                        name: product.name,
-                        product_id: product.product_id,
-                        qty: product.qty,
-                        qty_big: product.qty_big,
-                        qty_small: product.qty_small,
-                        price: product.price,
-                        discount_price: product.discount_price,
-                        use_discount: product.use_discount,
-                        user_id: user_oid,
-                        date: new Date(),
-                        img: product.img,
-                        code: product.code,
-                        use_small_and_big: product.use_small_and_big,
-                        img_big: product.img_big,
-                        img_small: product.img_small,
-                    }))
-                    await purchases.insertMany(purchasedProducts)
+                        const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
+                        const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
+                            name: product.name,
+                            product_id: product.product_id,
+                            qty: product.qty,
+                            qty_big: product.qty_big,
+                            qty_small: product.qty_small,
+                            price: product.price,
+                            discount_price: product.discount_price,
+                            use_discount: product.use_discount,
+                            user_id: user_oid,
+                            date: new Date(),
+                            img: product.img,
+                            code: product.code,
+                            use_small_and_big: product.use_small_and_big,
+                            img_big: product.img_big,
+                            img_small: product.img_small,
+                        }))
+                        await purchases.insertMany(purchasedProducts)
+                    }
                     const newAccessToken = jwt.sign(
                         {
                             user: {
                                 _id: userData.user._id,
                                 cart_id: new_cart_id.toHexString(),
                                 is_admin: userData.user.is_admin,
+                                email: userData.user.email,
                             },
                             refreshTokenExpireTime: userData.refreshTokenExpireTime,
                             exp: userData.exp,
@@ -1128,6 +1206,7 @@ const appRouter = router({
                                 _id: userData.user._id,
                                 cart_id: new_cart_id.toHexString(),
                                 is_admin: userData.user.is_admin,
+                                email: userData.user.email,
                             },
                             refreshTokenExpireTime: userData.refreshTokenExpireTime,
                             exp: userData.exp,
@@ -1148,36 +1227,37 @@ const appRouter = router({
                         cart_id: new_cart_id.toHexString(),
                     })
                     res.setHeader("Session-Token", session)
-                    await cartsByUser.updateOne(
-                        {
-                            _id: previous_cart_id
-                        },
-                        {
-                            $set: {
-                                expire_date: null,
-                                status: 'paid',
+                    if (type === "card") {
+                        await cartsByUser.updateOne(
+                            {
+                                _id: previous_cart_id
+                            },
+                            {
+                                $set: {
+                                    status: 'paid',
+                                }
                             }
-                        }
-                    )
-                    const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
-                    const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
-                        name: product.name,
-                        product_id: product._id,
-                        qty: product.qty,
-                        qty_small: product.qty_small,
-                        qty_big: product.qty_big,
-                        price: product.price,
-                        discount_price: product.discount_price,
-                        use_discount: product.use_discount,
-                        user_id: null,
-                        date: new Date(),
-                        img: product.img,
-                        code: product.code,
-                        use_small_and_big: product.use_small_and_big,
-                        img_big: product.img_big,
-                        img_small: product.img_small,
-                    }))
-                    await purchases.insertMany(purchasedProducts)
+                        )
+                        const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
+                        const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
+                            name: product.name,
+                            product_id: product._id,
+                            qty: product.qty,
+                            qty_small: product.qty_small,
+                            qty_big: product.qty_big,
+                            price: product.price,
+                            discount_price: product.discount_price,
+                            use_discount: product.use_discount,
+                            user_id: null,
+                            date: new Date(),
+                            img: product.img,
+                            code: product.code,
+                            use_small_and_big: product.use_small_and_big,
+                            img_big: product.img_big,
+                            img_small: product.img_small,
+                        }))
+                        await purchases.insertMany(purchasedProducts)
+                    }
                     return
                 }
             } catch (e) {
@@ -1676,10 +1756,96 @@ const appRouter = router({
                 });
             }
         }),
-    webhook: publicProcedure.mutation(async ({ ctx }): Promise<void> => {
-        console.log('body:', ctx.req.body)
-        return
-    })
+    webhook: publicProcedure
+        .mutation(async ({ ctx }): Promise<void> => {
+            const { cartsByUser } = ctx
+            const body = ctx.req.body
+            const isOrder = body?.data?.object?.object === "order"
+            const isPaid = body?.data?.object?.payment_status === "paid"
+            const orderId = body?.data?.object?.id
+            const amount = body?.data?.object?.amount
+            const paidAt = body?.data?.object?.updated_at
+            if (isOrder && isPaid && orderId) {
+                const amountParsed = (amount / 100).toFixed(2)
+                const date = new Date(paidAt * 1000)
+                const formatDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`
+                const cart = await cartsByUser.findOneAndUpdate(
+                    {
+                        order_id: orderId
+                    },
+                    {
+                        $set: {
+                            status: 'paid',
+                        }
+                    },
+                )
+                if (cart) {
+                    if (cart.user_id) {
+                        const productsInCart = await itemsByCart.find({ cart_id: cart._id }).toArray()
+                        const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
+                            name: product.name,
+                            product_id: product.product_id,
+                            qty: product.qty,
+                            qty_big: product.qty_big,
+                            qty_small: product.qty_small,
+                            price: product.price,
+                            discount_price: product.discount_price,
+                            use_discount: product.use_discount,
+                            user_id: cart.user_id,
+                            date: new Date(),
+                            img: product.img,
+                            code: product.code,
+                            use_small_and_big: product.use_small_and_big,
+                            img_big: product.img_big,
+                            img_small: product.img_small,
+                        }))
+                        await purchases.insertMany(purchasedProducts)
+                    }
+                    if (cart.email) {
+                        await sgMail.send({
+                            to: cart.email,
+                            from: 'asistencia@fourb.mx',
+                            subject: 'Pago confirmado',
+                            text: 'Tu pago ha sido procesado exitosamente',
+                            html: `<strong>Tu pago por $${amountParsed} MXN ha sido procesado exitosamente (${formatDate})</strong>`,
+                        });
+                    }
+                }
+            }
+            return
+        }),
+    verifyEmail: publicProcedure
+        .input(z.object({
+            token: z.string().nonempty(),
+        }))
+        .mutation(async ({ ctx, input }): Promise<void> => {
+            try {
+                const { users } = ctx
+                const user_id = Buffer.from(input.token, 'base64').toString('utf-8')
+                await users.updateOne(
+                    {
+                        _id: new ObjectId(user_id),
+                    },
+                    {
+                        $set: {
+                            verified_email: true,
+                        }
+                    }
+                )
+                return
+            } catch (e) {
+                if (e instanceof Error) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: e.message,
+                    });
+                }
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'An unexpected error occurred, please try again later.',
+                });
+            }
+        })
 });
 
 export type AppRouter = typeof appRouter;

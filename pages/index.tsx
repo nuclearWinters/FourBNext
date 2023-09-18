@@ -2,10 +2,26 @@ import Link from 'next/link';
 import { trpc } from '../utils/config';
 import { ProductList } from '../components/ProductList';
 import Head from 'next/head';
+import { useEffect } from 'react';
 
 export default function Home() {
   const lastProducts = trpc.inventory.useQuery({ limit: 8 });
   const discountProducts = trpc.inventory.useQuery({ limit: 8, discounts: true });
+  const confirmEmail = trpc.verifyEmail.useMutation({
+    onSuccess:() => {
+      alert('Email confirmed succesfully!')
+      window.history.replaceState(null, '', `?`)
+    }
+  })
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const token = urlParams.get('token')
+    if (token) {
+      confirmEmail.mutate({
+        token
+      })
+    }
+  }, [])
   return (
     <div>
       <Head>

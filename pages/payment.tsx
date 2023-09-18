@@ -1,4 +1,4 @@
-import { trpc } from '../utils/config'
+import { CONEKTA_PUBLIC_KEY, trpc } from '../utils/config'
 import { useEffect, useState } from 'react'
 import { CheckoutList } from '../components/CheckoutList'
 import facebook from '../public/facebook.svg'
@@ -18,13 +18,15 @@ export default function Payment() {
                 if (checkout_id) {
                     const config = {
                         checkoutRequestId: checkout_id,
-                        publicKey: 'key_FSmk9b0tZ8KedYKgLqOgerF',
+                        publicKey: CONEKTA_PUBLIC_KEY,
                         targetIFrame: 'example',
                     };
                     const callbacks = {
-                        onFinalizePayment: async () => {
+                        onFinalizePayment: async (info: any) => {
                             localStorage.removeItem("checkout_id")
-                            confirmationPhase.mutate()
+                            confirmationPhase.mutate({
+                                type: info?.charge?.payment_method?.type
+                            })
                         },
                         onErrorPayment: () => {
                             alert("Error")
@@ -39,9 +41,6 @@ export default function Payment() {
             clearInterval(interval)
         }
     }, [])
-    const total = cart.data?.reduce((curr, product) => {
-        return curr + (product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)
-    }, 0)
     return <div>
         <Head>
             <title>Pago - FOURB</title>
@@ -53,7 +52,6 @@ export default function Payment() {
         {checkoutId
             ? (
                 <>
-                    <div id="total" style={{ textAlign: 'center', marginTop: 20, fontWeight: 'bold', fontSize: 20 }}>Total: ${(Number(total) / 100).toFixed(2)}</div>
                     <form>
                         <div id="example" style={{ maxWidth: 500, width: '100%', margin: '0 auto' }} />
                     </form>

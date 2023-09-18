@@ -4,6 +4,7 @@ import { DecodeJWT, SessionJWT, UserJWT } from '../server/types';
 import { ObjectId } from 'mongodb';
 
 export const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || ""
+export const VIRTUAL_HOST = process.env.VIRTUAL_HOST || ""
 export const MONGO_DB = process.env.MONGO_DB;
 export const REFRESH_TOKEN_EXP_NUMBER = 43200;
 export const ACCESS_TOKEN_EXP_NUMBER = 900;
@@ -71,6 +72,7 @@ export const getTokenData = (accessToken?: string, refreshToken?: string): {
           _id: payload.user._id,
           cart_id: payload.user.cart_id,
           is_admin: payload.user.is_admin,
+          email: payload.user.email,
         },
         refreshTokenExpireTime: payload.exp,
         exp: accessTokenExpireTime > payload.exp ? payload.exp : accessTokenExpireTime,
