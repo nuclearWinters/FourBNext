@@ -12,6 +12,9 @@ import ellipsis from '../public/ellipsis-vertical.svg'
 import cart from '../public/cart.svg'
 import search from '../public/search.svg'
 
+//Carritos por ser pagados en efectivo (prio)
+//Compras pagadas y no enviadas/recogidas (prio)
+
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     const router = useRouter()
     const [input, setInput] = useState('')
@@ -64,14 +67,17 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                 </Link>
                 <Link href="/cart" className={css["header-button-top"]}>Carro de compras</Link>
                 {isAdmin ? <Link href={'/inventory-admin'} className={css["header-button-top"]}>Inventario</Link> : null}
+                {isAdmin ? <Link href={'/carts'} className={css["header-button-top"]}>Pagos en efectivo</Link> : null}
+                {isAdmin ? <Link href={'/shippings'} className={css["header-button-top"]}>Envios</Link> : null}
+                {isAdmin ? <Link href={'/deliveries'} className={css["header-button-top"]}>Entregas en mano</Link> : null}
                 {logged ? null : <button className={css["header-button-top"]} onClick={() => {
                     setShowLogin(true)
                 }}>Iniciar Sesión</button>}
                 {logged ? null : <button className={css["header-button-top"]} onClick={() => {
                     setShowRegister(true)
                 }}>Registrarse</button>}
-                {logged ? <Link href={'/account'} className={css["header-button-top"]}>Cuenta</Link> : null}
-                {logged ? <Link href={'/history'} className={css["header-button-top"]}>Historial</Link> : null}
+                {logged && !isAdmin ? <Link href={'/account'} className={css["header-button-top"]}>Cuenta</Link> : null}
+                {logged && !isAdmin ? <Link href={'/history'} className={css["header-button-top"]}>Historial</Link> : null}
                 {logged ? <button className={css["header-button-top"]} onClick={() => {
                     logOut.mutate()
                 }}>Cerrar Sesión</button> : null}

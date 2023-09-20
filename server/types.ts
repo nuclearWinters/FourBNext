@@ -127,6 +127,12 @@ export interface CartsByUserMongo {
     status: 'paid' | 'waiting'
     order_id: string | null
     email: string | null
+    delivery: 'city' | 'national' | 'store' | null
+    sent: boolean
+    delivered: boolean
+    address: string | null
+    phone: string | null
+    name: string | null
 }
 
 export interface ReservedInventoryMongo {

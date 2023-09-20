@@ -1,0 +1,13 @@
+.container {
+    margin: auto;
+    padding-bottom: 10px;
+    padding-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.input {
+    font-size: 18px;
+    padding-left: 6px;
+}
