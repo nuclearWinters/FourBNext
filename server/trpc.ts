@@ -196,7 +196,7 @@ export const appRouter = router({
                 res.setHeader("Set-Cookie", cookie.serialize("refreshToken", refreshToken, {
                     httpOnly: true,
                     expires: refreshTokenExpireDate,
-                    secure: false,
+                    secure: true,
                 }))
                 return
             } catch (e) {
@@ -217,7 +217,7 @@ export const appRouter = router({
         res.setHeader("Set-Cookie", cookie.serialize("refreshToken", "", {
             httpOnly: true,
             expires: new Date(),
-            secure: false,
+            secure: true,
         }))
         res.setHeader("Access-Token", "")
         return
@@ -295,7 +295,7 @@ export const appRouter = router({
                 res.setHeader("Set-Cookie", cookie.serialize("refreshToken", refreshToken, {
                     httpOnly: true,
                     expires: refreshTokenExpireDate,
-                    secure: false,
+                    secure: true,
                 }))
                 const userData: UserMongo = {
                     _id: user_id,
@@ -550,6 +550,7 @@ export const appRouter = router({
                             address: null,
                             phone: null,
                             name: null,
+                            checkout_id: null
                         }
                     },
                     {
@@ -711,6 +712,7 @@ export const appRouter = router({
                             address: null,
                             phone: null,
                             name: null,
+                            checkout_id: null
                         },
                     },
                     {
@@ -894,6 +896,7 @@ export const appRouter = router({
                                         delivery: input.delivery,
                                         phone: `${phone_prefix}${phone}`,
                                         name: `${name} ${apellidos}`,
+                                        checkout_id: order?.data?.checkout?.id
                                     }
                                 }
                             )
@@ -940,6 +943,7 @@ export const appRouter = router({
                                         delivery: input.delivery,
                                         phone: `${phone_prefix}${phone}`,
                                         name: `${name} ${apellidos}`,
+                                        checkout_id: order?.data?.checkout?.id
                                     }
                                 }
                             )
@@ -1023,6 +1027,7 @@ export const appRouter = router({
                                         address: `${street}, ${neighborhood}, ${zip} ${city} ${state}, ${country}`,
                                         phone: `${phone_prefix}${phone}`,
                                         name: `${name} ${apellidos}`,
+                                        checkout_id: order?.data?.checkout?.id ?? null
                                     }
                                 }
                             )
@@ -1088,6 +1093,7 @@ export const appRouter = router({
                                         address: `${street}, ${neighborhood}, ${zip} ${city} ${state}, ${country}`,
                                         phone: `${phone_prefix}${phone}`,
                                         name: `${name} ${apellidos}`,
+                                        checkout_id: order?.data?.checkout?.id ?? null,
                                     }
                                 }
                             )
@@ -1141,6 +1147,7 @@ export const appRouter = router({
                                         address: `${street}, ${neighborhood}, ${zip} ${city} ${state}, ${country}`,
                                         phone: `${phone_prefix}${phone}`,
                                         name: `${name} ${apellidos}`,
+                                        checkout_id: order?.data?.checkout?.id ?? null,
                                     }
                                 }
                             )
@@ -1176,6 +1183,11 @@ export const appRouter = router({
                 const { users, cartsByUser, purchases, itemsByCart, sessionData, userData, res } = ctx
                 const new_cart_id = new ObjectId()
                 const previous_cart_id = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                const session = sessionToBase64({
+                    ...sessionData,
+                    cart_id: new_cart_id.toHexString(),
+                })
+                res.setHeader("Session-Token", session)
                 if (userData) {
                     const user_oid = new ObjectId(userData.user._id)
                     await users.updateOne(
@@ -1249,16 +1261,11 @@ export const appRouter = router({
                     res.setHeader("Set-Cookie", cookie.serialize("refreshToken", refreshToken, {
                         httpOnly: true,
                         expires: refreshTokenExpireDate,
-                        secure: false,
+                        secure: true,
                     }))
                     res.setHeader("Access-Token", newAccessToken)
                     return
                 } else {
-                    const session = sessionToBase64({
-                        ...sessionData,
-                        cart_id: new_cart_id.toHexString(),
-                    })
-                    res.setHeader("Session-Token", session)
                     if (type === "card") {
                         await cartsByUser.updateOne(
                             {
@@ -2017,4 +2024,29 @@ export const appRouter = router({
                 });
             }
         }),
+    getUserCartData: publicProcedure
+        .query(async ({ ctx }): Promise<CartsByUserTRPC | null> => {
+            try {
+                const { userData, sessionData, cartsByUser } = ctx
+                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                const cart = await cartsByUser.findOne({ _id: cart_oid })
+                return cart ? ({
+                    ...cart,
+                    _id: cart._id.toHexString(),
+                    user_id: cart.user_id?.toHexString() ?? null,
+                    expire_date: cart.expire_date?.getTime() ?? null,
+                }) : null
+            } catch (e) {
+                if (e instanceof Error) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: e.message,
+                    });
+                }
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'An unexpected error occurred, please try again later.',
+                });
+            }
+        })
 });

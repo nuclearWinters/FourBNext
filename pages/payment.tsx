@@ -1,46 +1,35 @@
 import { CONEKTA_PUBLIC_KEY, trpc } from '../utils/config'
-import { useEffect, useState } from 'react'
-import { CheckoutList } from '../components/CheckoutList'
+import { useEffect } from 'react'
 import facebook from '../public/facebook.svg'
 import instagram from '../public/instagram.svg'
 import Image from 'next/image'
 import Head from 'next/head'
 
 export default function Payment() {
-    const cart = trpc.getCart.useQuery()
+    const cart = trpc.getUserCartData.useQuery()
+    const checkoutId = cart.data?.checkout_id
     const confirmationPhase = trpc.confirmationPhase.useMutation()
-    const [checkoutId, setCheckoutId] = useState("")
     useEffect(() => {
-        const checkout_id = localStorage.getItem("checkout_id") || ""
-        setCheckoutId(checkout_id)
-        const interval = setInterval(() => {
-            if ((window as any)?.ConektaCheckoutComponents) {
-                if (checkout_id) {
-                    const config = {
-                        checkoutRequestId: checkout_id,
-                        publicKey: CONEKTA_PUBLIC_KEY,
-                        targetIFrame: 'example',
-                    };
-                    const callbacks = {
-                        onFinalizePayment: async (info: any) => {
-                            localStorage.removeItem("checkout_id")
-                            confirmationPhase.mutate({
-                                type: info?.charge?.payment_method?.type
-                            })
-                        },
-                        onErrorPayment: () => {
-                            alert("Error")
-                        },
-                    };
-                    (window as any).ConektaCheckoutComponents.Integration({ config, callbacks });
-                    clearInterval(interval)
-                }
-            }
-        }, 1000)
-        return () => {
-            clearInterval(interval)
+        if (checkoutId) {
+            const config = {
+                checkoutRequestId: checkoutId,
+                publicKey: CONEKTA_PUBLIC_KEY,
+                targetIFrame: 'example',
+            };
+            const callbacks = {
+                onFinalizePayment: async (info: any) => {
+                    confirmationPhase.mutate({
+                        type: info?.charge?.payment_method?.type
+                    })
+                },
+                onErrorPayment: () => {
+                    alert("Error")
+                },
+            };
+            (window as any).ConektaCheckoutComponents.Integration({ config, callbacks });
         }
-    }, [])
+        return
+    }, [checkoutId])
     return <div>
         <Head>
             <title>Pago - FOURB</title>
@@ -49,31 +38,31 @@ export default function Payment() {
             Pago
         </h2>
         {cart.isLoading ? <div className="loading" /> : null}
-        {checkoutId
+        {cart.data?.checkout_id
             ? (
                 <>
                     <form>
                         <div id="example" style={{ maxWidth: 500, width: '100%', margin: '0 auto' }} />
                     </form>
-                    <div id="total" style={{ textAlign: 'center', marginTop: 20, fontWeight: 'bold', fontSize: 20 }}>Productos</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', flexDirection: 'column', maxWidth: '600px', margin: 'auto' }} id="products">
-                        {cart.data?.map(product => <CheckoutList product={product} key={product._id} />)}
-                    </div>
                 </>
-            ) : (
-                <div>
-                    <div style={{ textAlign: 'center', margin: 30 }}>Por favor, envíanos un mensaje en nuestra página de <a href='https://www.facebook.com/fourbmx/' target='_blank'>Facebook</a> o página de <a href='https://www.instagram.com/fourb_mx/' target='_blank'>Instagram</a> con el siguiente código:</div>
-                    <div className="payBox" style={{ display: "flex", justifyContent: 'center', margin: 'auto', background: '#e7ebee', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', padding: 20, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <div style={{ fontSize: 16, fontWeight: 500 }}>{cart?.data?.[0]?.cart_id || ""}</div>
+            ) : cart.data?.pay_in_cash
+                ? (
+                    <div>
+                        <div style={{ textAlign: 'center', margin: 30 }}>Por favor, envíanos un mensaje en nuestra página de <a href='https://www.facebook.com/fourbmx/' target='_blank'>Facebook</a> o página de <a href='https://www.instagram.com/fourb_mx/' target='_blank'>Instagram</a> con el siguiente código:</div>
+                        <div className="payBox" style={{ display: "flex", justifyContent: 'center', margin: 'auto', background: '#e7ebee', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', padding: 20, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                <div style={{ fontSize: 16, fontWeight: 500 }}>{cart?.data?._id || ""}</div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 40, alignItems: 'center', justifyContent: 'center', margin: 40 }}>
+                            <a href='https://www.facebook.com/fourbmx/' target='_blank'><Image src={facebook} alt="" width={40} /></a>
+                            <a href='https://www.instagram.com/fourb_mx/' target='_blank'><Image src={instagram} alt="" width={40} /></a>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 40, alignItems: 'center', justifyContent: 'center', margin: 40 }}>
-                        <a href='https://www.facebook.com/fourbmx/' target='_blank'><Image src={facebook} alt="" width={40} /></a>
-                        <a href='https://www.instagram.com/fourb_mx/' target='_blank'><Image src={instagram} alt="" width={40} /></a>
-                    </div>
-                </div>
-            )
+                )
+                : (
+                    <div style={{ textAlign: 'center', margin: 30 }}>Error, tu carrito no puede ser pagado</div>
+                )
         }
     </div>
 }

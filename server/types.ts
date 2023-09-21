@@ -133,6 +133,7 @@ export interface CartsByUserMongo {
     address: string | null
     phone: string | null
     name: string | null
+    checkout_id: string | null
 }
 
 export interface ReservedInventoryMongo {

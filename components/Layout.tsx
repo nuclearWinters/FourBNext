@@ -49,7 +49,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     });
     const logOut = trpc.logOut.useMutation({
         onSuccess: () => {
-            localStorage.clear()
+            localStorage.removeItem('Access-Token')
             window.location.reload()
         }
     });

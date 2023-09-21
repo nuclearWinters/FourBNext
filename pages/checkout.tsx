@@ -289,9 +289,6 @@ export default function Checkout() {
                 delivery,
             }, {
                 onSuccess(data) {
-                    if (data) {
-                        localStorage.setItem("checkout_id", data)
-                    }
                     router.push('/payment')
                 },
             })
