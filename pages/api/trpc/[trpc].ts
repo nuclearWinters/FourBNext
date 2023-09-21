@@ -5,7 +5,7 @@
 import * as trpcNext from '@trpc/server/adapters/next';
 import { appRouter } from '../../../server/trpc';
 import { MongoClient } from 'mongodb';
-import { MONGO_DB, getSessionData, getSessionToken, getTokenData } from '../../../server/utils';
+import { MONGO_DB, getSessionData, getSessionToken, getTokenData, revalidateProduct } from '../../../server/utils';
 import { CartsByUserMongo, InventoryMongo, ItemsByCartMongo, PurchasesMongo, ReservedInventoryMongo, UserMongo } from '../../../server/types';
 import { CronJob } from 'cron';
 
@@ -29,16 +29,19 @@ const job = new CronJob(
                 if (cartExpireTime < now) {
                     const items = await itemsByCart.find({ cart_id: cart._id }).toArray()
                     for (const item of items) {
-                        await inventory.updateOne({
-                            _id: item.product_id
-                        },
+                        await inventory.updateOne(
+                            {
+                                _id: item.product_id
+                            },
                             {
                                 $inc: {
                                     available: item.qty,
                                     available_big: item.qty_big,
                                     available_small: item.qty_small,
                                 }
-                            })
+                            }
+                        )
+                        revalidateProduct(item.product_id.toHexString())
                     }
                     await itemsByCart.deleteMany({ cart_id: cart._id })
                     await reservedInventory.deleteMany({ cart_id: cart._id })

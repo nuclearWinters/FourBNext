@@ -2,7 +2,7 @@ import { TRPCError, initTRPC } from '@trpc/server';
 import { CartsByUserMongo, ContextLocals } from './types';
 import { z } from 'zod';
 import { Filter, ObjectId } from 'mongodb';
-import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, VIRTUAL_HOST, jwt, sessionToBase64 } from './utils';
+import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, VIRTUAL_HOST, jwt, revalidateProduct, sessionToBase64 } from './utils';
 import { InventoryMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from './types';
 import bcrypt from "bcryptjs"
 import cookie from "cookie"
@@ -472,6 +472,7 @@ export const appRouter = router({
                 if (!product) {
                     throw new Error("Not enough inventory or product not found")
                 }
+                revalidateProduct(product._id.toHexString())
                 const expireDate = new Date()
                 expireDate.setDate(expireDate.getDate() + 7)
                 const reserved = await reservedInventory.updateOne(
@@ -661,6 +662,7 @@ export const appRouter = router({
                 if (!product) {
                     throw new Error("Not enough inventory or product not found")
                 }
+                revalidateProduct(product._id.toHexString())
                 const item_by_cart_oid = new ObjectId(item_by_cart_id)
                 const result = await itemsByCart.updateOne(
                     {
@@ -779,6 +781,7 @@ export const appRouter = router({
                 if (!product) {
                     throw new Error("Inventory not modified.")
                 }
+                revalidateProduct(product._id.toHexString())
                 return
             } catch (e) {
                 if (e instanceof Error) {
@@ -1565,7 +1568,7 @@ export const appRouter = router({
                     tags.push("talla10")
                 }
                 const { inventory } = ctx
-                await inventory.insertOne({
+                const product = await inventory.insertOne({
                     available: qty,
                     total: qty,
                     name,
@@ -1583,6 +1586,7 @@ export const appRouter = router({
                     available_small: qtySmall,
                     total_small: qtySmall,
                 })
+                revalidateProduct(product.insertedId.toHexString())
                 return
             } catch (e) {
                 if (e instanceof Error) {
@@ -1781,6 +1785,7 @@ export const appRouter = router({
                 if (!result) {
                     throw new Error("Not enough inventory or product not found")
                 }
+                revalidateProduct(result._id.toHexString())
                 return
             } catch (e) {
                 if (e instanceof Error) {

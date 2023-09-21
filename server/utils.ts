@@ -10,7 +10,6 @@ export const REFRESH_TOKEN_EXP_NUMBER = 43200;
 export const ACCESS_TOKEN_EXP_NUMBER = 900;
 export const REFRESHSECRET = process.env.REFRESHSECRET || "REFRESHSECRET";
 export const ACCESSSECRET = process.env.ACCESSSECRET || "ACCESSSECRET";
-export const PORT = process.env.PORT || 8000
 export const ACCESS_KEY = process.env.ACCESS_KEY || ""
 export const SECRET_KEY = process.env.SECRET_KEY || ""
 export const REGION = process.env.REGION || ""
@@ -148,4 +147,8 @@ export const getSessionToken = (sessionToken: string | null): string => {
     }
     return sessionToBase64(session)
   }
+}
+
+export const revalidateProduct = (product_id: string) => {
+  fetch(`https://${VIRTUAL_HOST}/api/revalidate?product_id=${product_id}` )
 }
