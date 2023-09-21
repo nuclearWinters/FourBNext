@@ -31,7 +31,7 @@ export default function Carts() {
         <input style={{ border: '1px solid black', width: 200, margin: 'auto', display: 'block', marginBottom: 10 }} size={1} className={"searchProduct"} name="search" placeholder="Buscar carrito..." value={search} onChange={e => {
             setSearch(e.target.value)
         }} />
-        <div style={{ margin: '0px 30px' }}>
+        <div style={{ margin: '0px 30px', overflow: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                     <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>

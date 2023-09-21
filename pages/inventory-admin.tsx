@@ -615,7 +615,7 @@ export default function InventoryAdmin() {
                 </div>
             </ModalClose>
         </Modal> : null}
-        <div style={{ margin: '0px 30px' }}>
+        <div style={{ margin: '0px 30px', overflow: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                     <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>
