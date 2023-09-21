@@ -311,6 +311,12 @@ a.fourb-button {
   flex-direction: row-reverse;
 }
 
+.table-item {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  vertical-align: middle;
+}
+
 @media only screen and (max-width: 700px) {
   .searchProduct {
     margin-left: 20px;

@@ -1,8 +1,8 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { ContextLocals, UserMongo } from "../../../server/types";
+import { ContextLocals, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
-import { appRouter } from "../../../server/trpc";
-import { getSessionData, sessionToBase64 } from "../../../server/utils";
+import { appRouter } from "./trpc";
+import { getSessionData, sessionToBase64 } from "./utils";
 
 describe("SignInMutation tests", () => {
     let client: MongoClient;

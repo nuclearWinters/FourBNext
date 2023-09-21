@@ -1241,7 +1241,7 @@ export const appRouter = router({
                                 email: userData.user.email,
                             },
                             refreshTokenExpireTime: userData.refreshTokenExpireTime,
-                            exp: userData.exp,
+                            exp: userData.refreshTokenExpireTime,
                         },
                         REFRESHSECRET
                     );
@@ -1975,6 +1975,35 @@ export const appRouter = router({
                     }
                 )
                 return
+            } catch (e) {
+                if (e instanceof Error) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: e.message,
+                    });
+                }
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'An unexpected error occurred, please try again later.',
+                });
+            }
+        }),
+    getItemsByCart: publicProcedure
+        .input(z.object({
+            cart_id: z.string().nonempty(),
+        }))
+        .query(async ({ ctx, input }): Promise<ItemsByCartTRPC[]> => {
+            try {
+                const { itemsByCart } = ctx
+                const { cart_id } = input
+                const cart_oid = new ObjectId(cart_id)
+                const itemsInCart = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                return itemsInCart.map(item => ({
+                    ...item,
+                    _id: item._id.toHexString(),
+                    product_id: item.product_id.toHexString(),
+                    cart_id: item.cart_id.toHexString(),
+                }))
             } catch (e) {
                 if (e instanceof Error) {
                     throw new TRPCError({

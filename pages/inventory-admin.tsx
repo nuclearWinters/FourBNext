@@ -702,6 +702,16 @@ export default function InventoryAdmin() {
                 </tbody>
             </table>
         </div>
+        {searchProducts.hasNextPage ? (
+            <button
+                className="fourb-button"
+                onClick={() => {
+                    searchProducts.fetchNextPage()
+                }}
+            >
+                Cargar mas
+            </button>
+        ) : null}
         {searchProducts.isLoading ? <div className="loading" /> : null}
     </div>
 }
