@@ -10,6 +10,7 @@ import cross from '../public/cross.svg'
 import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd';
 import Head from "next/head";
+import { toast } from "react-toastify";
 
 export const reorder = (list: string[], startIndex: number, endIndex: number) => {
     const result = Array.from(list);
@@ -97,6 +98,10 @@ export default function InventoryAdmin() {
             })
             setShowCreate(false)
             searchProducts.refetch()
+            toast.success('Producto creado correctamente.')
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     })
     const onDragEnd = (result: any) => {
@@ -276,7 +281,7 @@ export default function InventoryAdmin() {
                                                             })
                                                             setForm(state => ({ ...state, img_big: [...state.img_big, url.origin + url.pathname] }))
                                                         } catch (e) {
-                                                            alert('Error while uploading')
+                                                            toast.error('Error while uploading')
                                                         }
                                                     }
                                                 }
@@ -358,7 +363,7 @@ export default function InventoryAdmin() {
                                                             })
                                                             setForm(state => ({ ...state, img_small: [...state.img_small, url.origin + url.pathname] }))
                                                         } catch (e) {
-                                                            alert('Error while uploading')
+                                                            toast.error('Error while uploading')
                                                         }
                                                     }
                                                 }
@@ -450,7 +455,7 @@ export default function InventoryAdmin() {
                                                                 })
                                                                 setForm(state => ({ ...state, img: [...state.img, url.origin + url.pathname] }))
                                                             } catch (e) {
-                                                                alert('Error while uploading')
+                                                                toast.error('Error while uploading')
                                                             }
                                                         }
                                                     }

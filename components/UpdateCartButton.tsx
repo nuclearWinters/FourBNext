@@ -2,6 +2,7 @@ import { FC, useState } from "react"
 import { trpc } from "../utils/config";
 import { Modal } from "./Modal";
 import { ModalClose } from "./ModalClose";
+import { toast } from "react-toastify";
 
 export const UpdateCartButton: FC<{
     cartId: string;
@@ -22,7 +23,14 @@ export const UpdateCartButton: FC<{
         const onCloseCallback = () => {
             setShowModal(false)
         }
-        const confirmCartAsPaid = trpc.updateCart.useMutation()
+        const confirmCartAsPaid = trpc.updateCart.useMutation({
+            onSuccess: () => {
+                toast.success('Carrito actualizado con exito.')
+            },
+            onError: (e) => {
+                toast.error(e.message)
+            }
+        })
         return <div>
             <button className="fourb-button" onClick={() => {
                 setShowModal(true)

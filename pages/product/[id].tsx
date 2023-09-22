@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import { InputNumberCart } from "../../components/InputNumberCart";
 import Head from "next/head";
 import Script from "next/script";
+import { toast } from "react-toastify";
 
 type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -24,7 +25,11 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
     const [qty, setQty] = useState('1')
     const addOneToCart = trpc.addOneToCart.useMutation({
         onSuccess: () => {
+            toast.success('Carrito actualizado.')
             router.push('/cart')
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     })
     const qtyParsed = Number(qty) < 1 ? 1 : Number(qty)

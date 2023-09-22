@@ -3,14 +3,18 @@ import { trpc } from '../utils/config';
 import { ProductList } from '../components/ProductList';
 import Head from 'next/head';
 import { useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 export default function Home() {
   const lastProducts = trpc.inventory.useQuery({ limit: 8 });
   const discountProducts = trpc.inventory.useQuery({ limit: 8, discounts: true });
   const confirmEmail = trpc.verifyEmail.useMutation({
     onSuccess:() => {
-      alert('Email confirmed succesfully!')
+      toast.success('Email confirmed succesfully!')
       window.history.replaceState(null, '', `?`)
+    },
+    onError: (e) => {
+      toast.error(e.message)
     }
   })
   useEffect(() => {

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { trpc } from '../utils/config';
 import { FC, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export const ProductList: FC<{
     product: {
@@ -20,10 +21,10 @@ export const ProductList: FC<{
     const [checked, setChecked] = useState<"big" | "small">(product.available_big ? 'big' : 'small')
     const addOneToCart = trpc.addOneToCart.useMutation({
         onSuccess: () => {
-            alert("Añadido al carrito")
+            toast.success("Añadido al carrito")
         },
         onError: (err) => {
-            alert(err.message)
+            toast.error(err.message)
         }
     })
     return <div className="product-card">

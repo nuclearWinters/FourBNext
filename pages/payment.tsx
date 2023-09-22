@@ -4,11 +4,19 @@ import facebook from '../public/facebook.svg'
 import instagram from '../public/instagram.svg'
 import Image from 'next/image'
 import Head from 'next/head'
+import { toast } from 'react-toastify'
 
 export default function Payment() {
     const cart = trpc.getUserCartData.useQuery()
     const checkoutId = cart.data?.checkout_id
-    const confirmationPhase = trpc.confirmationPhase.useMutation()
+    const confirmationPhase = trpc.confirmationPhase.useMutation({
+        onSuccess: () => {
+            toast.success('Carritos pagado correctamente.')
+        },
+        onError: (e) => {
+            toast.error(e.message)
+        }
+    })
     useEffect(() => {
         if (checkoutId) {
             const config = {
@@ -23,7 +31,7 @@ export default function Payment() {
                     })
                 },
                 onErrorPayment: () => {
-                    alert("Error")
+                    toast.error('Error')
                 },
             };
             (window as any).ConektaCheckoutComponents.Integration({ config, callbacks });

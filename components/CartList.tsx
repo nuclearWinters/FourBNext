@@ -5,6 +5,7 @@ import css from './CartList.module.css'
 import trash from '../public/trash-can.svg'
 import Image from "next/image";
 import { InputNumberCart } from "./InputNumberCart";
+import { toast } from "react-toastify";
 
 export const CartList: FC<{
     refetch: () => void;
@@ -28,14 +29,20 @@ export const CartList: FC<{
 }> = ({ product, refetch }) => {
     const updateOneCart = trpc.updateOneCart.useMutation({
         onSuccess: () => {
-            alert("Producto actualizado en el carrito")
+            toast.success("Producto actualizado en el carrito")
             refetch()
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     });
     const removeOneCart = trpc.removeOneCart.useMutation({
         onSuccess: () => {
-            alert("Producto eliminado en el carrito")
+            toast.success("Producto eliminado en el carrito")
             refetch()
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     });
     const [input, setInput] = useState(String(product.qty || product.qty_big || product.qty_small))

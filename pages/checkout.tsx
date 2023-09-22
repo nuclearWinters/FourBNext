@@ -4,6 +4,7 @@ import { trpc } from "../utils/config";
 import { useRouter } from "next/router";
 import { ModalCheckbox } from "../components/ModalCheckbox";
 import Head from "next/head";
+import { toast } from "react-toastify";
 
 export default function Checkout() {
     const router = useRouter()
@@ -25,7 +26,15 @@ export default function Checkout() {
     })
     const mounted = useRef(false)
     const products = trpc.getCart.useQuery();
-    const checkout = trpc.checkoutPhase.useMutation();
+    const checkout = trpc.checkoutPhase.useMutation({
+        onSuccess() {
+            toast.success('Carrito revisado correctamente.')
+            router.push('/payment')
+        },
+        onError: (e) => {
+            toast.error(e.message)
+        }
+    });
     const user = trpc.getUser.useQuery(undefined, {
         onSuccess: (values) => {
             if (!mounted.current) {
@@ -287,10 +296,6 @@ export default function Checkout() {
                 address_id: form.address_id,
                 payment_method: paymentMethod,
                 delivery,
-            }, {
-                onSuccess(data) {
-                    router.push('/payment')
-                },
             })
         }}>Pagar</button>
     </div>

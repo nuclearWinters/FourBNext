@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { trpc } from "../utils/config"
 import Head from "next/head"
+import { toast } from "react-toastify"
 
 export default function Account() {
     const [form, setForm] = useState({
@@ -23,7 +24,10 @@ export default function Account() {
     })
     const editUser = trpc.editUser.useMutation({
         onSuccess: () => {
-            alert('Usuario actualizado exitosamente!')
+            toast.success('Usuario actualizado exitosamente!')
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     })
     const setFormByName = (name: string, value: string) => {

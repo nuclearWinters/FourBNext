@@ -11,6 +11,8 @@ import { ModalField } from "./ModalField"
 import ellipsis from '../public/ellipsis-vertical.svg'
 import cart from '../public/cart.svg'
 import search from '../public/search.svg'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     const router = useRouter()
@@ -43,22 +45,32 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
         onSuccess: () => {
             setShowLogin(false)
             window.location.reload()
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     });
     const logOut = trpc.logOut.useMutation({
         onSuccess: () => {
             localStorage.removeItem('Access-Token')
             window.location.reload()
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     });
     const register = trpc.register.useMutation({
         onSuccess: () => {
             setShowLogin(false)
             window.location.reload()
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     })
     return <>
         <div className={css.fourbHeaderContainer}>
+            <ToastContainer />
             {showRegister ? <Modal onClose={() => {
                 setShowRegister(false)
             }}>

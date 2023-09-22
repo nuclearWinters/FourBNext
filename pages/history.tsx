@@ -4,6 +4,7 @@ import { useRouter } from "next/router"
 import { Fragment } from "react"
 import { InfiniteScroll } from "../components/InfiniteScroll"
 import Head from "next/head"
+import { toast } from "react-toastify"
 
 export default function History() {
     const router = useRouter()
@@ -13,7 +14,11 @@ export default function History() {
     )
     const addOneCart = trpc.addOneToCart.useMutation({
         onSuccess: () => {
+            toast.success('Carrito actualizado.')
             router.push('/cart')
+        },
+        onError: (e) => {
+            toast.error(e.message)
         }
     })
     return <div>

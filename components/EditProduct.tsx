@@ -9,6 +9,7 @@ import cross from '../public/cross.svg'
 import Image from "next/image";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { getItemStyle, reorder } from "../pages/inventory-admin";
+import { toast } from "react-toastify";
 
 export const EditProduct: FC<{
     product: {
@@ -62,7 +63,14 @@ export const EditProduct: FC<{
             checkboxTalla9: product.tags.includes('talla9'),
             checkboxTalla10: product.tags.includes('talla10'),
         })
-        const editProduct = trpc.editProduct.useMutation()
+        const editProduct = trpc.editProduct.useMutation({
+            onSuccess: () => {
+                toast.success("Producto actualizado con exito.")
+            },
+            onError: (e) => {
+                toast.error(e.message)
+            }
+        })
         const onDragEnd = (result: any) => {
             if (!result.destination) {
                 return;
@@ -242,7 +250,7 @@ export const EditProduct: FC<{
                                                                 })
                                                                 setForm(state => ({ ...state, img_big: [...state.img_big, url.origin + url.pathname] }))
                                                             } catch (e) {
-                                                                alert('Error while uploading')
+                                                                toast.error('Error while uploading')
                                                             }
                                                         }
                                                     }
@@ -317,7 +325,7 @@ export const EditProduct: FC<{
                                                                 })
                                                                 setForm(state => ({ ...state, img_small: [...state.img_small, url.origin + url.pathname] }))
                                                             } catch (e) {
-                                                                alert('Error while uploading')
+                                                                toast.error('Error while uploading')
                                                             }
                                                         }
                                                     }
@@ -402,7 +410,7 @@ export const EditProduct: FC<{
                                                                     })
                                                                     setForm(state => ({ ...state, img: [...state.img, url.origin + url.pathname] }))
                                                                 } catch (e) {
-                                                                    alert('Error while uploading')
+                                                                    toast.error('Error while uploading')
                                                                 }
                                                             }
                                                         }
