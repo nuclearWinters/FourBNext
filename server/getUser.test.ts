@@ -2,15 +2,25 @@ import { MongoClient, Db, ObjectId } from "mongodb";
 import { ContextLocals, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
-import { getSessionData, sessionToBase64 } from "./utils";
+import { ACCESS_TOKEN_EXP_NUMBER } from "./utils";
+
+jest.mock('conekta');
+jest.mock('@sendgrid/mail');
+
+Object.defineProperty(global, 'fetch', {
+    value: () => Promise.resolve({
+        json: () => Promise.resolve({}),
+    }),
+    writable: true
+});
 
 describe("SignInMutation tests", () => {
     let client: MongoClient;
     let dbInstance: Db;
 
     beforeAll(async () => {
-        client = await MongoClient.connect(process.env.MONGO_URL as string, {});
-        dbInstance = client.db("auth");
+        client = await MongoClient.connect((globalThis as any).__MONGO_URI__, {});
+        dbInstance = client.db((globalThis as any).__MONGO_DB_NAME__);
     });
 
     afterAll(async () => {
@@ -20,25 +30,10 @@ describe("SignInMutation tests", () => {
     it("getUser: not logged user", async () => {
         const cart_id = new ObjectId().toHexString()
         const users = dbInstance.collection<UserMongo>("users");
-        await users.insertOne({
-            _id: new ObjectId("000000000000000000000020"),
-            email: "anrp1@gmail.com",
-            password: '',
-            phone: "",
-            name: "",
-            phone_prefix: "",
-            apellidos: "",
-            cart_id: new ObjectId(),
-            conekta_id: '',
-            default_address: null,
-            addresses: [],
-            is_admin: false,
-            verified_email: false,
-        });
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const session = {
+        const sessionData = {
             email: null,
             cart_id,
             name: null,
@@ -53,7 +48,6 @@ describe("SignInMutation tests", () => {
             state: null,
             phone_prefix: null,
         }
-        const sessionData = getSessionData(sessionToBase64(session))
         const caller = appRouter.createCaller({ req, res, users, sessionData } as ContextLocals)
         const response = await caller.getUser()
         expect(response).toEqual({
@@ -84,6 +78,109 @@ describe("SignInMutation tests", () => {
             password: undefined,
             phone: '',
             phone_prefix: '',
+            verified_email: false,
+        })
+    });
+
+    it("getUser: logged user", async () => {
+        const user_id = new ObjectId()
+        const session_cart_id = new ObjectId()
+        const user_cart_id = new ObjectId()
+        const users = dbInstance.collection<UserMongo>("users");
+        const email = "anrp1@gmail.com"
+        const address_id = new ObjectId()
+        await users.insertOne({
+            _id: user_id,
+            email,
+            password: 'password',
+            phone: "1111111111",
+            name: "Name",
+            phone_prefix: "+52",
+            apellidos: "Apellidos",
+            cart_id: user_cart_id,
+            conekta_id: 'conekta_id',
+            default_address: address_id,
+            addresses: [{
+                _id: address_id,
+                apellidos: "Apellidos",
+                city: "City",
+                country: "Mexico",
+                full_address: "Full Address",
+                name: "Name",
+                neighborhood: "Neighborhood",
+                phone: "1111111111",
+                phone_prefix: "+52",
+                state: "State",
+                street: "Street",
+                zip: "11111",
+            },],
+            is_admin: false,
+            verified_email: false,
+        });
+        const { req, res } = createMocks({
+            method: 'GET',
+        })
+        const sessionData = {
+            email: null,
+            cart_id: session_cart_id.toHexString(),
+            name: null,
+            apellidos: null,
+            phone: null,
+            conekta_id: null,
+            country: null,
+            street: null,
+            neighborhood: null,
+            zip: null,
+            city: null,
+            state: null,
+            phone_prefix: null,
+        }
+        const time = new Date()
+        time.setMilliseconds(0)
+        const timeMiliseconds = time.getTime()
+        const timeSeconds = timeMiliseconds / 1000
+        const expritation = timeSeconds + ACCESS_TOKEN_EXP_NUMBER
+        const userData = {
+            user: {
+                _id: user_id.toHexString(),
+                cart_id: user_cart_id.toHexString(),
+                is_admin: false,
+                email,
+            },
+            iat: timeSeconds,
+            exp: expritation,
+            refreshTokenExpireTime: expritation,
+        }
+        const caller = appRouter.createCaller({ req, res, users, sessionData, userData } as ContextLocals)
+        const response = await caller.getUser()
+        expect(response).toEqual({
+            _id: user_id.toHexString(),
+            addresses: [
+                {
+                    _id: address_id.toHexString(),
+                    apellidos: "Apellidos",
+                    city: "City",
+                    country: "Mexico",
+                    full_address: "Full Address",
+                    name: "Name",
+                    neighborhood: "Neighborhood",
+                    phone: "1111111111",
+                    phone_prefix: "+52",
+                    state: "State",
+                    street: "Street",
+                    zip: "11111",
+                },
+            ],
+            apellidos: 'Apellidos',
+            cart_id: user_cart_id.toHexString(),
+            conekta_id: 'conekta_id',
+            default_address: address_id.toHexString(),
+            email,
+            is_admin: false,
+            name: 'Name',
+            password: undefined,
+            phone: '1111111111',
+            phone_prefix: '+52',
             verified_email: false,
         })
     });

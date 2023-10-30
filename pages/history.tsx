@@ -38,27 +38,25 @@ export default function History() {
                         {page.items.map(product => (
                             <div key={product._id} style={{ borderTop: '1px solid rgba(0,0,0,0.2)' }}>
                                 <div className="product-card" style={{ flexDirection: 'row', display: 'flex' }}>
-                                    <Link href={`/product/${product.product_id}`}><img className="img-product" src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} /></Link>
+                                    <Link href={`/product/${product.product_id}`}><img className="img-product" src={product.imgs[0]} /></Link>
                                     <div>
-                                        <div style={{ fontWeight: 'bold' }} className="name">{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
+                                        <div style={{ fontWeight: 'bold' }} className="name">{product.name}{product.combination.join() === "default" ? "" : ` (${product.combination.join(" / ")})`}</div>
                                         <div className="price">
                                             Precio unitario: <strong>${((product.use_discount ? product.discount_price : product.price) / 100).toFixed(2)}</strong>
                                         </div>
                                         <div className="price">
-                                            Cantidad: <strong>{product.qty || product.qty_big || product.qty_small}</strong>
+                                            Cantidad: <strong>{product.qty}</strong>
                                         </div>
                                         <div className="price">
-                                            Total: <strong>${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)}</strong>
+                                            Total: <strong>${(((product.use_discount ? product.discount_price : product.price) * (product.qty)) / 100).toFixed(2)}</strong>
                                         </div>
                                         <button
                                             style={{ marginLeft: 20 }}
                                             className="fourb-button"
                                             onClick={() => {
                                                 addOneCart.mutate({
-                                                    product_id: product.product_id,
+                                                    product_variant_id: product.product_variant_id,
                                                     qty: product.qty ? 1 : 0,
-                                                    qtyBig: product.qty_big ? 1 : 0,
-                                                    qtySmall: product.qty_small ? 1 : 0,
                                                 })
                                             }}
                                         >

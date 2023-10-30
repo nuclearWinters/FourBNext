@@ -150,5 +150,5 @@ export const getSessionToken = (sessionToken: string | null): string => {
 }
 
 export const revalidateProduct = (product_id: string) => {
-  fetch(`https://${VIRTUAL_HOST}/api/revalidate?product_id=${product_id}` )
+  fetch(`https://${VIRTUAL_HOST}/api/revalidate?product_id=${product_id}`)
 }

@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { trpc } from "../utils/config"
 import Head from "next/head"
 import { toast } from "react-toastify"
 
 export default function Account() {
+    const mounted = useRef(false)
     const [form, setForm] = useState({
         name: '',
         apellidos: '',
@@ -13,13 +14,16 @@ export default function Account() {
     })
     trpc.getUser.useQuery(undefined, {
         onSuccess: (values) => {
-            setForm({
-                name: values.name,
-                apellidos: values.apellidos,
-                email: values.email,
-                phonePrefix: '+52',
-                phone: values.phone
-            })
+            if (!mounted.current) {
+                setForm({
+                    name: values.name,
+                    apellidos: values.apellidos,
+                    email: values.email,
+                    phonePrefix: '+52',
+                    phone: values.phone
+                })
+                mounted.current = true
+            }
         }
     })
     const editUser = trpc.editUser.useMutation({

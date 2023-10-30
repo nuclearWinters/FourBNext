@@ -41,15 +41,12 @@ export const CartDetails: FC<{ cart: CartsByUserTRPC }> = ({ cart }) => {
                         <tr key={item._id}>
                             <td className="table-item">{item._id}</td>
                             <td className="table-item">
-                                {item.use_small_and_big
-                                    ? <img className="img-table" alt="" width="100%" src={item.qty_big ? item.img_big[0] : item.img_small[0]} />
-                                    : <img className="img-table" alt="" width="100%" src={item.img[0]} />
-                                }
+                                <img className="img-table" alt="" width="100%" src={item.imgs[0]} />
                             </td>
                             <td className="table-item">{item.name}{item.use_small_and_big ? item.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</td>
                             <td className="table-item">{item.code}</td>
-                            <td className="table-item">{item.qty || item.qty_big || item.qty_small}</td>
-                            <td className="table-item">${(((item.use_discount ? item.discount_price : item.price) * (item.qty || item.qty_big || item.qty_small)) / 100).toFixed(2)}</td>
+                            <td className="table-item">{item.qty}</td>
+                            <td className="table-item">${(((item.use_discount ? item.discount_price : item.price) * item.qty) / 100).toFixed(2)}</td>
                         </tr>
                     ))}
                 </tbody>

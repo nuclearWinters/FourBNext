@@ -7,7 +7,7 @@ import Head from "next/head";
 export default function Cart() {
     const products = trpc.getCart.useQuery();
     const total = products.data?.reduce((curr, product) => {
-        const total = ((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100
+        const total = ((product.use_discount ? product.discount_price : product.price) * product.qty) / 100
         return curr + total
     }, 0)
     return <div>

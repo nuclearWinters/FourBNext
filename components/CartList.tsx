@@ -6,26 +6,20 @@ import trash from '../public/trash-can.svg'
 import Image from "next/image";
 import { InputNumberCart } from "./InputNumberCart";
 import { toast } from "react-toastify";
+import { ItemsByCartMongo } from "../server/types";
+
+type Modify<T, R> = Omit<T, keyof R> & R;
+
+export type ItemsByCartTRPC = Modify<ItemsByCartMongo, {
+    _id: string
+    product_variant_id: string,
+    cart_id: string,
+    product_id: string
+}>
 
 export const CartList: FC<{
     refetch: () => void;
-    product: {
-        code: string;
-        name: string;
-        product_id: string;
-        qty: number;
-        _id: string;
-        cart_id: string;
-        price: number;
-        img: string[];
-        discount_price: number;
-        use_discount: boolean;
-        img_small: string[];
-        img_big: string[];
-        use_small_and_big: boolean;
-        qty_big: number;
-        qty_small: number;
-    }
+    product: ItemsByCartTRPC
 }> = ({ product, refetch }) => {
     const updateOneCart = trpc.updateOneCart.useMutation({
         onSuccess: () => {
@@ -45,21 +39,21 @@ export const CartList: FC<{
             toast.error(e.message)
         }
     });
-    const [input, setInput] = useState(String(product.qty || product.qty_big || product.qty_small))
+    const [input, setInput] = useState(String(product.qty))
     return <tr className={css.productCard}>
         <td className={css.imageColumn} style={{ verticalAlign: 'top' }}>
-            <Link href={`/product/${product.product_id}`}>
-                <img className={css.imgProduct} src={product.use_small_and_big ? product.qty_big ? product.img_big[0] : product.img_small[0] : product.img[0]} />
+            <Link href={`/product/${product.product_variant_id}`}>
+                <img className={css.imgProduct} src={product.imgs[0]} />
             </Link>
         </td>
         <td className={css.columnResponsive}>
-            <Link href={`/product/${product.product_id}`} className={css.infoBox}>
-                <div className={css.name}>{product.name}{product.use_small_and_big ? product.qty_big ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}</div>
+            <Link href={`/product/${product.product_variant_id}`} className={css.infoBox}>
+                <div className={css.name}>{product.name}{product.combination.join() === "default" ? "" : ` (${product.combination.join(" / ")})`}</div>
                 <div className={css.price}>
                     <span className={product.use_discount ? css.priceDiscounted : ""}>${(product.price / 100).toFixed(2)} MXN</span>
                     {product.use_discount ? <span>${(product.discount_price / 100).toFixed(2)} MXN</span> : null}
                 </div>
-                <div className={css.price}>{`(${product.qty || product.qty_big || product.qty_small }) en el carrito`}</div>
+                <div className={css.price}>{`(${product.qty}) en el carrito`}</div>
             </Link>
             <div style={{ display: 'flex', alignItems: 'center' }} className={css.inputBox}>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', marginTop: 10 }}>
@@ -89,10 +83,8 @@ export const CartList: FC<{
                     <button className="fourb-button" onClick={() => {
                         updateOneCart.mutate({
                             item_by_cart_id: product._id,
-                            product_id: product.product_id,
+                            product_variant_id: product.product_variant_id,
                             qty: product.qty ? Number(input) : 0,
-                            qtyBig: product.qty_big ? Number(input) : 0,
-                            qtySmall: product.qty_small ? Number(input) : 0,
                         })
                     }}>
                         Actualizar
@@ -109,7 +101,7 @@ export const CartList: FC<{
             </div>
         </td>
         <td className={css.columnFlex} style={{ verticalAlign: 'top' }}>
-            <div style={{ paddingTop: 10 }} className="price">${(((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100).toFixed(2)} MXN</div>
+            <div style={{ paddingTop: 10 }} className="price">${(((product.use_discount ? product.discount_price : product.price) * product.qty) / 100).toFixed(2)} MXN</div>
         </td>
     </tr>
 }

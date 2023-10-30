@@ -8,9 +8,20 @@ import { ModalField } from "../components/ModalField";
 import { ModalCheckbox } from "../components/ModalCheckbox";
 import cross from '../public/cross.svg'
 import Link from "next/link";
-import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle, DropResult } from 'react-beautiful-dnd';
 import Head from "next/head";
 import { toast } from "react-toastify";
+import { nanoid } from "nanoid";
+
+interface Variant {
+    imgs: string[],
+    qty: string,
+    price: string,
+    sku: string,
+    use_discount: boolean,
+    discount_price: string,
+    combination: string[],
+}
 
 export const reorder = (list: string[], startIndex: number, endIndex: number) => {
     const result = Array.from(list);
@@ -39,62 +50,55 @@ export default function InventoryAdmin() {
     }
     const [form, setForm] = useState({
         name: '',
-        code: '',
-        price: '0.00',
-        use_discount: false,
-        discount_price: '0.00',
-        use_small_and_big: false,
-        incrementBig: '0',
-        incrementSmall: '0',
-        increment: '0',
-        img: [] as string[],
-        img_small: [] as string[],
-        img_big: [] as string[],
-        checkboxArete: false,
-        checkboxCollar: false,
-        checkboxAnillo: false,
-        checkboxPulsera: false,
-        checkboxPiercing: false,
-        checkboxTobillera: false,
-        checkboxOro10K: false,
-        checkboxAjustable: false,
-        checkboxTalla5: false,
-        checkboxTalla6: false,
-        checkboxTalla7: false,
-        checkboxTalla8: false,
-        checkboxTalla9: false,
-        checkboxTalla10: false,
+        description: '',
+        use_variants: false,
+        tags: [] as string[],
+        variants: {
+            'default': {
+                imgs: [] as string[],
+                qty: '0',
+                price: '0.00',
+                sku: '',
+                use_discount: false,
+                discount_price: '0.00',
+                combination: []
+            }
+        } as Record<string, Variant>,
+        options: [{
+            id: '',
+            name: '',
+            values: [] as {
+                id: string
+                name: string
+            }[],
+            type: 'string' as 'string' | 'color',
+        }]
     })
     const signedUrl = trpc.signedUrl.useMutation()
     const addProduct = trpc.addProduct.useMutation({
         onSuccess: () => {
             setForm({
                 name: '',
-                code: '',
-                price: '0.00',
-                use_discount: false,
-                discount_price: '0.00',
-                use_small_and_big: false,
-                incrementBig: '0',
-                incrementSmall: '0',
-                increment: '0',
-                img: [] as string[],
-                img_small: [] as string[],
-                img_big: [] as string[],
-                checkboxArete: false,
-                checkboxCollar: false,
-                checkboxAnillo: false,
-                checkboxPulsera: false,
-                checkboxPiercing: false,
-                checkboxTobillera: false,
-                checkboxOro10K: false,
-                checkboxAjustable: false,
-                checkboxTalla5: false,
-                checkboxTalla6: false,
-                checkboxTalla7: false,
-                checkboxTalla8: false,
-                checkboxTalla9: false,
-                checkboxTalla10: false,
+                description: '',
+                use_variants: false,
+                tags: [],
+                variants: {
+                    'default': {
+                        imgs: [],
+                        qty: '0',
+                        price: '0.00',
+                        sku: '',
+                        use_discount: false,
+                        discount_price: '0.00',
+                        combination: []
+                    }
+                },
+                options: [{
+                    id: '',
+                    name: '',
+                    values: [],
+                    type: 'string'
+                }]
             })
             setShowCreate(false)
             searchProducts.refetch()
@@ -104,46 +108,24 @@ export default function InventoryAdmin() {
             toast.error(e.message)
         }
     })
-    const onDragEnd = (result: any) => {
+    const onDragEnd = (result: DropResult, value: Variant, key: string) => {
         if (!result.destination) {
             return;
         }
         const items = reorder(
-            form.img,
+            value.imgs,
             result.source.index,
             result.destination.index
         );
         setForm(state => ({
             ...state,
-            img: items,
-        }))
-    }
-    const onDragEndSmall = (result: any) => {
-        if (!result.destination) {
-            return;
-        }
-        const items = reorder(
-            form.img_small,
-            result.source.index,
-            result.destination.index
-        );
-        setForm(state => ({
-            ...state,
-            img_small: items,
-        }))
-    }
-    const onDragEndBig = (result: any) => {
-        if (!result.destination) {
-            return;
-        }
-        const items = reorder(
-            form.img_big,
-            result.source.index,
-            result.destination.index
-        );
-        setForm(state => ({
-            ...state,
-            img_big: items,
+            variants: {
+                ...state.variants,
+                [key]: {
+                    ...value,
+                    imgs: items
+                }
+            }
         }))
     }
     return <div>
@@ -163,31 +145,30 @@ export default function InventoryAdmin() {
                         e.preventDefault()
                         addProduct.mutate({
                             name: form.name,
-                            code: form.code,
-                            qty: Number(form.increment),
-                            qtyBig: Number(form.incrementBig),
-                            qtySmall: Number(form.incrementSmall),
-                            price: Number(form.price) * 100,
-                            useSmallAndBig: form.use_small_and_big,
-                            img: form.img,
-                            imgBig: form.img_big,
-                            imgSmall: form.img_small,
-                            discountPrice: Number(form.discount_price) * 100,
-                            useDiscount: form.use_discount,
-                            checkboxArete: form.checkboxArete,
-                            checkboxCollar: form.checkboxCollar,
-                            checkboxAnillo: form.checkboxAnillo,
-                            checkboxPulsera: form.checkboxPulsera,
-                            checkboxPiercing: form.checkboxPiercing,
-                            checkboxTobillera: form.checkboxOro10K,
-                            checkboxOro10K: form.checkboxOro10K,
-                            checkboxAjustable: form.checkboxAjustable,
-                            checkboxTalla5: form.checkboxTalla5,
-                            checkboxTalla6: form.checkboxTalla6,
-                            checkboxTalla7: form.checkboxTalla7,
-                            checkboxTalla8: form.checkboxTalla8,
-                            checkboxTalla9: form.checkboxTalla9,
-                            checkboxTalla10: form.checkboxTalla10,
+                            description: form.description,
+                            options: form.options,
+                            use_variants: form.use_variants,
+                            variants: (() => {
+                                const variants: Record<string, {
+                                    imgs: string[],
+                                    qty: number,
+                                    price: number,
+                                    sku: string,
+                                    use_discount: boolean,
+                                    discount_price: number,
+                                    combination: string[]
+                                }> = {}
+                                for (const variant in form.variants) {
+                                    variants[variant] = {
+                                        ...form.variants[variant],
+                                        qty: Number(form.variants[variant].qty),
+                                        price: Number(form.variants[variant].price) * 100,
+                                        discount_price: Number(form.variants[variant].discount_price) * 100,
+                                    }
+                                }
+                                return variants
+                            })(),
+                            tags: [],
                         })
                     }}>
                         <ModalField
@@ -202,237 +183,428 @@ export default function InventoryAdmin() {
                             }}
                         />
                         <ModalField
-                            id="code"
-                            label="Código"
+                            id="description"
+                            label="Descripcion"
                             required
-                            name="code"
+                            name="description"
                             type="text"
-                            value={form.code}
+                            value={form.description}
                             onChange={(e) => {
                                 setForm(state => ({ ...state, [e.target.name]: e.target.value }))
                             }}
                         />
-                        <ModalField
+                        {form.use_variants ? null : <ModalField
+                            id="sku"
+                            label="Código"
+                            required
+                            name="sku"
+                            type="text"
+                            value={form.variants['default']?.sku}
+                            onChange={(e) => {
+                                setForm(state => ({
+                                    ...state,
+                                    variants: {
+                                        ...state.variants,
+                                        'default': {
+                                            ...form.variants['default'],
+                                            [e.target.name]: e.target.value,
+                                        }
+                                    }
+                                }))
+                            }}
+                        />}
+                        {form.use_variants ? null : <ModalField
                             id="price"
                             label="Precio"
                             required
                             name="price"
                             type="number"
-                            value={form.price}
+                            value={form.variants['default'].price}
                             onChange={(e) => {
-                                setForm(state => ({ ...state, [e.target.name]: toCurrency(e.target.value, '.') }))
+                                setForm(state => ({
+                                    ...state,
+                                    variants: {
+                                        ...state.variants,
+                                        'default': {
+                                            ...form.variants['default'],
+                                            [e.target.name]: toCurrency(e.target.value, '.')
+                                        }
+                                    }
+                                }))
                             }}
                             pattern="\d*"
                             step="any"
-                        />
-                        <ModalCheckbox
+                        />}
+                        {form.use_variants ? null : <ModalCheckbox
                             id="use_discount"
                             label="Usar descuento"
                             name="use_discount"
                             type="checkbox"
-                            checked={form.use_discount}
+                            checked={form.variants['default']?.use_discount}
                             onChange={(e) => {
-                                setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                setForm(state => ({
+                                    ...state,
+                                    variants: {
+                                        ...state.variants,
+                                        'default': {
+                                            ...form.variants['default'],
+                                            [e.target.name]: e.target.checked
+                                        }
+                                    }
+                                }))
                             }}
-                        />
-                        <div style={{ opacity: form.use_discount ? '1' : '0.4', pointerEvents: form.use_discount ? 'auto' : 'none' }}>
+                        />}
+                        {form.use_variants ? null : <div style={{ opacity: form.variants['default'].use_discount ? '1' : '0.4', pointerEvents: form.variants['default'].use_discount ? 'auto' : 'none' }}>
                             <ModalField
                                 id="discount_price"
                                 label="Precio de descuento"
                                 required
                                 name="discount_price"
                                 type="number"
-                                value={form.discount_price}
+                                value={form.variants['default']?.discount_price}
                                 onChange={(e) => {
-                                    setForm(state => ({ ...state, [e.target.name]: toCurrency(e.target.value, '.') }))
+                                    setForm(state => ({
+                                        ...state,
+                                        variants: {
+                                            ...state.variants,
+                                            'default': {
+                                                ...form.variants['default'],
+                                                [e.target.name]: toCurrency(e.target.value, '.')
+                                            }
+                                        }
+                                    }))
                                 }}
                                 pattern="\d*"
                                 step="any"
                             />
-                        </div>
+                        </div>}
                         <ModalCheckbox
-                            id="use_small_and_big"
-                            label="Usar opcion pequeña y grande"
-                            name="use_small_and_big"
+                            id="use_variants"
+                            label="Opciones de compra"
+                            name="use_variants"
                             type="checkbox"
-                            checked={form.use_small_and_big}
+                            checked={form.use_variants}
                             onChange={(e) => {
                                 setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                             }}
                         />
-                        {form.use_small_and_big
-                            ? (
-                                <>
-                                    <div className="img-title">
-                                        Version grande
-                                    </div>
-                                    <div style={{ marginLeft: 20 }}>
-                                        <input title="Subir fotos" name="image-big" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
-                                            const files = event.target.files
-                                            if (files) {
-                                                for (const file of files) {
-                                                    if (file.type) {
-                                                        try {
-                                                            const data = await signedUrl.mutateAsync({ fileType: file.type })
-                                                            const url = new URL(data.uploadUrl);
-                                                            await fetch(data.uploadUrl, {
-                                                                method: "PUT",
-                                                                body: file,
-                                                            })
-                                                            setForm(state => ({ ...state, img_big: [...state.img_big, url.origin + url.pathname] }))
-                                                        } catch (e) {
-                                                            toast.error('Error while uploading')
+                        {form.use_variants ? (
+                            <div>
+                                <div style={{ display: 'flex', flexDirection: "column" }}>
+                                    {form.options.map((option, idxOption) => (
+                                        <div key={idxOption} style={{ display: 'flex', flexDirection: 'row' }}>
+                                            <div>Move</div>
+                                            <div style={{ display: 'flex', flexDirection: "column" }}>
+                                                <div>Option Name</div>
+                                                <input></input>
+                                                <div>Option Values</div>
+                                                {option.values.map((value, idxValue) => (
+                                                    <input
+                                                        key={idxValue}
+                                                        value={value.name}
+                                                        onChange={(event) => {
+                                                            if (event.target.value === "") {
+                                                                const newOptions = [...form.options]
+                                                                newOptions[idxOption].values.splice(idxValue)
+                                                                setForm({ ...form, options: newOptions })
+                                                            } else {
+                                                                const newOptions = [...form.options]
+                                                                newOptions[idxOption].values[idxValue].name = event.target.value
+                                                                setForm({ ...form, options: newOptions })
+                                                            }
+                                                        }}
+                                                        placeholder="Add another value"
+                                                    />
+                                                ))}
+                                                <input
+                                                    value=""
+                                                    onChange={(event) => {
+                                                        const newOptions = [...form.options]
+                                                        newOptions[idxOption].values.push({
+                                                            id: nanoid(5),
+                                                            name: event.target.value
+                                                        })
+                                                        setForm({ ...form, options: newOptions })
+                                                    }}
+                                                    placeholder="Add another value"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    form.options.splice(idxOption, 1)
+                                                    setForm({ ...form, options: [...form.options] })
+                                                }}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setForm({
+                                            ...form,
+                                            options: [...form.options, { id: '', name: '', values: [], type: 'string' }]
+                                        })
+                                    }}
+                                >
+                                    Add another option
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const variants = {
+                                            'default': form.variants['default']
+                                        } as Record<string, {
+                                            imgs: string[],
+                                            qty: string,
+                                            price: string,
+                                            sku: string,
+                                            use_discount: boolean,
+                                            discount_price: string,
+                                            combination: string[],
+                                        }>
+
+                                        let result = form.options[0].values.map(value => ([value.name]));
+
+                                        for (var k = 1; k < form.options.length; k++) {
+                                            const next: string[][] = [];
+                                            result.forEach(item => {
+                                                form.options[k].values.forEach(word => {
+                                                    var line = item.slice(0);
+                                                    line.push(word.name);
+                                                    next.push(line);
+                                                })
+                                            });
+                                            result = next;
+                                        }
+
+                                        for (const combination of result) {
+                                            variants[combination.join("")] = {
+                                                imgs: [],
+                                                price: '0.00',
+                                                sku: '',
+                                                qty: '0',
+                                                use_discount: false,
+                                                discount_price: '0.00',
+                                                combination,
+                                            }
+                                        }
+
+                                        setForm({ ...form, variants })
+                                    }}
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        ) : null}
+                        {
+                            form.use_variants && Object.keys(form.variants).length > 1 ? (
+                                <div>{Object.entries(form.variants).map(([key, value]) => {
+                                    if (key === "default") {
+                                        return null
+                                    }
+                                    return <div key={key}>
+                                        <div className="img-title">
+                                            {value.combination.join(" / ")}
+                                        </div>
+                                        <ModalField
+                                            id={`${key}-sku`}
+                                            label="Código"
+                                            required
+                                            name="sku"
+                                            type="text"
+                                            value={value.sku}
+                                            onChange={(e) => {
+                                                setForm(state => ({
+                                                    ...state,
+                                                    variants: {
+                                                        ...state.variants,
+                                                        [key]: {
+                                                            ...value,
+                                                            [e.target.name]: e.target.value,
+                                                        }
+                                                    }
+                                                }))
+                                            }}
+                                        />
+                                        <ModalField
+                                            id={`${key}-price`}
+                                            label="Precio"
+                                            required
+                                            name="price"
+                                            type="number"
+                                            value={value.price}
+                                            onChange={(e) => {
+                                                setForm(state => ({
+                                                    ...state,
+                                                    variants: {
+                                                        ...state.variants,
+                                                        [key]: {
+                                                            ...value,
+                                                            [e.target.name]: toCurrency(e.target.value, '.')
+                                                        }
+                                                    },
+                                                }))
+                                            }}
+                                            pattern="\d*"
+                                            step="any"
+                                        />
+                                        <ModalCheckbox
+                                            id={`${key}-use_discount`}
+                                            label="Usar descuento"
+                                            name="use_discount"
+                                            type="checkbox"
+                                            checked={value.use_discount}
+                                            onChange={(e) => {
+                                                setForm(state => ({
+                                                    ...state,
+                                                    variants: {
+                                                        ...state.variants,
+                                                        [key]: {
+                                                            ...value,
+                                                            [e.target.name]: e.target.checked,
+                                                        }
+                                                    },
+                                                }))
+                                            }}
+                                        />
+                                        <div style={{ opacity: value.use_discount ? '1' : '0.4', pointerEvents: value.use_discount ? 'auto' : 'none' }}>
+                                            <ModalField
+                                                id={`${key}-discount_price`}
+                                                label="Precio de descuento"
+                                                required
+                                                name="discount_price"
+                                                type="number"
+                                                value={value.discount_price}
+                                                onChange={(e) => {
+                                                    setForm(state => ({
+                                                        ...state,
+                                                        variants: {
+                                                            ...state.variants,
+                                                            [key]: {
+                                                                ...value,
+                                                                [e.target.name]: toCurrency(e.target.value, '.')
+                                                            }
+                                                        },
+                                                    }))
+                                                }}
+                                                pattern="\d*"
+                                                step="any"
+                                            />
+                                        </div>
+                                        <div style={{ marginLeft: 20 }}>
+                                            <input title="Subir fotos" name="image-big" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
+                                                const files = event.target.files
+                                                if (files) {
+                                                    for (const file of files) {
+                                                        if (file.type) {
+                                                            try {
+                                                                const data = await signedUrl.mutateAsync({ fileType: file.type })
+                                                                const url = new URL(data.uploadUrl);
+                                                                await fetch(data.uploadUrl, {
+                                                                    method: "PUT",
+                                                                    body: file,
+                                                                })
+                                                                setForm(state => ({
+                                                                    ...state,
+                                                                    variants: {
+                                                                        ...state.variants,
+                                                                        [key]: {
+                                                                            ...state.variants[key],
+                                                                            imgs: [...state.variants[key].imgs, url.origin + url.pathname],
+                                                                        }
+                                                                    }
+                                                                }))
+                                                            } catch (e) {
+                                                                toast.error('Error while uploading')
+                                                            }
                                                         }
                                                     }
                                                 }
-                                            }
-                                        }} />
-                                        <div className="input-container images-container">
-                                            <DragDropContext onDragEnd={onDragEndBig}>
-                                                <Droppable droppableId="droppable" direction="horizontal">
-                                                    {(provided) => (
-                                                        <div
-                                                            ref={provided.innerRef}
-                                                            style={{
-                                                                display: 'flex',
-                                                                padding: 8,
-                                                                overflow: 'auto',
-                                                            }}
-                                                            {...provided.droppableProps}
-                                                        >
-                                                            {form.img_big.map((item, index) => (
-                                                                <Draggable key={item} draggableId={item} index={index}>
-                                                                    {(provided, snapshot) => (
-                                                                        <div
-                                                                            ref={provided.innerRef}
-                                                                            {...provided.draggableProps}
-                                                                            {...provided.dragHandleProps}
-                                                                            style={getItemStyle(
-                                                                                snapshot.isDragging,
-                                                                                provided.draggableProps.style
-                                                                            )}
-                                                                        ><div style={{ position: 'relative' }} key={item}>
-                                                                                <button
-                                                                                    className="closeImgButton"
-                                                                                    type="button"
-                                                                                    onClick={() => {
-                                                                                        setForm(state => ({ ...state, img_big: state.img_big.filter(currImg => item !== currImg) }))
-                                                                                    }}
-                                                                                >
-                                                                                    <Image src={cross} alt="" height={10} />
-                                                                                </button>
-                                                                                <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                            }} />
+                                            <div className="input-container images-container">
+                                                <DragDropContext onDragEnd={(result) => onDragEnd(result, form.variants[key], key)}>
+                                                    <Droppable droppableId="droppable" direction="horizontal">
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    padding: 8,
+                                                                    overflow: 'auto',
+                                                                }}
+                                                                {...provided.droppableProps}
+                                                            >
+                                                                {value.imgs.map((item, index) => (
+                                                                    <Draggable key={item} draggableId={item} index={index}>
+                                                                        {(provided, snapshot) => (
+                                                                            <div
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                style={getItemStyle(
+                                                                                    snapshot.isDragging,
+                                                                                    provided.draggableProps.style
+                                                                                )}
+                                                                            ><div style={{ position: 'relative' }} key={item}>
+                                                                                    <button
+                                                                                        className="closeImgButton"
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setForm(state => ({
+                                                                                                ...state,
+                                                                                                variants: {
+                                                                                                    ...state.variants,
+                                                                                                    [key]: {
+                                                                                                        ...state.variants[key],
+                                                                                                        imgs: state.variants[key].imgs.filter(currImg => item !== currImg)
+                                                                                                    }
+                                                                                                }
+                                                                                            }))
+                                                                                        }}
+                                                                                    >
+                                                                                        <Image src={cross} alt="" height={10} />
+                                                                                    </button>
+                                                                                    <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                                                                </div>
                                                                             </div>
-                                                                        </div>
-                                                                    )}
-                                                                </Draggable>
-                                                            ))}
-                                                            {provided.placeholder}
-                                                        </div>
-                                                    )}
-                                                </Droppable>
-                                            </DragDropContext>
-                                        </div>
-                                        <ModalField
-                                            id="incrementBig"
-                                            label={`Cantidad en el inventario`}
-                                            required
-                                            name="incrementBig"
-                                            type="number"
-                                            value={form.incrementBig}
-                                            onChange={(e) => {
-                                                setForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="img-title">
-                                        Version chica
-                                    </div>
-                                    <div style={{ marginLeft: 20 }}>
-                                        <input title="Subir fotos" name="image-small" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
-                                            const files = event.target.files
-                                            if (files) {
-                                                for (const file of files) {
-                                                    if (file.type) {
-                                                        try {
-                                                            const data = await signedUrl.mutateAsync({ fileType: file.type })
-                                                            const url = new URL(data.uploadUrl);
-                                                            await fetch(data.uploadUrl, {
-                                                                method: "PUT",
-                                                                body: file,
-                                                            })
-                                                            setForm(state => ({ ...state, img_small: [...state.img_small, url.origin + url.pathname] }))
-                                                        } catch (e) {
-                                                            toast.error('Error while uploading')
+                                                                        )}
+                                                                    </Draggable>
+                                                                ))}
+                                                                {provided.placeholder}
+                                                            </div>
+                                                        )}
+                                                    </Droppable>
+                                                </DragDropContext>
+                                            </div>
+                                            <ModalField
+                                                id={`${key}-qty`}
+                                                label={`Cantidad en el inventario`}
+                                                required
+                                                name="qty"
+                                                type="number"
+                                                value={value.qty}
+                                                onChange={(e) => {
+                                                    setForm(state => ({
+                                                        ...state,
+                                                        variants: {
+                                                            ...state.variants,
+                                                            [key]: {
+                                                                ...state.variants[key],
+                                                                [e.target.name]: e.target.value
+                                                            }
                                                         }
-                                                    }
-                                                }
-                                            }
-                                        }} />
-                                        <div className="input-container images-container">
-                                            <DragDropContext onDragEnd={onDragEndSmall}>
-                                                <Droppable droppableId="droppable" direction="horizontal">
-                                                    {(provided) => (
-                                                        <div
-                                                            ref={provided.innerRef}
-                                                            style={{
-                                                                display: 'flex',
-                                                                padding: 8,
-                                                                overflow: 'auto',
-                                                            }}
-                                                            {...provided.droppableProps}
-                                                        >
-                                                            {form.img_small.map((item, index) => (
-                                                                <Draggable key={item} draggableId={item} index={index}>
-                                                                    {(provided, snapshot) => (
-                                                                        <div
-                                                                            ref={provided.innerRef}
-                                                                            {...provided.draggableProps}
-                                                                            {...provided.dragHandleProps}
-                                                                            style={getItemStyle(
-                                                                                snapshot.isDragging,
-                                                                                provided.draggableProps.style
-                                                                            )}
-                                                                        >
-                                                                            <div style={{ position: 'relative' }} key={item}>
-                                                                                <button
-                                                                                    className="closeImgButton"
-                                                                                    type="button"
-                                                                                    onClick={() => {
-                                                                                        setForm(state => ({ ...state, img_small: state.img_small.filter(currImg => item !== currImg) }))
-                                                                                    }}
-                                                                                >
-                                                                                    <Image src={cross} alt="" height={10} />
-                                                                                </button>
-                                                                                <img className="img-uploaded" alt="" width="100%" src={item} />
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </Draggable>
-                                                            ))}
-                                                            {provided.placeholder}
-                                                        </div>
-                                                    )}
-                                                </Droppable>
-                                            </DragDropContext>
+                                                    }))
+                                                }}
+                                            />
                                         </div>
-                                        <ModalField
-                                            id="incrementSmall"
-                                            label={`Cantidad en el inventario`}
-                                            required
-                                            name="incrementSmall"
-                                            type="number"
-                                            value={form.incrementSmall}
-                                            onChange={(e) => {
-                                                setForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                            }}
-                                        />
                                     </div>
-                                </>
-                            )
-                            : null
+                                })}</div>
+                            ) : null
                         }
-                        {form.use_small_and_big
+                        {form.use_variants
                             ? null
                             : (
                                 <>
@@ -453,7 +625,16 @@ export default function InventoryAdmin() {
                                                                     method: "PUT",
                                                                     body: file,
                                                                 })
-                                                                setForm(state => ({ ...state, img: [...state.img, url.origin + url.pathname] }))
+                                                                setForm(state => ({
+                                                                    ...state,
+                                                                    variants: {
+                                                                        ...state.variants,
+                                                                        'default': {
+                                                                            ...state.variants['default'],
+                                                                            imgs: [...state.variants['default'].imgs, url.origin + url.pathname],
+                                                                        }
+                                                                    }
+                                                                }))
                                                             } catch (e) {
                                                                 toast.error('Error while uploading')
                                                             }
@@ -463,7 +644,7 @@ export default function InventoryAdmin() {
                                             }} />
                                         </div>
                                         <div className="input-container images-container">
-                                            <DragDropContext onDragEnd={onDragEnd}>
+                                            <DragDropContext onDragEnd={(result) => onDragEnd(result, form.variants['default'], 'default')}>
                                                 <Droppable droppableId="droppable" direction="horizontal">
                                                     {(provided) => (
                                                         <div
@@ -475,7 +656,7 @@ export default function InventoryAdmin() {
                                                             }}
                                                             {...provided.droppableProps}
                                                         >
-                                                            {form.img.map((item, index) => (
+                                                            {form.variants['default'].imgs.map((item, index) => (
                                                                 <Draggable key={item} draggableId={item} index={index}>
                                                                     {(provided, snapshot) => (
                                                                         <div
@@ -492,7 +673,16 @@ export default function InventoryAdmin() {
                                                                                     className="closeImgButton"
                                                                                     type="button"
                                                                                     onClick={() => {
-                                                                                        setForm(state => ({ ...state, img: state.img.filter(currImg => item !== currImg) }))
+                                                                                        setForm(state => ({
+                                                                                            ...state,
+                                                                                            variants: {
+                                                                                                ...state.variants,
+                                                                                                'default': {
+                                                                                                    ...state.variants['default'],
+                                                                                                    imgs: state.variants['default'].imgs.filter(currImg => item !== currImg)
+                                                                                                }
+                                                                                            }
+                                                                                        }))
                                                                                     }}
                                                                                 >
                                                                                     <Image src={cross} alt="" height={10} />
@@ -510,14 +700,23 @@ export default function InventoryAdmin() {
                                             </DragDropContext>
                                         </div>
                                         <ModalField
-                                            id="increment"
+                                            id="qty"
                                             label={`Cantidad en el inventario`}
                                             required
-                                            name="increment"
+                                            name="qty"
                                             type="number"
-                                            value={form.increment}
+                                            value={form.variants['default'].qty}
                                             onChange={(e) => {
-                                                setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                                setForm(state => ({
+                                                    ...state,
+                                                    variants: {
+                                                        ...state.variants,
+                                                        'default': {
+                                                            ...state.variants['default'],
+                                                            [e.target.name]: e.target.value
+                                                        }
+                                                    }
+                                                }))
                                             }}
                                             pattern="\d*"
                                             step="any"
@@ -529,90 +728,7 @@ export default function InventoryAdmin() {
                         <div className="input-container">
                             <label htmlFor="discount">Tags</label>
                             <div className="checkboxes" style={{ display: 'flex', flexWrap: 'wrap', }}>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxArete`} name="checkboxArete" checked={form.checkboxArete} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxArete`}>Arete</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxCollar`} name="checkboxCollar" checked={form.checkboxCollar} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxCollar`}>Collar</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxAnillo`} name="checkboxAnillo" checked={form.checkboxAnillo} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxAnillo`}>Anillo</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxPulsera`} name="checkboxPulsera" checked={form.checkboxPulsera} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxPulsera`}>Pulsera</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxPiercing`} name="checkboxPiercing" checked={form.checkboxPiercing} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxPiercing`}>Piercing</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxTobillera`} name="checkboxTobillera" checked={form.checkboxTobillera} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxTobillera`}>Tobillera</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxOro10K`} name="checkboxOro10K" checked={form.checkboxOro10K} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxOro10K`}>ORO 10 K</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxAjustable`} name="checkboxAjustable" checked={form.checkboxAjustable} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxAjustable`}>Ajustable</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxTalla5`} name="checkboxTalla5" checked={form.checkboxTalla5} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxTalla5`}>Talla 5</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id="checkboxTalla6" name="checkboxTalla6" checked={form.checkboxTalla6} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxTalla6`}>Talla 6</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id="checkboxTalla7" name="checkboxTalla7" checked={form.checkboxTalla7} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxTalla7`}>Talla 7</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxTalla8`} name="checkboxTalla8" checked={form.checkboxTalla8} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxTalla8`}>Talla 8</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxTalla9`} name="checkboxTalla9" checked={form.checkboxTalla9} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxTalla9`}>Talla 9</label>
-                                </div>
-                                <div style={{ width: '25%' }}>
-                                    <input type="checkbox" id={`checkboxTalla10`} name="checkboxTalla10" checked={form.checkboxTalla10} onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                    }} />
-                                    <label htmlFor={`checkboxTalla10`}>Talla 10</label>
-                                </div>
+
                             </div>
                         </div>
                         <button type="submit" className="fourb-button">Crear</button>
@@ -626,11 +742,12 @@ export default function InventoryAdmin() {
                     <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Imagen</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Nombre</th>
+                        <th style={{ paddingBottom: 10, textAlign: 'left' }}>Descripcion</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Codigo</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Precio</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Con descuento</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Precio descuento</th>
-                        <th style={{ paddingBottom: 10, textAlign: 'left' }}>Opcion Grande/Chica</th>
+                        <th style={{ paddingBottom: 10, textAlign: 'left' }}>Opciones</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Disponible</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Total</th>
                         <th style={{ paddingBottom: 10, textAlign: 'left' }}>Tags</th>
@@ -645,57 +762,52 @@ export default function InventoryAdmin() {
                                 <Fragment key={product._id}>
                                     <tr>
                                         <td>
-                                            {product.use_small_and_big
+                                            {product.use_variants
                                                 ? null
-                                                : <img className="img-table" alt="" width="100%" src={product.img[0]} />
+                                                : <img className="img-table" alt="" width="100%" src={product.variants['default'].imgs[0]} />
                                             }
                                         </td>
                                         <td>{product.name}</td>
-                                        <td>{product.code}</td>
-                                        <td>${toCurrency(String(product.price), '.')}</td>
+                                        <td>{product.description}</td>
+                                        <td>{product.use_variants ? null : product.variants['default'].sku }</td>
+                                        <td>{product.use_variants ? null : `$${toCurrency(String(product.variants['default'].price), '.')}`}</td>
                                         <td>
-                                            <input type="checkbox" checked={product.use_discount} readOnly />
+                                            {product.use_variants ? null : <input type="checkbox" checked={product.variants['default'].use_discount} readOnly />}
                                         </td>
-                                        <td>${toCurrency(String(product.discount_price), '.')}</td>
+                                        <td>{product.use_variants ? null : `$${toCurrency(String(product.variants['default'].discount_price), '.')}`}</td>
                                         <td>
-                                            <input type="checkbox" checked={product.use_small_and_big} readOnly />
+                                            <input type="checkbox" checked={product.use_variants} readOnly />
                                         </td>
-                                        <td>{product.available}</td>
-                                        <td>{product.total}</td>
-                                        <td>{product.tags.join(',')}</td>
+                                        <td>{product.use_variants ? null : product.variants['default'].available}</td>
+                                        <td>{product.use_variants ? null : product.variants['default'].total}</td>
+                                        <td>{product.tags.join(', ')}</td>
                                         <td><EditProduct product={product} onSuccessEdit={() => {
                                             searchProducts.refetch()
                                         }} /></td>
                                         <td><Link href={`/product/${product._id}`} className="fourb-button">VER</Link></td>
                                     </tr>
-                                    {product.use_small_and_big ? <tr>
+                                    {product.use_variants ? <tr>
                                         <td colSpan={12}>
                                             <table style={{ marginLeft: 40, borderCollapse: 'collapse' }}>
                                                 <thead>
                                                     <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>
-                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Version</th>
+                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Variante</th>
                                                         <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Imagen</th>
                                                         <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Disponible</th>
                                                         <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr>
-                                                        <td>Grande</td>
-                                                        <td>
-                                                            <img className="img-table" alt="" width="100%" src={product.img_big[0]} />
-                                                        </td>
-                                                        <td>{product.available_big}</td>
-                                                        <td>{product.total_big}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Chica</td>
-                                                        <td>
-                                                            <img className="img-table" alt="" width="100%" src={product.img_small[0]} />
-                                                        </td>
-                                                        <td>{product.available_small}</td>
-                                                        <td>{product.total_small}</td>
-                                                    </tr>
+                                                    {Object.values(product.variants).map((value) => {
+                                                        return <tr>
+                                                            <td>{value.combination.join(' / ')}</td>
+                                                            <td>
+                                                                <img className="img-table" alt="" width="100%" src={value.imgs[0]} />
+                                                            </td>
+                                                            <td>{value.available}</td>
+                                                            <td>{value.total}</td>
+                                                        </tr>
+                                                    })}
                                                 </tbody>
                                             </table>
                                         </td>

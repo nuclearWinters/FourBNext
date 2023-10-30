@@ -10,27 +10,10 @@ import Image from "next/image";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { getItemStyle, reorder } from "../pages/inventory-admin";
 import { toast } from "react-toastify";
+import { InventoryTRPC } from "../pages/product/[id]";
 
 export const EditProduct: FC<{
-    product: {
-        code: string;
-        name: string;
-        price: number;
-        img: string[];
-        _id: string;
-        available: number;
-        total: number;
-        discount_price: number;
-        use_discount: boolean;
-        tags: string[];
-        img_small: string[];
-        img_big: string[];
-        available_small: number;
-        total_small: number;
-        available_big: number;
-        total_big: number;
-        use_small_and_big: boolean;
-    }
+    product: InventoryTRPC
     onSuccessEdit: () => void
 }> = ({
     product,
@@ -46,22 +29,7 @@ export const EditProduct: FC<{
             discount_price: toCurrency(String(product.discount_price), '.'),
             price: toCurrency(String(product.price), '.'),
             increment: '0',
-            incrementSmall: '0',
-            incrementBig: '0',
-            checkboxArete: product.tags.includes('arete'),
-            checkboxCollar: product.tags.includes('collar'),
-            checkboxAnillo: product.tags.includes('anillo'),
-            checkboxPulsera: product.tags.includes('pulser'),
-            checkboxPiercing: product.tags.includes('piercing'),
-            checkboxTobillera: product.tags.includes('tobillera'),
-            checkboxOro10K: product.tags.includes('oro10k'),
-            checkboxAjustable: product.tags.includes('ajustable'),
-            checkboxTalla5: product.tags.includes('talla5'),
-            checkboxTalla6: product.tags.includes('talla6'),
-            checkboxTalla7: product.tags.includes('talla7'),
-            checkboxTalla8: product.tags.includes('talla8'),
-            checkboxTalla9: product.tags.includes('talla9'),
-            checkboxTalla10: product.tags.includes('talla10'),
+            tags: product.tags,
         })
         const editProduct = trpc.editProduct.useMutation({
             onSuccess: () => {
@@ -71,7 +39,7 @@ export const EditProduct: FC<{
                 toast.error(e.message)
             }
         })
-        const onDragEnd = (result: any) => {
+        const onDragEnd = (result: any, value: any, key: string) => {
             if (!result.destination) {
                 return;
             }
@@ -83,34 +51,6 @@ export const EditProduct: FC<{
             setForm(state => ({
                 ...state,
                 img: items,
-            }))
-        }
-        const onDragEndSmall = (result: any) => {
-            if (!result.destination) {
-                return;
-            }
-            const items = reorder(
-                form.img_small,
-                result.source.index,
-                result.destination.index
-            );
-            setForm(state => ({
-                ...state,
-                img_small: items,
-            }))
-        }
-        const onDragEndBig = (result: any) => {
-            if (!result.destination) {
-                return;
-            }
-            const items = reorder(
-                form.img_big,
-                result.source.index,
-                result.destination.index
-            );
-            setForm(state => ({
-                ...state,
-                img_big: items,
             }))
         }
         return <div>
@@ -127,31 +67,14 @@ export const EditProduct: FC<{
                             editProduct.mutate({
                                 id: product._id,
                                 name: form.name,
-                                code: form.code,
+                                sku: form.sku,
                                 increment: Number(form.increment),
-                                incrementBig: Number(form.incrementBig),
-                                incrementSmall: Number(form.incrementSmall),
-                                img: form.img,
-                                imgSmall: form.img_small,
-                                imgBig: form.img_big,
+                                imgs: form.img,
                                 useDiscount: form.use_discount,
-                                useSmallAndBig: form.use_small_and_big,
+                                useSmallAndBig: form.use,
                                 discountPrice: Number(form.discount_price) * 100,
                                 price: Number(form.price) * 100,
-                                checkboxArete: form.tags.includes('arete'),
-                                checkboxCollar: form.tags.includes('collar'),
-                                checkboxAnillo: form.tags.includes('anillo'),
-                                checkboxPulsera: form.tags.includes('pulsera'),
-                                checkboxPiercing: form.tags.includes('piercing'),
-                                checkboxTobillera: form.tags.includes('tobillera'),
-                                checkboxOro10K: form.tags.includes('oro10k'),
-                                checkboxAjustable: form.tags.includes('ajustable'),
-                                checkboxTalla5: form.tags.includes('talla5'),
-                                checkboxTalla6: form.tags.includes('talla6'),
-                                checkboxTalla7: form.tags.includes('talla7'),
-                                checkboxTalla8: form.tags.includes('talla8'),
-                                checkboxTalla9: form.tags.includes('talla9'),
-                                checkboxTalla10: form.tags.includes('talla10'),
+                                tags: 
                             }, {
                                 onSuccess: () => {
                                     setShowModal(false)
@@ -220,172 +143,15 @@ export const EditProduct: FC<{
                                 />
                             </div>
                             <ModalCheckbox
-                                id="use_small_and_big"
-                                label="Usar opcion pequeña y grande"
-                                name="use_small_and_big"
+                                id="use_variants"
+                                label="Opciones de compra"
+                                name="use_variants"
                                 type="checkbox"
-                                checked={form.use_small_and_big}
+                                checked={form.use_variants}
                                 onChange={(e) => {
                                     setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                 }}
                             />
-                            {form.use_small_and_big
-                                ? (
-                                    <>
-                                        <div className="img-title">
-                                            Version grande
-                                        </div>
-                                        <div style={{ marginLeft: 20 }}>
-                                            <input name="image-big" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
-                                                const files = event.target.files
-                                                if (files) {
-                                                    for (const file of files) {
-                                                        if (file.type) {
-                                                            try {
-                                                                const data = await signedUrl.mutateAsync({ fileType: file.type })
-                                                                const url = new URL(data.uploadUrl);
-                                                                await fetch(data.uploadUrl, {
-                                                                    method: "PUT",
-                                                                    body: file,
-                                                                })
-                                                                setForm(state => ({ ...state, img_big: [...state.img_big, url.origin + url.pathname] }))
-                                                            } catch (e) {
-                                                                toast.error('Error while uploading')
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }} />
-                                            <div className="input-container images-container">
-                                                <DragDropContext onDragEnd={onDragEndBig}>
-                                                    <Droppable droppableId="droppable" direction="horizontal">
-                                                        {(provided) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                style={{
-                                                                    display: 'flex',
-                                                                    padding: 8,
-                                                                    overflow: 'auto',
-                                                                }}
-                                                                {...provided.droppableProps}
-                                                            >
-                                                                {form.img_big.map((item, index) => (
-                                                                    <Draggable key={item} draggableId={item} index={index}>
-                                                                        {(provided, snapshot) => (
-                                                                            <div
-                                                                                ref={provided.innerRef}
-                                                                                {...provided.draggableProps}
-                                                                                {...provided.dragHandleProps}
-                                                                                style={getItemStyle(
-                                                                                    snapshot.isDragging,
-                                                                                    provided.draggableProps.style
-                                                                                )}
-                                                                            >
-                                                                                <div style={{ position: 'relative' }} key={index}>
-                                                                                    <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
-                                                                                    <img className="img-uploaded" alt="" width={"100%"} src={item} />
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-                                                                    </Draggable>
-                                                                ))}
-                                                                {provided.placeholder}
-                                                            </div>
-                                                        )}
-                                                    </Droppable>
-                                                </DragDropContext>
-                                            </div>
-                                            <ModalField
-                                                id="incrementBig"
-                                                label={`Añadir al inventario (Disponible: ${product.available_big} de ${product.total_big})`}
-                                                required
-                                                name="incrementBig"
-                                                type="number"
-                                                value={form.incrementBig}
-                                                onChange={(e) => {
-                                                    setForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="img-title">
-                                            Version chica
-                                        </div>
-                                        <div style={{ marginLeft: 20 }}>
-                                            <input name="image-small" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
-                                                const files = event.target.files
-                                                if (files) {
-                                                    for (const file of files) {
-                                                        if (file.type) {
-                                                            try {
-                                                                const data = await signedUrl.mutateAsync({ fileType: file.type })
-                                                                const url = new URL(data.uploadUrl);
-                                                                await fetch(data.uploadUrl, {
-                                                                    method: "PUT",
-                                                                    body: file,
-                                                                })
-                                                                setForm(state => ({ ...state, img_small: [...state.img_small, url.origin + url.pathname] }))
-                                                            } catch (e) {
-                                                                toast.error('Error while uploading')
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }} />
-                                            <div className="input-container images-container">
-                                                <DragDropContext onDragEnd={onDragEndSmall}>
-                                                    <Droppable droppableId="droppable" direction="horizontal">
-                                                        {(provided) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                style={{
-                                                                    display: 'flex',
-                                                                    padding: 8,
-                                                                    overflow: 'auto',
-                                                                }}
-                                                                {...provided.droppableProps}
-                                                            >
-                                                                {form.img_small.map((item, index) => (
-                                                                    <Draggable key={item} draggableId={item} index={index}>
-                                                                        {(provided, snapshot) => (
-                                                                            <div
-                                                                                ref={provided.innerRef}
-                                                                                {...provided.draggableProps}
-                                                                                {...provided.dragHandleProps}
-                                                                                style={getItemStyle(
-                                                                                    snapshot.isDragging,
-                                                                                    provided.draggableProps.style
-                                                                                )}
-                                                                            >
-                                                                                <div style={{ position: 'relative', marginTop: 20 }} key={index}>
-                                                                                    <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
-                                                                                    <img className="img-uploaded" alt="" width="100%" src={item} />
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-                                                                    </Draggable>
-                                                                ))}
-                                                                {provided.placeholder}
-                                                            </div>
-                                                        )}
-                                                    </Droppable>
-                                                </DragDropContext>
-                                            </div>
-                                            <ModalField
-                                                id="incrementSmall"
-                                                label={`Añadir al inventario (Disponible: ${product.available_small} de ${product.total_small})`}
-                                                required
-                                                name="incrementSmall"
-                                                type="number"
-                                                value={form.incrementSmall}
-                                                onChange={(e) => {
-                                                    setForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                                }}
-                                            />
-                                        </div>
-                                    </>
-                                )
-                                : null
-                            }
                             {form.use_small_and_big
                                 ? null
                                 : (
@@ -476,90 +242,7 @@ export const EditProduct: FC<{
                             <div className="input-container">
                                 <label htmlFor="discount">Tags</label>
                                 <div className="checkboxes" style={{ display: 'flex', flexWrap: 'wrap', }}>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxArete`} name="checkboxArete" checked={form.checkboxArete} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxArete`}>Arete</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxCollar`} name="checkboxCollar" checked={form.checkboxCollar} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxCollar`}>Collar</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxAnillo`} name="checkboxAnillo" checked={form.checkboxAnillo} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxAnillo`}>Anillo</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxPulsera`} name="checkboxPulsera" checked={form.checkboxPulsera} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxPulsera`}>Pulsera</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxPiercing`} name="checkboxPiercing" checked={form.checkboxPiercing} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxPiercing`}>Piercing</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTobillera`} name="checkboxTobillera" checked={form.checkboxTobillera} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxTobillera`}>Tobillera</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxOro10K`} name="checkboxOro10K" checked={form.checkboxOro10K} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxOro10K`}>ORO 10 K</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxAjustable`} name="checkboxAjustable" checked={form.checkboxAjustable} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxAjustable`}>Ajustable</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTalla5`} name="checkboxTalla5" checked={form.checkboxTalla5} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxTalla5`}>Talla 5</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id="checkboxTalla6" name="checkboxTalla6" checked={form.checkboxTalla6} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxTalla6`}>Talla 6</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id="checkboxTalla7" name="checkboxTalla7" checked={form.checkboxTalla7} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxTalla7`}>Talla 7</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTalla8`} name="checkboxTalla8" checked={form.checkboxTalla8} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxTalla8`}>Talla 8</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTalla9`} name="checkboxTalla9" checked={form.checkboxTalla9} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxTalla9`}>Talla 9</label>
-                                    </div>
-                                    <div style={{ width: '25%' }}>
-                                        <input type="checkbox" id={`checkboxTalla10`} name="checkboxTalla10" checked={form.checkboxTalla10} onChange={(e) => {
-                                            setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
-                                        }} />
-                                        <label htmlFor={`checkboxTalla10`}>Talla 10</label>
-                                    </div>
+
                                 </div>
                             </div>
                             <button type="submit" className="fourb-button">Actualizar</button>

@@ -98,7 +98,7 @@ export default function Checkout() {
         setForm(state => ({ ...state, [name]: value }))
     }
     const total = products.data?.reduce((curr, product) => {
-        const total = ((product.use_discount ? product.discount_price : product.price) * (product.qty || product.qty_big || product.qty_small)) / 100
+        const total = ((product.use_discount ? product.discount_price : product.price) * product.qty) / 100
         return curr + total
     }, 0)
     return <div>

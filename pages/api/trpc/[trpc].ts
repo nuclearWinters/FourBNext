@@ -6,7 +6,7 @@ import * as trpcNext from '@trpc/server/adapters/next';
 import { appRouter } from '../../../server/trpc';
 import { MongoClient } from 'mongodb';
 import { MONGO_DB, getSessionData, getSessionToken, getTokenData, revalidateProduct } from '../../../server/utils';
-import { CartsByUserMongo, InventoryMongo, ItemsByCartMongo, PurchasesMongo, ReservedInventoryMongo, UserMongo } from '../../../server/types';
+import { CartsByUserMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, ReservedInventoryMongo, UserMongo } from '../../../server/types';
 import { CronJob } from 'cron';
 
 const client = await MongoClient.connect(MONGO_DB || "mongodb://mongo-fourb:27017", {})
@@ -14,6 +14,7 @@ const db = client.db("fourb");
 export const users = db.collection<UserMongo>("users")
 export const cartsByUser = db.collection<CartsByUserMongo>("carts_by_user")
 export const inventory = db.collection<InventoryMongo>("inventory")
+export const variantInventory = db.collection<InventoryVariantsMongo>("variants_inventory")
 export const itemsByCart = db.collection<ItemsByCartMongo>("items_by_cart")
 export const reservedInventory = db.collection<ReservedInventoryMongo>("reserved_inventory")
 export const purchases = db.collection<PurchasesMongo>("purchases")
@@ -29,19 +30,34 @@ const job = new CronJob(
                 if (cartExpireTime < now) {
                     const items = await itemsByCart.find({ cart_id: cart._id }).toArray()
                     for (const item of items) {
-                        await inventory.updateOne(
+                        const variantProduct = await variantInventory.findOneAndUpdate(
                             {
-                                _id: item.product_id
+                                _id: item.product_variant_id
                             },
                             {
                                 $inc: {
                                     available: item.qty,
-                                    available_big: item.qty_big,
-                                    available_small: item.qty_small,
                                 }
+                            },
+                            {
+                                returnDocument: 'after'   
                             }
                         )
-                        revalidateProduct(item.product_id.toHexString())
+                        if (!variantProduct) {
+                            continue
+                        }
+                        await inventory.updateOne(
+                            {
+                                _id: variantProduct.inventory_id
+                            },
+                            {
+                                $set: {
+                                    [`variants.${variantProduct.combination.join("")}.available`]: variantProduct.available,
+                                    [`variants.${variantProduct.combination.join("")}.total`]: variantProduct.total,
+                                },
+                            },
+                        )
+                        revalidateProduct(variantProduct.inventory_id.toHexString())
                     }
                     await itemsByCart.deleteMany({ cart_id: cart._id })
                     await reservedInventory.deleteMany({ cart_id: cart._id })
@@ -88,6 +104,7 @@ export default trpcNext.createNextApiHandler({
             itemsByCart,
             reservedInventory,
             purchases,
+            variantInventory
         })
     },
 });

@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import { InventoryTRPC } from "./product/[id]";
+import { InventoryTRPC, VariantTRPC } from "./product/[id]";
 import { VIRTUAL_HOST } from "../utils/config";
 import { inventory } from "./api/trpc/[trpc]";
 
@@ -31,7 +31,21 @@ function SiteMap() {
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     const products = await inventory.find().toArray()
-    const sitemap = generateSiteMap(products.map(product => ({ ...product, _id: product._id.toHexString() })));
+    const newProducts = products.map(product => {
+        const newVariants: Record<string, VariantTRPC> = {}
+        for (const key in product.variants) {
+            newVariants[key] = {
+                ...product.variants[key],
+                inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
+            }
+        }
+        return {
+            ...product,
+            _id: product._id.toHexString(),
+            variants: newVariants
+        }
+    })
+    const sitemap = generateSiteMap(newProducts);
     res.setHeader('Content-Type', 'text/xml');
     res.write(sitemap);
     res.end();

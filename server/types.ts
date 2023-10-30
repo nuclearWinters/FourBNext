@@ -62,61 +62,73 @@ export interface SessionJWT {
     phone_prefix: string | null;
 }
 
+export interface VariantMongo {
+    inventory_variant_oid: ObjectId
+    imgs: string[]
+    available: number,
+    total: number,
+    price: number,
+    sku: string,
+    use_discount: boolean,
+    discount_price: number,
+    combination: string[]
+}
+
 export interface InventoryMongo {
     _id?: ObjectId;
-    available: number;
-    total: number;
     name: string;
-    price: number;
-    img: string[];
-    discount_price: number;
-    use_discount: boolean;
+    description: string;
     tags: string[]
-    code: string;
-    img_small: string[];
-    img_big: string[];
-    use_small_and_big: boolean;
-    available_small: number;
-    total_small: number;
-    available_big: number;
-    total_big: number;
+    options: {
+        id: string
+        name: string
+        values: {
+            id: string
+            name: string
+        }[]
+        type: 'string' | 'color'
+    }[]
+    use_variants: boolean
+    variants: Record<string, VariantMongo>
+}
+
+export interface InventoryVariantsMongo {
+    _id?: ObjectId
+    inventory_id: ObjectId
+    available: number
+    total: number
+    combination: string[]
 }
 
 export interface ItemsByCartMongo {
     _id?: ObjectId;
-    product_id: ObjectId,
+    product_variant_id: ObjectId,
     cart_id: ObjectId,
     qty: number;
-    qty_big: number;
-    qty_small: number;
     price: number;
     discount_price: number;
     use_discount: boolean;
     name: string;
-    img: string[];
-    code: string;
-    img_small: string[];
-    img_big: string[];
-    use_small_and_big: boolean;
+    imgs: string[];
+    sku: string;
+    combination: string[]
+    product_id: ObjectId
 }
 
 export interface PurchasesMongo {
     _id?: ObjectId;
-    product_id: ObjectId,
+    product_variant_id: ObjectId,
     qty: number;
-    qty_big: number;
-    qty_small: number;
     price: number;
     discount_price: number;
     use_discount: boolean;
     name: string;
     user_id: ObjectId | null;
     date: Date;
-    img: string[];
-    code: string;
-    img_small: string[];
-    img_big: string[];
-    use_small_and_big: boolean;
+    imgs: string[];
+    sku: string;
+    combination: string[]
+    product_id: ObjectId,
 }
 
 export interface CartsByUserMongo {
@@ -139,10 +151,8 @@ export interface CartsByUserMongo {
 export interface ReservedInventoryMongo {
     _id?: ObjectId;
     cart_id: ObjectId;
-    product_id: ObjectId;
+    product_variant_id: ObjectId;
     qty: number;
-    qty_small: number;
-    qty_big: number;
 }
 
 export interface ContextLocals {
@@ -156,6 +166,7 @@ export interface ContextLocals {
     cartsByUser: Collection<CartsByUserMongo>;
     reservedInventory: Collection<ReservedInventoryMongo>;
     purchases: Collection<PurchasesMongo>
+    variantInventory: Collection<InventoryVariantsMongo>
 }
 
 export interface UserJWT {

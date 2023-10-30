@@ -1,5 +1,5 @@
 import { TRPCError, initTRPC } from '@trpc/server';
-import { CartsByUserMongo, ContextLocals } from './types';
+import { CartsByUserMongo, ContextLocals, InventoryVariantsMongo, VariantMongo } from './types';
 import { z } from 'zod';
 import { Filter, ObjectId } from 'mongodb';
 import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, VIRTUAL_HOST, jwt, revalidateProduct, sessionToBase64 } from './utils';
@@ -36,21 +36,28 @@ export type UserTRPC = Modify<UserMongo, {
     }[]
 }>
 
+export type VariantTRPC = Modify<VariantMongo, {
+    inventory_variant_oid: string
+}>
+
 export type InventoryTRPC = Modify<InventoryMongo, {
     _id: string
+    variants: Record<string, VariantTRPC>
 }>
 
 export type ItemsByCartTRPC = Modify<ItemsByCartMongo, {
     _id: string
-    product_id: string,
+    product_variant_id: string,
     cart_id: string,
+    product_id: string
 }>
 
 export type PurchasesTRPC = Modify<PurchasesMongo, {
     _id: string
-    product_id: string
+    product_variant_id: string
     user_id: string | null
     date: number
+    product_id: string
 }>
 
 export type CartsByUserTRPC = Modify<CartsByUserMongo, {
@@ -370,8 +377,22 @@ export const appRouter = router({
                     const nextItem = products.pop();
                     nextCursor = nextItem!._id.toHexString();
                 }
+                const newProducts = products.map(product => {
+                    const newVariants: Record<string, VariantTRPC> = {}
+                    for (const key in product.variants) {
+                        newVariants[key] = {
+                            ...product.variants[key],
+                            inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
+                        }
+                    }
+                    return {
+                        ...product,
+                        _id: product._id.toHexString(),
+                        variants: newVariants
+                    }
+                })
                 return {
-                    items: products.map(product => ({ ...product, _id: product._id.toHexString() })),
+                    items: newProducts,
                     nextCursor,
                 };
             } else if (tag) {
@@ -386,8 +407,22 @@ export const appRouter = router({
                     const nextItem = products.pop();
                     nextCursor = nextItem!._id.toHexString();
                 }
+                const newProducts = products.map(product => {
+                    const newVariants: Record<string, VariantTRPC> = {}
+                    for (const key in product.variants) {
+                        newVariants[key] = {
+                            ...product.variants[key],
+                            inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
+                        }
+                    }
+                    return {
+                        ...product,
+                        _id: product._id.toHexString(),
+                        variants: newVariants
+                    }
+                })
                 return {
-                    items: products.map(product => ({ ...product, _id: product._id.toHexString() })),
+                    items: newProducts,
                     nextCursor,
                 };
             } else if (discounts) {
@@ -402,8 +437,22 @@ export const appRouter = router({
                     const nextItem = products.pop();
                     nextCursor = nextItem!._id.toHexString();
                 }
+                const newProducts = products.map(product => {
+                    const newVariants: Record<string, VariantTRPC> = {}
+                    for (const key in product.variants) {
+                        newVariants[key] = {
+                            ...product.variants[key],
+                            inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
+                        }
+                    }
+                    return {
+                        ...product,
+                        _id: product._id.toHexString(),
+                        variants: newVariants
+                    }
+                })
                 return {
-                    items: products.map(product => ({ ...product, _id: product._id.toHexString() })),
+                    items: newProducts,
                     nextCursor,
                 };
             } else {
@@ -416,61 +465,78 @@ export const appRouter = router({
                     const nextItem = products.pop();
                     nextCursor = nextItem!._id.toHexString();
                 }
+                const newProducts = products.map(product => {
+                    const newVariants: Record<string, VariantTRPC> = {}
+                    for (const key in product.variants) {
+                        newVariants[key] = {
+                            ...product.variants[key],
+                            inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
+                        }
+                    }
+                    return {
+                        ...product,
+                        _id: product._id.toHexString(),
+                        variants: newVariants
+                    }
+                })
                 return {
-                    items: products.map(product => ({ ...product, _id: product._id.toHexString() })),
+                    items: newProducts,
                     nextCursor,
                 };
             }
         }),
     addOneToCart: publicProcedure
         .input(z.object({
-            product_id: z.string(),
+            product_variant_id: z.string(),
             qty: z.number(),
-            qtyBig: z.number(),
-            qtySmall: z.number(),
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { inventory, itemsByCart, reservedInventory, cartsByUser, sessionData, userData, res } = ctx
-                const product_id = input.product_id
+                const { inventory, variantInventory, itemsByCart, reservedInventory, cartsByUser, sessionData, userData, res } = ctx
+                const product_variant_id = input.product_variant_id
                 const qty = input.qty || 0
-                const qtyBig = input.qtyBig || 0
-                const qtySmall = input.qtySmall || 0
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
-                const product_oid = new ObjectId(product_id)
-                const filter: Filter<InventoryMongo> = {
-                    _id: product_oid
+                const product_variant_oid = new ObjectId(product_variant_id)
+                const filter: Filter<InventoryVariantsMongo> = {
+                    _id: product_variant_oid
                 }
                 if (qty) {
                     filter.available = {
                         $gte: qty
                     }
+                } else {
+                    throw new Error('Quantity must not be zero.')
                 }
-                if (qtyBig) {
-                    filter.available_big = {
-                        $gte: qtyBig
-                    }
-                }
-                if (qtySmall) {
-                    filter.available_small = {
-                        $gte: qtySmall
-                    }
-                }
-                const product = await inventory.findOneAndUpdate(
+                const variantProduct = await variantInventory.findOneAndUpdate(
                     filter,
                     {
                         $inc: {
                             available: -qty,
-                            available_big: -qtyBig,
-                            available_small: -qtySmall,
                         }
                     },
                     {
                         returnDocument: "after"
                     }
                 )
+                if (!variantProduct) {
+                    throw new Error("Not enough inventory or product not found.")
+                }
+                const product = await inventory.findOneAndUpdate(
+                    {
+                        _id: variantProduct.inventory_id
+                    },
+                    {
+                        $set: {
+                            [`variants.${variantProduct.combination.join("")}.available`]: variantProduct.available,
+                            [`variants.${variantProduct.combination.join("")}.total`]: variantProduct.total,
+                        },
+                    },
+                    {
+                        returnDocument: 'after',
+                    }
+                )
                 if (!product) {
-                    throw new Error("Not enough inventory or product not found")
+                    throw new Error("Product not found.")
                 }
                 revalidateProduct(product._id.toHexString())
                 const expireDate = new Date()
@@ -478,17 +544,15 @@ export const appRouter = router({
                 const reserved = await reservedInventory.updateOne(
                     {
                         cart_id: cart_oid,
-                        product_id: product_oid,
+                        product_variant_id: product_variant_oid,
                     },
                     {
                         $inc: {
                             qty,
-                            qty_big: qtyBig,
-                            qty_small: qtySmall,
                         },
                         $setOnInsert: {
                             cart_id: cart_oid,
-                            product_id: product_oid,
+                            product_variant_id: product_variant_oid,
                         },
                     },
                     {
@@ -498,29 +562,30 @@ export const appRouter = router({
                 if (!(reserved.modifiedCount || reserved.upsertedCount)) {
                     throw new Error("Item not reserved.")
                 }
+                const variant = Object.values(product.variants).find(variant => variant.inventory_variant_oid.toHexString() === product_variant_id)
+                if (!variant) {
+                    throw new Error('Variant not found.')
+                }
                 const result = await itemsByCart.updateOne(
                     {
-                        product_id: product_oid,
+                        product_variant_id: product_variant_oid,
                         cart_id: cart_oid,
                     },
                     {
                         $inc: {
                             qty,
-                            qty_big: qtyBig,
-                            qty_small: qtySmall,
                         },
                         $setOnInsert: {
                             name: product.name,
-                            product_id: product_oid,
+                            product_variant_id: variant.inventory_variant_oid,
                             cart_id: cart_oid,
-                            price: product.price,
-                            discount_price: product.discount_price,
-                            use_discount: product.use_discount,
-                            img: product.img,
-                            code: product.code,
-                            img_big: product.img_big,
-                            img_small: product.img_small,
-                            use_small_and_big: product.use_small_and_big,
+                            price: variant.price,
+                            discount_price: variant.discount_price,
+                            use_discount: variant.use_discount,
+                            imgs: variant.imgs,
+                            sku: variant.sku,
+                            combination: variant.combination,
+                            product_id: product._id
                         }
                     },
                     {
@@ -541,7 +606,7 @@ export const appRouter = router({
                         $setOnInsert: {
                             _id: cart_oid,
                             pay_in_cash: false,
-                            user_id: userData?.user.cart_id ? new ObjectId(userData?.user.cart_id) : null,
+                            user_id: userData?.user._id ? new ObjectId(userData?.user._id) : null,
                             status: 'waiting',
                             email: userData?.user.email ?? sessionData.email,
                             order_id: null,
@@ -588,8 +653,9 @@ export const appRouter = router({
                 return itemsInCart.map(item => ({
                     ...item,
                     _id: item._id.toHexString(),
-                    product_id: item.product_id.toHexString(),
+                    product_variant_id: item.product_variant_id.toHexString(),
                     cart_id: item.cart_id.toHexString(),
+                    product_id: item.product_id.toHexString()
                 }))
             } catch (e) {
                 if (e instanceof Error) {
@@ -607,60 +673,63 @@ export const appRouter = router({
     updateOneCart: publicProcedure
         .input(z.object({
             item_by_cart_id: z.string(),
-            product_id: z.string(),
+            product_variant_id: z.string(),
             qty: z.number(),
-            qtyBig: z.number(),
-            qtySmall: z.number(),
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { inventory, itemsByCart, reservedInventory, cartsByUser, userData, sessionData } = ctx
+                const { inventory, variantInventory, itemsByCart, reservedInventory, cartsByUser, userData, sessionData } = ctx
                 const item_by_cart_id = input.item_by_cart_id
-                const product_id = input.product_id
+                const product_variant_id = input.product_variant_id
                 const qty = input.qty || 0
-                const qtyBig = input.qtyBig || 0
-                const qtySmall = input.qtySmall || 0
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
-                const product_oid = new ObjectId(product_id)
+                const product_variant_oid = new ObjectId(product_variant_id)
                 const reserved = await reservedInventory.findOneAndDelete({
                     cart_id: cart_oid,
-                    product_id: product_oid,
+                    product_variant_id: product_variant_oid,
                 })
                 if (!reserved) {
                     throw new Error("Item not reserved.")
                 }
-                const filter: Filter<InventoryMongo> = {
-                    _id: product_oid,
+                const filter: Filter<InventoryVariantsMongo> = {
+                    _id: product_variant_oid,
                 }
                 if (qty) {
                     filter.available = {
                         $gte: qty - reserved.qty,
                     }
+                } else {
+                    throw new Error('Quantity must not be zero.')
                 }
-                if (qtyBig) {
-                    filter.available_big = {
-                        $gte: qtyBig - reserved.qty_big,
-                    }
-                }
-                if (qtySmall) {
-                    filter.available_small = {
-                        $gte: qtySmall - reserved.qty_small,
-                    }
-                }
-                const product = await inventory.findOneAndUpdate(
+                const variantProduct = await variantInventory.findOneAndUpdate(
                     filter,
                     {
                         $inc: {
                             available: reserved.qty - qty,
-                            available_big: reserved.qty_big - qtyBig,
-                            available_small: reserved.qty_small - qtySmall,
                         },
                     },
                     {
                         returnDocument: "after"
                     })
+                if (!variantProduct) {
+                    throw new Error("Not enough inventory or product not found.")
+                }
+                const product = await inventory.findOneAndUpdate(
+                    {
+                        _id: variantProduct.inventory_id
+                    },
+                    {
+                        $set: {
+                            [`variants.${variantProduct.combination.join("")}.available`]: variantProduct.available,
+                            [`variants.${variantProduct.combination.join("")}.total`]: variantProduct.total,
+                        },
+                    },
+                    {
+                        returnDocument: 'after',
+                    }
+                )
                 if (!product) {
-                    throw new Error("Not enough inventory or product not found")
+                    throw new Error("Product not found.")
                 }
                 revalidateProduct(product._id.toHexString())
                 const item_by_cart_oid = new ObjectId(item_by_cart_id)
@@ -672,8 +741,6 @@ export const appRouter = router({
                     {
                         $set: {
                             qty,
-                            qty_big: qtyBig,
-                            qty_small: qtySmall,
                         },
                     },
                 )
@@ -682,14 +749,11 @@ export const appRouter = router({
                 }
                 const expireDate = new Date()
                 expireDate.setDate(expireDate.getDate() + 7)
-                const newReserved = await reservedInventory.insertOne(
-                    {
-                        qty,
-                        cart_id: cart_oid,
-                        product_id: product_oid,
-                        qty_big: qtyBig,
-                        qty_small: qtySmall,
-                    })
+                const newReserved = await reservedInventory.insertOne({
+                    qty,
+                    cart_id: cart_oid,
+                    product_variant_id: product_variant_oid,
+                })
                 if (!newReserved.insertedId) {
                     throw new Error("Item not reserved.")
                 }
@@ -704,7 +768,7 @@ export const appRouter = router({
                         $setOnInsert: {
                             _id: cart_oid,
                             pay_in_cash: false,
-                            user_id: userData?.user.cart_id ? new ObjectId(userData?.user.cart_id) : null,
+                            user_id: userData?.user._id ? new ObjectId(userData?.user._id) : null,
                             status: 'waiting',
                             email: userData?.user.email ?? sessionData.email,
                             order_id: null,
@@ -741,7 +805,7 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { itemsByCart, reservedInventory, inventory, userData, sessionData } = ctx
+                const { inventory, itemsByCart, reservedInventory, variantInventory, userData, sessionData } = ctx
                 const item_by_cart_id = input.item_by_cart_id
                 if (item_by_cart_id && typeof item_by_cart_id !== "string") {
                     throw new Error("Product ID is required and must be a string")
@@ -762,24 +826,44 @@ export const appRouter = router({
                 }
                 const reservation = await reservedInventory.findOneAndDelete(
                     {
-                        product_id: result.product_id,
+                        product_variant_id: result.product_variant_id,
                         cart_id: cart_oid,
                     })
                 if (!reservation) {
                     throw new Error("Item in reservation was not deleted.")
                 }
-                const product = await inventory.findOneAndUpdate({
-                    _id: result.product_id,
-                },
+                const variantProduct = await variantInventory.findOneAndUpdate(
+                    {
+                        _id: result.product_variant_id,
+                    },
                     {
                         $inc: {
                             available: reservation.qty,
-                            available_small: reservation.qty_small,
-                            available_big: reservation.qty_big,
                         },
-                    })
-                if (!product) {
+                    },
+                    {
+                        returnDocument: 'after'
+                    }
+                )
+                if (!variantProduct) {
                     throw new Error("Inventory not modified.")
+                }
+                const product = await inventory.findOneAndUpdate(
+                    {
+                        _id: variantProduct.inventory_id
+                    },
+                    {
+                        $set: {
+                            [`variants.${variantProduct.combination.join("")}.available`]: variantProduct.available,
+                            [`variants.${variantProduct.combination.join("")}.total`]: variantProduct.total,
+                        },
+                    },
+                    {
+                        returnDocument: 'after',
+                    }
+                )
+                if (!product) {
+                    throw new Error("Product not found.")
                 }
                 revalidateProduct(product._id.toHexString())
                 return
@@ -802,23 +886,23 @@ export const appRouter = router({
                 z.object({
                     delivery: z.literal('store'),
                     phone_prefix: z.literal('+52'),
-                    phone: z.string().nonempty(),
-                    name: z.string().nonempty(),
-                    apellidos: z.string().nonempty(),
+                    phone: z.string().min(1),
+                    name: z.string().min(1),
+                    apellidos: z.string().min(1),
                     payment_method: z.enum(["cash", "conekta"]),
-                    email: z.string(),
+                    email: z.string().email(),
                 }),
                 z.object({
-                    name: z.string().nonempty(),
-                    apellidos: z.string().nonempty(),
-                    street: z.string().nonempty(),
-                    email: z.string(),
-                    country: z.string().nonempty(),
-                    neighborhood: z.string().nonempty(),
-                    zip: z.string().nonempty(),
-                    city: z.string().nonempty(),
-                    state: z.string().nonempty(),
-                    phone: z.string().nonempty(),
+                    name: z.string().min(1),
+                    apellidos: z.string().min(1),
+                    street: z.string().min(1),
+                    email: z.string().email(),
+                    country: z.string().min(1),
+                    neighborhood: z.string().min(1),
+                    zip: z.string().min(1),
+                    city: z.string().min(1),
+                    state: z.string().min(1),
+                    phone: z.string().min(1),
                     address_id: z.string(),
                     phone_prefix: z.literal('+52'),
                     payment_method: z.enum(["cash", "conekta"]),
@@ -832,6 +916,9 @@ export const appRouter = router({
                 if (input.delivery === "store") {
                     const { name, apellidos, phone, phone_prefix, payment_method, email } = input
                     if (payment_method === "cash") {
+                        if (!email) {
+                            throw new Error("Email is required and must be a string")
+                        }
                         const session = sessionToBase64({
                             ...sessionData,
                             email,
@@ -848,10 +935,11 @@ export const appRouter = router({
                             {
                                 $set: {
                                     pay_in_cash: true,
-                                    email: userData?.user.email ?? sessionData.email,
+                                    email,
                                     delivery: input.delivery,
                                     phone: `${phone_prefix}${phone}`,
                                     name: `${name} ${apellidos}`,
+                                    user_id: userData?.user._id ? new ObjectId(userData.user._id) : null
                                 }
                             }
                         )
@@ -881,7 +969,7 @@ export const appRouter = router({
                                 line_items: products.map(product => ({
                                     name: product.name,
                                     unit_price: product.use_discount ? product.discount_price : product.price,
-                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                    quantity: product.qty,
                                 })),
                                 checkout: {
                                     type: 'Integration',
@@ -928,7 +1016,7 @@ export const appRouter = router({
                                 line_items: products.map(product => ({
                                     name: product.name,
                                     unit_price: product.use_discount ? product.discount_price : product.price,
-                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                    quantity: product.qty,
                                 })),
                                 checkout: {
                                     type: 'Integration',
@@ -963,7 +1051,7 @@ export const appRouter = router({
                             {
                                 $set: {
                                     pay_in_cash: true,
-                                    email: userData?.user.email ?? sessionData.email,
+                                    email,
                                     delivery: input.delivery,
                                     address: `${street}, ${neighborhood}, ${zip} ${city} ${state}, ${country}`,
                                     phone: `${phone_prefix}${phone}`,
@@ -971,6 +1059,13 @@ export const appRouter = router({
                                 }
                             }
                         )
+                        await sgMail.send({
+                            to: email,
+                            from: 'asistencia@fourb.mx',
+                            subject: 'Por favor contáctanos y envíanos el código adjunto',
+                            text: `Envíanos un mensaje a nuestro Instagram o Facebook con este código en mano: ${cart_oid.toHexString()}`,
+                            html: `<strong>Envíanos un mensaje a nuestro <a href='https://www.instagram.com/fourb_mx/' target='_blank'>Instagram</a> o <a href='https://www.facebook.com/fourbmx/' target='_blank'>Facebook</a> con este código en mano: ${cart_oid.toHexString()}</strong>`,
+                        });
                         return ''
                     } else {
                         if (address_id && userData) {
@@ -1011,7 +1106,7 @@ export const appRouter = router({
                                 line_items: products.map(product => ({
                                     name: product.name,
                                     unit_price: product.use_discount ? product.discount_price : product.price,
-                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                    quantity: product.qty,
                                 })),
                                 checkout: {
                                     type: 'Integration',
@@ -1077,7 +1172,7 @@ export const appRouter = router({
                                 line_items: products.map(product => ({
                                     name: product.name,
                                     unit_price: product.use_discount ? product.discount_price : product.price,
-                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                    quantity: product.qty,
                                 })),
                                 checkout: {
                                     type: 'Integration',
@@ -1131,7 +1226,7 @@ export const appRouter = router({
                                 line_items: products.map(product => ({
                                     name: product.name,
                                     unit_price: product.use_discount ? product.discount_price : product.price,
-                                    quantity: product.use_small_and_big ? product.qty_big ? product.qty_big : product.qty_small : product.qty,
+                                    quantity: product.qty,
                                 })),
                                 checkout: {
                                     type: 'Integration',
@@ -1217,20 +1312,17 @@ export const appRouter = router({
                         const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
                         const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
                             name: product.name,
-                            product_id: product.product_id,
+                            product_variant_id: product.product_variant_id,
                             qty: product.qty,
-                            qty_big: product.qty_big,
-                            qty_small: product.qty_small,
                             price: product.price,
                             discount_price: product.discount_price,
                             use_discount: product.use_discount,
                             user_id: user_oid,
                             date: new Date(),
-                            img: product.img,
-                            code: product.code,
-                            use_small_and_big: product.use_small_and_big,
-                            img_big: product.img_big,
-                            img_small: product.img_small,
+                            imgs: product.imgs,
+                            sku: product.sku,
+                            product_id: product.product_id,
+                            combination: product.combination,
                         }))
                         await purchases.insertMany(purchasedProducts)
                     }
@@ -1283,20 +1375,17 @@ export const appRouter = router({
                         const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
                         const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
                             name: product.name,
-                            product_id: product._id,
+                            product_variant_id: product.product_variant_id,
                             qty: product.qty,
-                            qty_small: product.qty_small,
-                            qty_big: product.qty_big,
                             price: product.price,
                             discount_price: product.discount_price,
                             use_discount: product.use_discount,
                             user_id: null,
                             date: new Date(),
-                            img: product.img,
-                            code: product.code,
-                            use_small_and_big: product.use_small_and_big,
-                            img_big: product.img_big,
-                            img_small: product.img_small,
+                            imgs: product.imgs,
+                            sku: product.sku,
+                            combination: product.combination,
+                            product_id: product.product_id
                         }))
                         await purchases.insertMany(purchasedProducts)
                     }
@@ -1346,9 +1435,10 @@ export const appRouter = router({
                     items: history.map(history => ({
                         ...history,
                         _id: history._id.toHexString(),
-                        product_id: history.product_id.toHexString(),
+                        product_variant_id: history.product_variant_id.toHexString(),
                         user_id: history.user_id?.toHexString() || null,
                         date: history.date.getTime(),
+                        product_id: history.product_id.toHexString(),
                     })),
                     nextCursor
                 }
@@ -1367,7 +1457,7 @@ export const appRouter = router({
         }),
     signedUrl: publicProcedure
         .input(z.object({
-            fileType: z.string().nonempty()
+            fileType: z.string().min(1)
         }))
         .mutation(async ({ input }): Promise<{
             uploadUrl: string
@@ -1404,9 +1494,9 @@ export const appRouter = router({
     editUser: publicProcedure
         .input(z.object({
             email: z.string().email(),
-            name: z.string().nonempty(),
-            apellidos: z.string().nonempty(),
-            phone: z.string().nonempty(),
+            name: z.string().min(1),
+            apellidos: z.string().min(1),
+            phone: z.string().min(1),
             phonePrefix: z.literal('+52')
         })).mutation(async ({ ctx, input }): Promise<void> => {
             try {
@@ -1448,144 +1538,78 @@ export const appRouter = router({
         }),
     addProduct: publicProcedure
         .input(z.object({
-            qty: z.number(),
-            qtySmall: z.number(),
-            qtyBig: z.number(),
-            name: z.string().nonempty(),
-            price: z.number(),
-            useSmallAndBig: z.boolean(),
-            img: z.array(z.string()),
-            imgBig: z.array(z.string()),
-            imgSmall: z.array(z.string()),
-            discountPrice: z.number(),
-            useDiscount: z.boolean(),
-            checkboxArete: z.boolean(),
-            checkboxCollar: z.boolean(),
-            checkboxAnillo: z.boolean(),
-            checkboxPulsera: z.boolean(),
-            checkboxPiercing: z.boolean(),
-            checkboxTobillera: z.boolean(),
-            checkboxOro10K: z.boolean(),
-            checkboxAjustable: z.boolean(),
-            checkboxTalla5: z.boolean(),
-            checkboxTalla6: z.boolean(),
-            checkboxTalla7: z.boolean(),
-            checkboxTalla8: z.boolean(),
-            checkboxTalla9: z.boolean(),
-            checkboxTalla10: z.boolean(),
-            code: z.string(),
-        }).superRefine(({ useSmallAndBig, imgBig, imgSmall, img }, ctx) => {
-            if (useSmallAndBig) {
-                if (imgBig.length === 0) {
-                    ctx.addIssue({
-                        code: "custom",
-                        message: "Images for big option must include at least one image"
-                    });
-                }
-                if (imgSmall.length === 0) {
-                    ctx.addIssue({
-                        code: "custom",
-                        message: "Images for small option must include at least one image"
-                    });
-                }
-            } else {
-                if (img.length === 0) {
-                    ctx.addIssue({
-                        code: "custom",
-                        message: "Images must include at least one image"
-                    });
-                }
-            }
+            name: z.string().min(1),
+            description: z.string(),
+            variants: z.record(z.string(), z.object({
+                imgs: z.array(z.string()),
+                qty: z.number(),
+                price: z.number(),
+                sku: z.string(),
+                use_discount: z.boolean(),
+                discount_price: z.number(),
+                combination: z.array(z.string())
+            })),
+            use_variants: z.boolean(),
+            options: z.array(z.object({
+                id: z.string().min(1),
+                name: z.string().min(1),
+                values: z.array(
+                    z.object({
+                        id: z.string(),
+                        name: z.string()
+                    })
+                ),
+                type: z.enum(["string", "color"])
+            })),
+            tags: z.array(z.string()),
         })).mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const qty = input.qty
-                const qtySmall = input.qtySmall
-                const qtyBig = input.qtyBig
                 const name = input.name
-                const price = input.price
-                const useSmallAndBig = input.useSmallAndBig
-                const img = input.img
-                const imgBig = input.imgBig
-                const imgSmall = input.imgSmall
-                const discountPrice = input.discountPrice
-                const useDiscount = input.useDiscount
-                const checkboxArete = input.checkboxArete
-                const checkboxCollar = input.checkboxCollar
-                const checkboxAnillo = input.checkboxAnillo
-                const checkboxPulsera = input.checkboxPulsera
-                const checkboxPiercing = input.checkboxPiercing
-                const checkboxTobillera = input.checkboxTobillera
-                const checkboxOro10K = input.checkboxOro10K
-                const checkboxAjustable = input.checkboxAjustable
-                const checkboxTalla5 = input.checkboxTalla5
-                const checkboxTalla6 = input.checkboxTalla6
-                const checkboxTalla7 = input.checkboxTalla7
-                const checkboxTalla8 = input.checkboxTalla8
-                const checkboxTalla9 = input.checkboxTalla9
-                const checkboxTalla10 = input.checkboxTalla10
-                const code = input.code
-                const tags = []
-                if (checkboxArete) {
-                    tags.push("arete")
-                }
-                if (checkboxCollar) {
-                    tags.push("collar")
-                }
-                if (checkboxAnillo) {
-                    tags.push("anillo")
-                }
-                if (checkboxPulsera) {
-                    tags.push("pulsera")
-                }
-                if (checkboxPiercing) {
-                    tags.push("piercing")
-                }
-                if (checkboxTobillera) {
-                    tags.push("tobillera")
-                }
-                if (checkboxOro10K) {
-                    tags.push("oro10k")
-                }
-                if (checkboxAjustable) {
-                    tags.push("ajustable")
-                }
-                if (checkboxTalla5) {
-                    tags.push("talla5")
-                }
-                if (checkboxTalla6) {
-                    tags.push("talla6")
-                }
-                if (checkboxTalla7) {
-                    tags.push("talla7")
-                }
-                if (checkboxTalla8) {
-                    tags.push("tall8")
-                }
-                if (checkboxTalla9) {
-                    tags.push("tall9")
-                }
-                if (checkboxTalla10) {
-                    tags.push("talla10")
-                }
-                const { inventory } = ctx
-                const product = await inventory.insertOne({
-                    available: qty,
-                    total: qty,
-                    name,
-                    price,
-                    img,
-                    discount_price: discountPrice,
-                    use_discount: useDiscount,
-                    tags,
-                    code,
-                    use_small_and_big: useSmallAndBig,
-                    img_big: imgBig,
-                    img_small: imgSmall,
-                    available_big: qtyBig,
-                    total_big: qtyBig,
-                    available_small: qtySmall,
-                    total_small: qtySmall,
+                const description = input.description
+                const variants = input.variants
+                const options = input.options
+                const use_variants = input.use_variants
+                const tags = input.tags
+                const { inventory, variantInventory } = ctx
+                const variantsObject: Record<string, {
+                    inventory_variant_oid: ObjectId,
+                    imgs: string[],
+                    available: number;
+                    total: number;
+                    price: number;
+                    sku: string;
+                    use_discount: boolean,
+                    discount_price: number,
+                    combination: string[]
+                }> = {}
+                Object.entries(variants).forEach(([key, value]) => {
+                    variantsObject[key] = {
+                        inventory_variant_oid: new ObjectId(),
+                        imgs: value.imgs,
+                        price: value.price,
+                        sku: value.sku,
+                        available: value.qty,
+                        total: value.qty,
+                        use_discount: value.use_discount,
+                        discount_price: value.discount_price,
+                        combination: value.combination,
+                    }
                 })
+                const product = await inventory.insertOne({
+                    name,
+                    tags,
+                    description,
+                    variants: variantsObject,
+                    options,
+                    use_variants,
+                })
+                await variantInventory.insertMany(Object.values(variantsObject).map(variant => ({
+                    _id: variant.inventory_variant_oid,
+                    inventory_id: product.insertedId,
+                    available: variant.available,
+                    total: variant.total,
+                    combination: variant.combination,
+                })))
                 revalidateProduct(product.insertedId.toHexString())
                 return
             } catch (e) {
@@ -1603,185 +1627,127 @@ export const appRouter = router({
         }),
     editProduct: publicProcedure
         .input(z.object({
-            id: z.string().nonempty(),
-            increment: z.number(),
-            incrementSmall: z.number(),
-            incrementBig: z.number(),
-            name: z.string().nonempty(),
-            price: z.number(),
-            useSmallAndBig: z.boolean(),
-            img: z.array(z.string()),
-            imgBig: z.array(z.string()),
-            imgSmall: z.array(z.string()),
-            discountPrice: z.number(),
-            useDiscount: z.boolean(),
-            checkboxArete: z.boolean(),
-            checkboxCollar: z.boolean(),
-            checkboxAnillo: z.boolean(),
-            checkboxPulsera: z.boolean(),
-            checkboxPiercing: z.boolean(),
-            checkboxTobillera: z.boolean(),
-            checkboxOro10K: z.boolean(),
-            checkboxAjustable: z.boolean(),
-            checkboxTalla5: z.boolean(),
-            checkboxTalla6: z.boolean(),
-            checkboxTalla7: z.boolean(),
-            checkboxTalla8: z.boolean(),
-            checkboxTalla9: z.boolean(),
-            checkboxTalla10: z.boolean(),
-            code: z.string(),
-        }).superRefine(({ useSmallAndBig, imgBig, imgSmall, img }, ctx) => {
-            if (useSmallAndBig) {
-                if (imgBig.length === 0) {
-                    ctx.addIssue({
-                        code: "custom",
-                        message: "Images for big option must include at least one image"
-                    });
-                }
-                if (imgSmall.length === 0) {
-                    ctx.addIssue({
-                        code: "custom",
-                        message: "Images for small option must include at least one image"
-                    });
-                }
-            } else {
-                if (img.length === 0) {
-                    ctx.addIssue({
-                        code: "custom",
-                        message: "Images must include at least one image"
-                    });
-                }
-            }
+            id: z.string().min(1),
+            name: z.string().min(1),
+            description: z.string(),
+            variants: z.record(z.string(), z.object({
+                inventory_variant_oid: z.string().min(1),
+                imgs: z.array(z.string()),
+                increment: z.number(),
+                total: z.number(),
+                available: z.number(),
+                price: z.number(),
+                sku: z.string(),
+                use_discount: z.boolean(),
+                discount_price: z.number(),
+                combination: z.array(z.string())
+            })),
+            use_variants: z.boolean(),
+            options: z.array(z.object({
+                id: z.string().min(1),
+                name: z.string().min(1),
+                values: z.array(
+                    z.object({
+                        id: z.string(),
+                        name: z.string()
+                    })
+                ),
+                type: z.enum(['string', 'color'])
+            })),
+            tags: z.array(z.string()),
         })).mutation(async ({ ctx, input }): Promise<void> => {
             try {
                 const id = input.id
-                const increment = input.increment || 0
-                const incrementSmall = input.incrementSmall || 0
-                const incrementBig = input.incrementBig || 0
                 const name = input.name
-                const price = input.price
-                const code = input.code
-                const discountPrice = input.discountPrice
-                const useDiscount = input.useDiscount
-                const checkboxArete = input.checkboxArete
-                const checkboxCollar = input.checkboxCollar
-                const checkboxAnillo = input.checkboxAnillo
-                const checkboxPulsera = input.checkboxPulsera
-                const checkboxPiercing = input.checkboxPiercing
-                const checkboxTobillera = input.checkboxTobillera
-                const checkboxOro10K = input.checkboxOro10K
-                const checkboxAjustable = input.checkboxAjustable
-                const checkboxTalla5 = input.checkboxTalla5
-                const checkboxTalla6 = input.checkboxTalla6
-                const checkboxTalla7 = input.checkboxTalla7
-                const checkboxTalla8 = input.checkboxTalla8
-                const checkboxTalla9 = input.checkboxTalla9
-                const checkboxTalla10 = input.checkboxTalla10
-                const useSmallAndBig = input.useSmallAndBig
-                const img = input.img as string[]
-                const imgBig = input.imgBig as string[]
-                const imgSmall = input.imgSmall as string[]
-                const tags = []
-                if (checkboxArete) {
-                    tags.push("arete")
-                }
-                if (checkboxCollar) {
-                    tags.push("collar")
-                }
-                if (checkboxAnillo) {
-                    tags.push("anillo")
-                }
-                if (checkboxPulsera) {
-                    tags.push("pulsera")
-                }
-                if (checkboxPiercing) {
-                    tags.push("piercing")
-                }
-                if (checkboxTobillera) {
-                    tags.push("tobillera")
-                }
-                if (checkboxOro10K) {
-                    tags.push("oro10k")
-                }
-                if (checkboxAjustable) {
-                    tags.push("ajustable")
-                }
-                if (checkboxTalla5) {
-                    tags.push("talla5")
-                }
-                if (checkboxTalla6) {
-                    tags.push("talla6")
-                }
-                if (checkboxTalla7) {
-                    tags.push("talla7")
-                }
-                if (checkboxTalla8) {
-                    tags.push("tall8")
-                }
-                if (checkboxTalla9) {
-                    tags.push("tall9")
-                }
-                if (checkboxTalla10) {
-                    tags.push("talla10")
-                }
-                const { inventory } = ctx
+                const description = input.description
+                const tags = input.tags
+                const use_variants = input.use_variants
+                const options = input.options
+                const variants = input.variants
+                const { inventory, variantInventory } = ctx
                 const product_oid = new ObjectId(id)
                 const filter: Filter<InventoryMongo> = {
                     _id: product_oid,
                 }
-                if (increment) {
-                    filter.available = {
-                        $gte: -increment
+                const variantsObject: Record<string, {
+                    inventory_variant_oid: ObjectId,
+                    imgs: string[],
+                    available: number;
+                    total: number;
+                    price: number;
+                    sku: string;
+                    use_discount: boolean,
+                    discount_price: number,
+                    combination: string[],
+                }> = {}
+                Object.entries(variants).forEach(([key, value]) => {
+                    variantsObject[key] = {
+                        inventory_variant_oid: new ObjectId(value.inventory_variant_oid),
+                        imgs: value.imgs,
+                        price: value.price,
+                        sku: value.sku,
+                        available: value.available + value.increment,
+                        total: value.total + value.increment,
+                        use_discount: value.use_discount,
+                        discount_price: value.discount_price,
+                        combination: value.combination,
                     }
-                }
-                if (incrementBig) {
-                    filter.available_big = {
-                        $gte: -incrementBig
-                    }
-                }
-                if (incrementSmall) {
-                    filter.available_small = {
-                        $gte: -incrementSmall
-                    }
-                }
+                })
                 const result = await inventory.findOneAndUpdate(
                     filter,
                     {
-                        ...(increment ? {
-                            $inc: {
-                                available: increment,
-                                total: increment,
-                            }
-                        } : {}),
-                        ...(incrementBig ? {
-                            $inc: {
-                                available_big: incrementBig,
-                                total_big: incrementBig,
-                            }
-                        } : {}),
-                        ...(incrementSmall ? {
-                            $inc: {
-                                available_small: incrementSmall,
-                                total_small: incrementSmall,
-                            }
-                        } : {}),
                         $set: {
                             name,
-                            price,
-                            discount_price: discountPrice,
-                            use_discount: useDiscount,
+                            description,
                             tags,
-                            code,
-                            use_small_and_big: useSmallAndBig,
-                            img,
-                            img_big: imgBig,
-                            img_small: imgSmall,
+                            options,
+                            variants: variantsObject,
+                            use_variants,
                         }
                     },
                     {
                         returnDocument: "after",
                     }
                 )
+                for (const key in variants) {
+                    const variant = variants[key]
+                    if (variant.increment) {
+                        const filter: Filter<InventoryVariantsMongo> = {
+                            _id: new ObjectId(variant.inventory_variant_oid),
+                            available: {
+                                $gte: -variant.increment
+                            }
+                        }
+                        const result = await variantInventory.findOneAndUpdate(
+                            filter,
+                            {
+                                ...(variant.increment ? {
+                                    $inc: {
+                                        available: variant.increment,
+                                        total: variant.increment,
+                                    }
+                                } : {}),
+                            },
+                            {
+                                returnDocument: "after",
+                            }
+                        )
+                        if (result) {
+                            await inventory.findOneAndUpdate(
+                                { _id: result?.inventory_id },
+                                {
+                                    $set: {
+                                        [`variants.${key}.available`]: result.available,
+                                        [`variants.${key}.total`]: result.total,
+                                    }
+                                },
+                                {
+                                    returnDocument: "after",
+                                }
+                            )
+                        }
+                    }
+                }
                 if (!result) {
                     throw new Error("Not enough inventory or product not found")
                 }
@@ -1828,20 +1794,17 @@ export const appRouter = router({
                         const productsInCart = await itemsByCart.find({ cart_id: cart._id }).toArray()
                         const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
                             name: product.name,
-                            product_id: product.product_id,
+                            product_variant_id: product.product_variant_id,
                             qty: product.qty,
-                            qty_big: product.qty_big,
-                            qty_small: product.qty_small,
                             price: product.price,
                             discount_price: product.discount_price,
                             use_discount: product.use_discount,
                             user_id: cart.user_id,
                             date: new Date(),
-                            img: product.img,
-                            code: product.code,
-                            use_small_and_big: product.use_small_and_big,
-                            img_big: product.img_big,
-                            img_small: product.img_small,
+                            imgs: product.imgs,
+                            sku: product.sku,
+                            combination: product.combination,
+                            product_id: product.product_id,
                         }))
                         await purchases.insertMany(purchasedProducts)
                     }
@@ -1860,7 +1823,7 @@ export const appRouter = router({
         }),
     verifyEmail: publicProcedure
         .input(z.object({
-            token: z.string().nonempty(),
+            token: z.string().min(1),
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
@@ -1965,7 +1928,7 @@ export const appRouter = router({
         }),
     updateCart: publicProcedure
         .input(z.object({
-            cart_id: z.string().nonempty(),
+            cart_id: z.string().min(1),
             status: z.enum(['paid', 'waiting']).nullish(),
             delivered: z.boolean().nullish(),
             sent: z.boolean().nullish(),
@@ -2002,7 +1965,7 @@ export const appRouter = router({
         }),
     getItemsByCart: publicProcedure
         .input(z.object({
-            cart_id: z.string().nonempty(),
+            cart_id: z.string().min(1),
         }))
         .query(async ({ ctx, input }): Promise<ItemsByCartTRPC[]> => {
             try {
@@ -2013,8 +1976,9 @@ export const appRouter = router({
                 return itemsInCart.map(item => ({
                     ...item,
                     _id: item._id.toHexString(),
-                    product_id: item.product_id.toHexString(),
+                    product_variant_id: item.product_variant_id.toHexString(),
                     cart_id: item.cart_id.toHexString(),
+                    product_id: item.product_id.toHexString(),
                 }))
             } catch (e) {
                 if (e instanceof Error) {

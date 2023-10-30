@@ -1,8 +1,8 @@
 import { ObjectId } from "mongodb";
 import { FC, useState } from "react"
 import css from "./product.module.css"
-import { inventory } from "../api/trpc/[trpc]";
-import { InventoryMongo } from "../../server/types";
+import { inventory, variantInventory } from "../api/trpc/[trpc]";
+import { InventoryMongo, VariantMongo } from "../../server/types";
 import { trpc } from "../../utils/config";
 import { useRouter } from "next/router";
 import { InputNumberCart } from "../../components/InputNumberCart";
@@ -12,16 +12,17 @@ import { toast } from "react-toastify";
 
 type Modify<T, R> = Omit<T, keyof R> & R;
 
+export type VariantTRPC = Modify<VariantMongo, {
+    inventory_variant_oid: string
+}>
+
 export type InventoryTRPC = Modify<InventoryMongo, {
     _id: string
+    variants: Record<string, VariantTRPC>
 }>
 
 export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
     const router = useRouter()
-    const [checked, setChecked] = useState<"big" | "small">(product.available_big ? "big" : "small")
-    const checkedBig = checked === "big"
-    const checkedSmall = checked === "small"
-    const disabled = product.use_small_and_big ? ((product.available_big === 0 && checkedBig) || (product.available_small === 0 && checkedBig)) : product.available === 0
     const [qty, setQty] = useState('1')
     const addOneToCart = trpc.addOneToCart.useMutation({
         onSuccess: () => {
@@ -34,6 +35,9 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
     })
     const qtyParsed = Number(qty) < 1 ? 1 : Number(qty)
     const title = `${product.name} - FOURB`
+    const [selectedOption, setSelectedOption] = useState(product.use_variants ? product.options.map(option => option.values[0].id) : ['default'])
+    const variant = product.variants[selectedOption.join("")]
+    const disabled = variant.available === 0
     return <div className={css.productContainer} style={{ flex: 1, flexDirection: 'column' }}>
         <Head>
             <title>{title}</title>
@@ -47,65 +51,54 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                     "@type": "Product",
                     "name": product.name,
                     "description": "",
-                    "image": product.use_small_and_big ? [...product.img_big, ...product.img_small] : product.img,
-                    "sku": product.code,
+                    "image": variant.imgs,
+                    "sku": variant.sku,
                     "offers": {
                         "@type": "AggregateOffer",
-                        "offerCount": product.use_small_and_big ? product.available_big + product.available_small : product.available,
-                        "lowPrice": product.use_discount ? product.discount_price : product.price,
-                        "highPrice": product.price,
+                        "offerCount": variant.available,
+                        "lowPrice": variant.use_discount ? variant.discount_price : variant.price,
+                        "highPrice": variant.price,
                         "priceCurrency": "MXN"
-                      }
+                    }
                 })
             }}
         >
         </Script>
         <div className={css.productBox} style={{ flex: 1, display: 'flex' }}>
             <div style={{ flex: 4 }}>
-                {product.use_small_and_big
-                    ? (
-                        <>
-                            <img style={{ display: checkedBig ? "flex" : "none" }} className={css.mainImage} src={product.img_big[0]} />
-                            <img style={{ display: checkedBig ? "none" : "flex" }} className={css.mainImage} src={product.img_small[0]} />
-                        </>
-                    )
-                    : <img className={css.mainImage} src={product.img[0]} />
-                }
+                <img className={css.mainImage} src={variant.imgs[0]} />
             </div>
             <div className={css.infoBox}>
                 <h1 className={css.name}>
-                    {product.name}{product.use_small_and_big ? checkedBig ? " (Tamaño Grande)" : " (Tamaño Pequeño)" : ""}
+                    {product.name}{product.use_variants ? `(${variant.combination.join(" / ")})` : ""}
                 </h1>
-                {checkedBig && product.use_small_and_big && product.available_big < 10 ? <div className={css.qtyWarning}>{product.available_big === 0 ? "AGOTADOS" : "POCOS DISPONIBLES"}</div> : null}
-                {checkedSmall && product.use_small_and_big && product.available_small < 10 ? <div className={css.qtyWarning}>{product.available_small === 0 ? "AGOTADOS" : "POCOS DISPONIBLES"}</div> : null}
-                {!product.use_small_and_big && product.available < 10 ? <div className={css.qtyWarning}>{product.available === 0 ? "AGOTADOS" : "POCOS DISPONIBLES"}</div> : null}
-                <div className={css.code}>SKU: {product.code}</div>
+                {product.use_variants && variant.available < 10 ? <div className={css.qtyWarning}>{variant.available === 0 ? "AGOTADOS" : "POCOS DISPONIBLES"}</div> : null}
+                <div className={css.code}>SKU: {variant.sku}</div>
                 <div className={css.price}>
-                    <span className={product.use_discount ? css.originalPrice : ""}>${(product.price / 100).toFixed(2)} MXN</span>
-                    {product.use_discount ? <><span className={css.discount}>${(product.discount_price / 100).toFixed(2)} MXN</span><span className={css.oferta}>OFERTA</span></> : null}
+                    <span className={variant.use_discount ? css.originalPrice : ""}>${(variant.price / 100).toFixed(2)} MXN</span>
+                    {variant.use_discount ? <><span className={css.discount}>${(variant.discount_price / 100).toFixed(2)} MXN</span><span className={css.oferta}>OFERTA</span></> : null}
                 </div>
                 <div className={css.paymentInfo}>
                     Paga personalmente en efectivo, por transferencia, en tiendas OXXO o tarjeta de debito/credito en linea
                 </div>
-                {product.use_small_and_big ? <div style={{ marginBottom: 10 }}>
-                    <div>Tamaño</div>
-                    <button
-                        className={checkedBig ? css.selected : css.unselected}
-                        onClick={() => {
-                            setChecked("big")
-                        }}
-                    >
-                        Grande
-                    </button>
-                    <button
-                        className={checkedSmall ? css.selected : css.unselected}
-                        onClick={() => {
-                            setChecked("small")
-                        }}
-                    >
-                        Pequeño
-                    </button>
-                </div> : null}
+                {product.use_variants ? product.options.map((option, idxOption) => {
+                    return <div style={{ marginBottom: 10 }}>
+                        {option.values.map(value => {
+                            return <>
+                            <div>{value.name}</div>
+                            <button
+                                className={value.id === selectedOption[idxOption] ? css.selected : css.unselected}
+                                onClick={() => {
+                                    selectedOption[idxOption] = value.id
+                                    setSelectedOption([...selectedOption])
+                                }}
+                            >
+                                Grande
+                            </button>
+                            </>
+                        })}
+                    </div>
+                }) : null}
                 <InputNumberCart
                     label={"Cantidad"}
                     required
@@ -135,10 +128,8 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                     type="button"
                     onClick={() => {
                         addOneToCart.mutate({
-                            product_id: product._id,
-                            qty: !product.use_small_and_big ? qtyParsed : 0,
-                            qtyBig: product.use_small_and_big && checkedBig ? qtyParsed : 0,
-                            qtySmall: product.use_small_and_big && checkedSmall ? qtyParsed : 0,
+                            product_variant_id: variant.inventory_variant_oid,
+                            qty: qtyParsed || 0,
                         })
                     }}
                 >
@@ -147,15 +138,18 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
             </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-            {!product.use_small_and_big ? product.img.map(img => (
+            {!product.use_variants ? product.variants['default'].imgs.map(img => (
                 <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
             )) : null}
-            {product.use_small_and_big && checkedBig ? product.img_big.map(img => (
-                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
-            )) : null}
-            {product.use_small_and_big && checkedSmall ? product.img_small.map(img => (
-                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
-            )) : null}
+            {product.use_variants ? Object.values(product.variants).map(variant => {
+                const combination = variant.combination.join("")
+                if (combination === "default") {
+                    return null
+                }
+                return variant.imgs.map(img => (
+                    <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
+                ))
+            }) : null}
         </div>
     </div>
 }
@@ -172,5 +166,12 @@ export async function getStaticPaths() {
 
 export const getStaticProps = async ({ params }: { params: { id: string } }) => {
     const product = await inventory.findOne({ _id: new ObjectId(params.id) })
-    return { props: { product: { ...product, _id: product?._id.toHexString() } } }
+    return {
+        props: {
+            product: {
+                ...product,
+                _id: product?._id.toHexString()
+            }
+        }
+    }
 }
