@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { FC, useState } from "react"
 import css from "./product.module.css"
-import { inventory, variantInventory } from "../api/trpc/[trpc]";
+import { inventory } from "../api/trpc/[trpc]";
 import { InventoryMongo, VariantMongo } from "../../server/types";
 import { trpc } from "../../utils/config";
 import { useRouter } from "next/router";
@@ -42,13 +42,14 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
             ).map(
                 option => option.values[0].id
             )
-            : product.options.filter(
-                option => option.values.every(value => value.name === "default")
-            ).map(
-                option => option.values[0].id
-            )
+            : []
     )
-    const variant = product.variants[product.variants.findIndex(variant => variant.combination.every(combination => selectedOption.includes(combination.id)))]
+    const variantIndex = product.use_variants
+        ? product.variants.findIndex(variant => variant.combination.every(combination => {
+            return selectedOption.includes(combination.id)
+        }))
+        : product.variants.findIndex(variant => variant.combination.every(combination => combination.name.includes('default')))
+    const variant = product.variants[variantIndex]
     const disabled = variant.available === 0
     const variantName = variant.combination.map(combination => combination.name).join(" / ")
     return <div className={css.productContainer} style={{ flex: 1, flexDirection: 'column' }}>
@@ -83,7 +84,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
             </div>
             <div className={css.infoBox}>
                 <h1 className={css.name}>
-                    {product.name}{product.use_variants ? `(${variantName})` : ""}
+                    {product.name}{product.use_variants ? ` (${variantName})` : ""}
                 </h1>
                 {product.use_variants && variant.available < 10 ? <div className={css.qtyWarning}>{variant.available === 0 ? "AGOTADOS" : "POCOS DISPONIBLES"}</div> : null}
                 <div className={css.code}>SKU: {variant.sku}</div>
@@ -92,24 +93,26 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                     {variant.use_discount ? <><span className={css.discount}>${(variant.discount_price / 100).toFixed(2)} MXN</span><span className={css.oferta}>OFERTA</span></> : null}
                 </div>
                 <div className={css.paymentInfo}>
-                    Paga personalmente en efectivo, por transferencia, en tiendas OXXO o tarjeta de debito/credito en linea
+                    Paga personalmente en efectivo, por transferencia, en tiendas OXXO o con tarjeta de debito/credito en linea
                 </div>
                 {product.use_variants ? product.options.map((option, idxOption) => {
-                    return <div style={{ marginBottom: 10 }}>
-                        {option.values.map(value => {
-                            return <>
-                                <div>{value.name}</div>
-                                <button
-                                    className={value.id === selectedOption[idxOption] ? css.selected : css.unselected}
-                                    onClick={() => {
-                                        selectedOption[idxOption] = value.id
-                                        setSelectedOption([...selectedOption])
-                                    }}
-                                >
-                                    Grande
-                                </button>
-                            </>
-                        })}
+                    return <div key={option.id}>
+                        <div>{option.name}</div>
+                        <div style={{ marginBottom: 10, display: 'flex' }}>
+                            {option.values.map(value => {
+                                return <>
+                                    <button
+                                        className={value.id === selectedOption[idxOption] ? css.selected : css.unselected}
+                                        onClick={() => {
+                                            selectedOption[idxOption] = value.id
+                                            setSelectedOption([...selectedOption])
+                                        }}
+                                    >
+                                        {value.name}
+                                    </button>
+                                </>
+                            })}
+                        </div>
                     </div>
                 }) : null}
                 <InputNumberCart
@@ -185,7 +188,11 @@ export const getStaticProps = async ({ params }: { params: { id: string } }) => 
         props: {
             product: {
                 ...product,
-                _id: product?._id.toHexString()
+                _id: product?._id.toHexString(),
+                variants: product?.variants.map(variant => ({
+                    ...variant,
+                    inventory_variant_oid: variant.inventory_variant_oid.toHexString(),
+                }))
             }
         }
     }

@@ -405,14 +405,14 @@ export default function InventoryAdmin() {
                                             form.variants[defaultVariantIndex],
                                         ]
 
-                                        let result = form.options[0].values.map(value => ([value.name]));
+                                        let result = form.options[0].values.map(value => ([value]));
 
                                         for (var k = 1; k < form.options.length; k++) {
-                                            const next: string[][] = [];
+                                            const next: Combination[][] = [];
                                             result.forEach(item => {
                                                 form.options[k].values.forEach(word => {
                                                     var line = item.slice(0);
-                                                    line.push(word.name);
+                                                    line.push(word);
                                                     next.push(line);
                                                 })
                                             });
@@ -428,12 +428,11 @@ export default function InventoryAdmin() {
                                                 use_discount: false,
                                                 discount_price: '0.00',
                                                 combination: combination.map(combination => ({
-                                                    id: nanoid(5),
-                                                    name: combination,
+                                                    id: combination.id,
+                                                    name: combination.name,
                                                 })),
                                             })
                                         }
-
                                         setForm({ ...form, variants })
                                     }}
                                 >
