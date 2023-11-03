@@ -33,14 +33,17 @@ export default function History() {
                 next={purchases.fetchNextPage}
                 hasMore={!!purchases.hasNextPage}
             >
-                {purchases.data?.pages.map((page, index) => (
+                {purchases.data?.pages.map((page, index) => {
+                    return (
                     <Fragment key={index}>
-                        {page.items.map(product => (
+                        {page.items.map(product => {
+                            const variantName = product.combination.map(combination => combination.name).join(" / ")
+                            return (
                             <div key={product._id} style={{ borderTop: '1px solid rgba(0,0,0,0.2)' }}>
                                 <div className="product-card" style={{ flexDirection: 'row', display: 'flex' }}>
                                     <Link href={`/product/${product.product_id}`}><img className="img-product" src={product.imgs[0]} /></Link>
                                     <div>
-                                        <div style={{ fontWeight: 'bold' }} className="name">{product.name}{product.combination.join() === "default" ? "" : ` (${product.combination.join(" / ")})`}</div>
+                                        <div style={{ fontWeight: 'bold' }} className="name">{product.name}{variantName === "default" ? "" : ` (${variantName})`}</div>
                                         <div className="price">
                                             Precio unitario: <strong>${((product.use_discount ? product.discount_price : product.price) / 100).toFixed(2)}</strong>
                                         </div>
@@ -65,9 +68,9 @@ export default function History() {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </Fragment>
-                ))}
+                )})}
             </InfiniteScroll>
         </div>
         {purchases.isLoading ? <div className="loading" /> : null}

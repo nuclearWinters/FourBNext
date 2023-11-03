@@ -40,6 +40,7 @@ export const CartList: FC<{
         }
     });
     const [input, setInput] = useState(String(product.qty))
+    const variantName = product.combination.map(combination => combination.name).join(" / ")
     return <tr className={css.productCard}>
         <td className={css.imageColumn} style={{ verticalAlign: 'top' }}>
             <Link href={`/product/${product.product_variant_id}`}>
@@ -48,7 +49,7 @@ export const CartList: FC<{
         </td>
         <td className={css.columnResponsive}>
             <Link href={`/product/${product.product_variant_id}`} className={css.infoBox}>
-                <div className={css.name}>{product.name}{product.combination.join() === "default" ? "" : ` (${product.combination.join(" / ")})`}</div>
+                <div className={css.name}>{product.name}{variantName === "default" ? "" : ` (${variantName})`}</div>
                 <div className={css.price}>
                     <span className={product.use_discount ? css.priceDiscounted : ""}>${(product.price / 100).toFixed(2)} MXN</span>
                     {product.use_discount ? <span>${(product.discount_price / 100).toFixed(2)} MXN</span> : null}

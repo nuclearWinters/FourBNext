@@ -2,6 +2,7 @@ import { MongoClient, Db, ObjectId } from "mongodb";
 import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, ReservedInventoryMongo, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
+import { nanoid } from "nanoid";
 
 jest.mock('conekta');
 jest.mock('@sendgrid/mail');
@@ -46,7 +47,10 @@ describe("RemoveOneCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
-        const combination = ['default']
+        const combination = [{
+            id: nanoid(5),
+            name: 'default',
+        }]
         const qty = 1
         const item_by_cart_oid = new ObjectId()
         const reserved_oid = new ObjectId()
@@ -77,8 +81,8 @@ describe("RemoveOneCart tests", () => {
             tags,
             use_variants: false,
             options: [],
-            variants: {
-                'default': {
+            variants: [
+                {
                     inventory_variant_oid,
                     imgs: [],
                     available,
@@ -89,7 +93,7 @@ describe("RemoveOneCart tests", () => {
                     discount_price,
                     combination,
                 }
-            }
+            ]
         })
         await variantInventory.insertOne({
             _id: inventory_variant_oid,
@@ -170,8 +174,8 @@ describe("RemoveOneCart tests", () => {
             options: [],
             tags,
             use_variants: false,
-            variants: {
-                'default': {
+            variants: [
+                {
                     available: newAvailable,
                     combination,
                     discount_price,
@@ -182,7 +186,7 @@ describe("RemoveOneCart tests", () => {
                     total,
                     use_discount,
                 },
-            },
+            ],
         })
         const variant = await variantInventory.findOne({ _id: inventory_variant_oid })
         expect(variant).toEqual({

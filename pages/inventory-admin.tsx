@@ -1,6 +1,6 @@
 import { CSSProperties, Fragment, useState } from "react"
 import { toCurrency, trpc } from "../utils/config"
-import { EditProduct } from "../components/EditProduct";
+import { EditProduct, reorderOptions } from "../components/EditProduct";
 import Image from "next/image";
 import { Modal } from "../components/Modal";
 import { ModalClose } from "../components/ModalClose";
@@ -12,15 +12,26 @@ import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle,
 import Head from "next/head";
 import { toast } from "react-toastify";
 import { nanoid } from "nanoid";
+import { Combination } from "../server/types";
+import TagsInput from 'react-tagsinput'
+import drag from '../public/drag.svg'
 
-interface Variant {
-    imgs: string[],
-    qty: string,
-    price: string,
-    sku: string,
-    use_discount: boolean,
-    discount_price: string,
-    combination: string[],
+export interface VariantCreate {
+    imgs: string[]
+    qty: string
+    price: string
+    sku: string
+    use_discount: boolean
+    discount_price: string
+    combination: Combination[]
+}
+
+export interface ProductCreate {
+    name: string
+    description: string
+    use_variants: false
+    tags: string[]
+    variants: VariantCreate[]
 }
 
 export const reorder = (list: string[], startIndex: number, endIndex: number) => {
@@ -53,24 +64,24 @@ export default function InventoryAdmin() {
         description: '',
         use_variants: false,
         tags: [] as string[],
-        variants: {
-            'default': {
+        variants: [
+            {
                 imgs: [] as string[],
                 qty: '0',
                 price: '0.00',
                 sku: '',
                 use_discount: false,
                 discount_price: '0.00',
-                combination: []
+                combination: [{
+                    id: nanoid(5),
+                    name: 'default'
+                }]
             }
-        } as Record<string, Variant>,
+        ],
         options: [{
-            id: '',
+            id: nanoid(5),
             name: '',
-            values: [] as {
-                id: string
-                name: string
-            }[],
+            values: [] as Combination[],
             type: 'string' as 'string' | 'color',
         }]
     })
@@ -82,19 +93,22 @@ export default function InventoryAdmin() {
                 description: '',
                 use_variants: false,
                 tags: [],
-                variants: {
-                    'default': {
+                variants: [
+                    {
                         imgs: [],
                         qty: '0',
                         price: '0.00',
                         sku: '',
                         use_discount: false,
                         discount_price: '0.00',
-                        combination: []
+                        combination: [{
+                            id: nanoid(5),
+                            name: 'default',
+                        }]
                     }
-                },
+                ],
                 options: [{
-                    id: '',
+                    id: nanoid(5),
                     name: '',
                     values: [],
                     type: 'string'
@@ -108,7 +122,7 @@ export default function InventoryAdmin() {
             toast.error(e.message)
         }
     })
-    const onDragEnd = (result: DropResult, value: Variant, key: string) => {
+    const onDragEnd = (result: DropResult, value: VariantCreate, idx: number) => {
         if (!result.destination) {
             return;
         }
@@ -117,17 +131,29 @@ export default function InventoryAdmin() {
             result.source.index,
             result.destination.index
         );
+        form.variants[idx] = {
+            ...value,
+            imgs: items
+        }
         setForm(state => ({
             ...state,
-            variants: {
-                ...state.variants,
-                [key]: {
-                    ...value,
-                    imgs: items
-                }
-            }
         }))
     }
+    const onDragEndOptions = (result: DropResult) => {
+        if (!result.destination) {
+            return;
+        }
+        const items = reorderOptions(
+            form.options,
+            result.source.index,
+            result.destination.index
+        );
+        setForm(state => ({
+            ...state,
+            options: items,
+        }))
+    }
+    const defaultVariantIndex = form.variants.findIndex(variant => variant.combination.map(combination => combination.name).every(name => name === 'default'))
     return <div>
         <Head>
             <title>Inventario - FOURB</title>
@@ -146,29 +172,15 @@ export default function InventoryAdmin() {
                         addProduct.mutate({
                             name: form.name,
                             description: form.description,
-                            options: form.options,
+                            options: form.use_variants ? form.options : [],
                             use_variants: form.use_variants,
-                            variants: (() => {
-                                const variants: Record<string, {
-                                    imgs: string[],
-                                    qty: number,
-                                    price: number,
-                                    sku: string,
-                                    use_discount: boolean,
-                                    discount_price: number,
-                                    combination: string[]
-                                }> = {}
-                                for (const variant in form.variants) {
-                                    variants[variant] = {
-                                        ...form.variants[variant],
-                                        qty: Number(form.variants[variant].qty),
-                                        price: Number(form.variants[variant].price) * 100,
-                                        discount_price: Number(form.variants[variant].discount_price) * 100,
-                                    }
-                                }
-                                return variants
-                            })(),
-                            tags: [],
+                            variants: form.variants.map(variant => ({
+                                ...variant,
+                                qty: Number(variant.qty),
+                                price: Number(variant.price) * 100,
+                                discount_price: Number(variant.discount_price) * 100,
+                            })),
+                            tags: form.tags,
                         })
                     }}>
                         <ModalField
@@ -199,17 +211,14 @@ export default function InventoryAdmin() {
                             required
                             name="sku"
                             type="text"
-                            value={form.variants['default']?.sku}
+                            value={form.variants[defaultVariantIndex].sku}
                             onChange={(e) => {
+                                form.variants[defaultVariantIndex] = {
+                                    ...form.variants[defaultVariantIndex],
+                                    [e.target.name]: e.target.value,
+                                }
                                 setForm(state => ({
                                     ...state,
-                                    variants: {
-                                        ...state.variants,
-                                        'default': {
-                                            ...form.variants['default'],
-                                            [e.target.name]: e.target.value,
-                                        }
-                                    }
                                 }))
                             }}
                         />}
@@ -219,17 +228,14 @@ export default function InventoryAdmin() {
                             required
                             name="price"
                             type="number"
-                            value={form.variants['default'].price}
+                            value={form.variants[defaultVariantIndex].price}
                             onChange={(e) => {
+                                form.variants[defaultVariantIndex] = {
+                                    ...form.variants[defaultVariantIndex],
+                                    [e.target.name]: toCurrency(e.target.value, '.'),
+                                }
                                 setForm(state => ({
                                     ...state,
-                                    variants: {
-                                        ...state.variants,
-                                        'default': {
-                                            ...form.variants['default'],
-                                            [e.target.name]: toCurrency(e.target.value, '.')
-                                        }
-                                    }
                                 }))
                             }}
                             pattern="\d*"
@@ -240,38 +246,32 @@ export default function InventoryAdmin() {
                             label="Usar descuento"
                             name="use_discount"
                             type="checkbox"
-                            checked={form.variants['default']?.use_discount}
+                            checked={form.variants[defaultVariantIndex].use_discount}
                             onChange={(e) => {
+                                form.variants[defaultVariantIndex] = {
+                                    ...form.variants[defaultVariantIndex],
+                                    [e.target.name]: e.target.checked,
+                                }
                                 setForm(state => ({
                                     ...state,
-                                    variants: {
-                                        ...state.variants,
-                                        'default': {
-                                            ...form.variants['default'],
-                                            [e.target.name]: e.target.checked
-                                        }
-                                    }
                                 }))
                             }}
                         />}
-                        {form.use_variants ? null : <div style={{ opacity: form.variants['default'].use_discount ? '1' : '0.4', pointerEvents: form.variants['default'].use_discount ? 'auto' : 'none' }}>
+                        {form.use_variants ? null : <div style={{ opacity: form.variants[defaultVariantIndex].use_discount ? '1' : '0.4', pointerEvents: form.variants[defaultVariantIndex].use_discount ? 'auto' : 'none' }}>
                             <ModalField
                                 id="discount_price"
                                 label="Precio de descuento"
                                 required
                                 name="discount_price"
                                 type="number"
-                                value={form.variants['default']?.discount_price}
+                                value={form.variants[defaultVariantIndex].discount_price}
                                 onChange={(e) => {
+                                    form.variants[defaultVariantIndex] = {
+                                        ...form.variants[defaultVariantIndex],
+                                        [e.target.name]: toCurrency(e.target.value, '.'),
+                                    }
                                     setForm(state => ({
                                         ...state,
-                                        variants: {
-                                            ...state.variants,
-                                            'default': {
-                                                ...form.variants['default'],
-                                                [e.target.name]: toCurrency(e.target.value, '.')
-                                            }
-                                        }
                                     }))
                                 }}
                                 pattern="\d*"
@@ -290,81 +290,120 @@ export default function InventoryAdmin() {
                         />
                         {form.use_variants ? (
                             <div>
-                                <div style={{ display: 'flex', flexDirection: "column" }}>
-                                    {form.options.map((option, idxOption) => (
-                                        <div key={idxOption} style={{ display: 'flex', flexDirection: 'row' }}>
-                                            <div>Move</div>
-                                            <div style={{ display: 'flex', flexDirection: "column" }}>
-                                                <div>Option Name</div>
-                                                <input></input>
-                                                <div>Option Values</div>
-                                                {option.values.map((value, idxValue) => (
-                                                    <input
-                                                        key={idxValue}
-                                                        value={value.name}
-                                                        onChange={(event) => {
-                                                            if (event.target.value === "") {
-                                                                const newOptions = [...form.options]
-                                                                newOptions[idxOption].values.splice(idxValue)
-                                                                setForm({ ...form, options: newOptions })
-                                                            } else {
-                                                                const newOptions = [...form.options]
-                                                                newOptions[idxOption].values[idxValue].name = event.target.value
-                                                                setForm({ ...form, options: newOptions })
-                                                            }
-                                                        }}
-                                                        placeholder="Add another value"
-                                                    />
-                                                ))}
-                                                <input
-                                                    value=""
-                                                    onChange={(event) => {
-                                                        const newOptions = [...form.options]
-                                                        newOptions[idxOption].values.push({
-                                                            id: nanoid(5),
-                                                            name: event.target.value
-                                                        })
-                                                        setForm({ ...form, options: newOptions })
-                                                    }}
-                                                    placeholder="Add another value"
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    form.options.splice(idxOption, 1)
-                                                    setForm({ ...form, options: [...form.options] })
+                                <DragDropContext onDragEnd={onDragEndOptions}>
+                                    <Droppable droppableId="droppable" direction="horizontal">
+                                        {(provided) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                style={{
+                                                    display: 'flex',
+                                                    padding: 8,
+                                                    overflow: 'auto',
                                                 }}
+                                                {...provided.droppableProps}
                                             >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
+                                                <div style={{ display: 'flex', flexDirection: "column" }}>
+                                                    {form.options.map((option, idxOption) => (
+                                                        <Draggable key={option.id} draggableId={option.id} index={idxOption}>
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    style={getItemStyle(
+                                                                        snapshot.isDragging,
+                                                                        provided.draggableProps.style
+                                                                    )}
+                                                                >
+                                                                    <div key={idxOption} style={{ display: 'flex', flexDirection: 'row' }}>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30 }}>
+                                                                            <Image src={drag} alt="" />
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', flexDirection: "column" }}>
+                                                                            <ModalField
+                                                                                id={`${idxOption}-option-name`}
+                                                                                label="Nombre de la opcion"
+                                                                                required
+                                                                                name="name"
+                                                                                type="text"
+                                                                                value={option.name}
+                                                                                onChange={(e) => {
+                                                                                    form.options[idxOption].name = e.target.value
+                                                                                    setForm(state => ({
+                                                                                        ...state,
+                                                                                    }))
+                                                                                }}
+                                                                            />
+                                                                            <div>Valor de la opcion</div>
+                                                                            {option.values.map((value, idxValue) => (
+                                                                                <ModalField
+                                                                                    label=""
+                                                                                    id={`${idxOption}-${idxValue}-option-value`}
+                                                                                    key={value.id}
+                                                                                    value={value.name}
+                                                                                    onChange={(event) => {
+                                                                                        if (event.target.value === "") {
+                                                                                            const newOptions = [...form.options]
+                                                                                            newOptions[idxOption].values.splice(idxValue)
+                                                                                            setForm({ ...form, options: newOptions })
+                                                                                        } else {
+                                                                                            const newOptions = [...form.options]
+                                                                                            newOptions[idxOption].values[idxValue].name = event.target.value
+                                                                                            setForm({ ...form, options: newOptions })
+                                                                                        }
+                                                                                    }}
+                                                                                    placeholder="Añadir otro valor"
+                                                                                />
+                                                                            ))}
+                                                                            <input
+                                                                                value=""
+                                                                                onChange={(event) => {
+                                                                                    const newOptions = [...form.options]
+                                                                                    newOptions[idxOption].values.push({
+                                                                                        id: nanoid(5),
+                                                                                        name: event.target.value
+                                                                                    })
+                                                                                    setForm({ ...form, options: newOptions })
+                                                                                }}
+                                                                                placeholder="Añadir otro valor"
+                                                                            />
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                form.options.splice(idxOption, 1)
+                                                                                setForm({ ...form, options: [...form.options] })
+                                                                            }}
+                                                                        >
+                                                                            Delete
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    ))}
+                                                    {provided.placeholder}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </Droppable>
+                                </DragDropContext>
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setForm({
                                             ...form,
-                                            options: [...form.options, { id: '', name: '', values: [], type: 'string' }]
+                                            options: [...form.options, { id: nanoid(5), name: '', values: [], type: 'string' }]
                                         })
                                     }}
                                 >
-                                    Add another option
+                                    Añadir otra opcion
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        const variants = {
-                                            'default': form.variants['default']
-                                        } as Record<string, {
-                                            imgs: string[],
-                                            qty: string,
-                                            price: string,
-                                            sku: string,
-                                            use_discount: boolean,
-                                            discount_price: string,
-                                            combination: string[],
-                                        }>
+                                        const variants = [
+                                            form.variants[defaultVariantIndex],
+                                        ]
 
                                         let result = form.options[0].values.map(value => ([value.name]));
 
@@ -381,15 +420,18 @@ export default function InventoryAdmin() {
                                         }
 
                                         for (const combination of result) {
-                                            variants[combination.join("")] = {
+                                            variants.push({
                                                 imgs: [],
                                                 price: '0.00',
                                                 sku: '',
                                                 qty: '0',
                                                 use_discount: false,
                                                 discount_price: '0.00',
-                                                combination,
-                                            }
+                                                combination: combination.map(combination => ({
+                                                    id: nanoid(5),
+                                                    name: combination,
+                                                })),
+                                            })
                                         }
 
                                         setForm({ ...form, variants })
@@ -399,211 +441,190 @@ export default function InventoryAdmin() {
                                 </button>
                             </div>
                         ) : null}
-                        {
-                            form.use_variants && Object.keys(form.variants).length > 1 ? (
-                                <div>{Object.entries(form.variants).map(([key, value]) => {
-                                    if (key === "default") {
-                                        return null
-                                    }
-                                    return <div key={key}>
-                                        <div className="img-title">
-                                            {value.combination.join(" / ")}
-                                        </div>
+                        {form.use_variants && form.variants.length > 1 ? (
+                            <div>{form.variants.map((value, idx) => {
+                                const variantName = value.combination.map(combination => combination.name).join(" / ")
+                                if (variantName === 'default') {
+                                    return null
+                                }
+                                return <div key={idx}>
+                                    <div className="img-title">
+                                        {variantName}
+                                    </div>
+                                    <ModalField
+                                        id={`${idx}-sku`}
+                                        label="Código"
+                                        required
+                                        name="sku"
+                                        type="text"
+                                        value={value.sku}
+                                        onChange={(e) => {
+                                            form.variants[idx] = {
+                                                ...value,
+                                                [e.target.name]: e.target.value,
+                                            }
+                                            setForm(state => ({
+                                                ...state,
+                                            }))
+                                        }}
+                                    />
+                                    <ModalField
+                                        id={`${idx}-price`}
+                                        label="Precio"
+                                        required
+                                        name="price"
+                                        type="number"
+                                        value={value.price}
+                                        onChange={(e) => {
+                                            form.variants[idx] = {
+                                                ...value,
+                                                [e.target.name]: toCurrency(e.target.value, '.'),
+                                            }
+                                            setForm(state => ({
+                                                ...state,
+                                            }))
+                                        }}
+                                        pattern="\d*"
+                                        step="any"
+                                    />
+                                    <ModalCheckbox
+                                        id={`${idx}-use_discount`}
+                                        label="Usar descuento"
+                                        name="use_discount"
+                                        type="checkbox"
+                                        checked={value.use_discount}
+                                        onChange={(e) => {
+                                            form.variants[idx] = {
+                                                ...value,
+                                                [e.target.name]: e.target.checked,
+                                            }
+                                            setForm(state => ({
+                                                ...state,
+                                            }))
+                                        }}
+                                    />
+                                    <div style={{ opacity: value.use_discount ? '1' : '0.4', pointerEvents: value.use_discount ? 'auto' : 'none' }}>
                                         <ModalField
-                                            id={`${key}-sku`}
-                                            label="Código"
+                                            id={`${idx}-discount_price`}
+                                            label="Precio de descuento"
                                             required
-                                            name="sku"
-                                            type="text"
-                                            value={value.sku}
-                                            onChange={(e) => {
-                                                setForm(state => ({
-                                                    ...state,
-                                                    variants: {
-                                                        ...state.variants,
-                                                        [key]: {
-                                                            ...value,
-                                                            [e.target.name]: e.target.value,
-                                                        }
-                                                    }
-                                                }))
-                                            }}
-                                        />
-                                        <ModalField
-                                            id={`${key}-price`}
-                                            label="Precio"
-                                            required
-                                            name="price"
+                                            name="discount_price"
                                             type="number"
-                                            value={value.price}
+                                            value={value.discount_price}
                                             onChange={(e) => {
+                                                form.variants[idx] = {
+                                                    ...value,
+                                                    [e.target.name]: toCurrency(e.target.value, '.'),
+                                                }
                                                 setForm(state => ({
                                                     ...state,
-                                                    variants: {
-                                                        ...state.variants,
-                                                        [key]: {
-                                                            ...value,
-                                                            [e.target.name]: toCurrency(e.target.value, '.')
-                                                        }
-                                                    },
                                                 }))
                                             }}
                                             pattern="\d*"
                                             step="any"
                                         />
-                                        <ModalCheckbox
-                                            id={`${key}-use_discount`}
-                                            label="Usar descuento"
-                                            name="use_discount"
-                                            type="checkbox"
-                                            checked={value.use_discount}
-                                            onChange={(e) => {
-                                                setForm(state => ({
-                                                    ...state,
-                                                    variants: {
-                                                        ...state.variants,
-                                                        [key]: {
-                                                            ...value,
-                                                            [e.target.name]: e.target.checked,
-                                                        }
-                                                    },
-                                                }))
-                                            }}
-                                        />
-                                        <div style={{ opacity: value.use_discount ? '1' : '0.4', pointerEvents: value.use_discount ? 'auto' : 'none' }}>
-                                            <ModalField
-                                                id={`${key}-discount_price`}
-                                                label="Precio de descuento"
-                                                required
-                                                name="discount_price"
-                                                type="number"
-                                                value={value.discount_price}
-                                                onChange={(e) => {
-                                                    setForm(state => ({
-                                                        ...state,
-                                                        variants: {
-                                                            ...state.variants,
-                                                            [key]: {
+                                    </div>
+                                    <div style={{ marginLeft: 20 }}>
+                                        <input title="Subir fotos" name="image-big" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
+                                            const files = event.target.files
+                                            if (files) {
+                                                for (const file of files) {
+                                                    if (file.type) {
+                                                        try {
+                                                            const data = await signedUrl.mutateAsync({ fileType: file.type })
+                                                            const url = new URL(data.uploadUrl);
+                                                            await fetch(data.uploadUrl, {
+                                                                method: "PUT",
+                                                                body: file,
+                                                            })
+                                                            form.variants[idx] = {
                                                                 ...value,
-                                                                [e.target.name]: toCurrency(e.target.value, '.')
+                                                                imgs: [...form.variants[idx].imgs, url.origin + url.pathname],
                                                             }
-                                                        },
-                                                    }))
-                                                }}
-                                                pattern="\d*"
-                                                step="any"
-                                            />
-                                        </div>
-                                        <div style={{ marginLeft: 20 }}>
-                                            <input title="Subir fotos" name="image-big" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
-                                                const files = event.target.files
-                                                if (files) {
-                                                    for (const file of files) {
-                                                        if (file.type) {
-                                                            try {
-                                                                const data = await signedUrl.mutateAsync({ fileType: file.type })
-                                                                const url = new URL(data.uploadUrl);
-                                                                await fetch(data.uploadUrl, {
-                                                                    method: "PUT",
-                                                                    body: file,
-                                                                })
-                                                                setForm(state => ({
-                                                                    ...state,
-                                                                    variants: {
-                                                                        ...state.variants,
-                                                                        [key]: {
-                                                                            ...state.variants[key],
-                                                                            imgs: [...state.variants[key].imgs, url.origin + url.pathname],
-                                                                        }
-                                                                    }
-                                                                }))
-                                                            } catch (e) {
-                                                                toast.error('Error while uploading')
-                                                            }
+                                                            setForm(state => ({
+                                                                ...state,
+                                                            }))
+                                                        } catch (e) {
+                                                            toast.error('Error while uploading')
                                                         }
                                                     }
                                                 }
-                                            }} />
-                                            <div className="input-container images-container">
-                                                <DragDropContext onDragEnd={(result) => onDragEnd(result, form.variants[key], key)}>
-                                                    <Droppable droppableId="droppable" direction="horizontal">
-                                                        {(provided) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                style={{
-                                                                    display: 'flex',
-                                                                    padding: 8,
-                                                                    overflow: 'auto',
-                                                                }}
-                                                                {...provided.droppableProps}
-                                                            >
-                                                                {value.imgs.map((item, index) => (
-                                                                    <Draggable key={item} draggableId={item} index={index}>
-                                                                        {(provided, snapshot) => (
-                                                                            <div
-                                                                                ref={provided.innerRef}
-                                                                                {...provided.draggableProps}
-                                                                                {...provided.dragHandleProps}
-                                                                                style={getItemStyle(
-                                                                                    snapshot.isDragging,
-                                                                                    provided.draggableProps.style
-                                                                                )}
-                                                                            ><div style={{ position: 'relative' }} key={item}>
-                                                                                    <button
-                                                                                        className="closeImgButton"
-                                                                                        type="button"
-                                                                                        onClick={() => {
-                                                                                            setForm(state => ({
-                                                                                                ...state,
-                                                                                                variants: {
-                                                                                                    ...state.variants,
-                                                                                                    [key]: {
-                                                                                                        ...state.variants[key],
-                                                                                                        imgs: state.variants[key].imgs.filter(currImg => item !== currImg)
-                                                                                                    }
-                                                                                                }
-                                                                                            }))
-                                                                                        }}
-                                                                                    >
-                                                                                        <Image src={cross} alt="" height={10} />
-                                                                                    </button>
-                                                                                    <img className="img-uploaded" alt="" width={"100%"} src={item} />
-                                                                                </div>
+                                            }
+                                        }} />
+                                        <div className="input-container images-container">
+                                            <DragDropContext onDragEnd={(result) => onDragEnd(result, form.variants[idx], idx)}>
+                                                <Droppable droppableId="droppable" direction="horizontal">
+                                                    {(provided) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            style={{
+                                                                display: 'flex',
+                                                                padding: 8,
+                                                                overflow: 'auto',
+                                                            }}
+                                                            {...provided.droppableProps}
+                                                        >
+                                                            {value.imgs.map((item, index) => (
+                                                                <Draggable key={item} draggableId={item} index={index}>
+                                                                    {(provided, snapshot) => (
+                                                                        <div
+                                                                            ref={provided.innerRef}
+                                                                            {...provided.draggableProps}
+                                                                            {...provided.dragHandleProps}
+                                                                            style={getItemStyle(
+                                                                                snapshot.isDragging,
+                                                                                provided.draggableProps.style
+                                                                            )}
+                                                                        >
+                                                                            <div style={{ position: 'relative' }} key={item}>
+                                                                                <button
+                                                                                    className="closeImgButton"
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        form.variants[idx] = {
+                                                                                            ...value,
+                                                                                            imgs: form.variants[idx].imgs.filter(currImg => item !== currImg)
+                                                                                        }
+                                                                                        setForm(state => ({
+                                                                                            ...state,
+                                                                                        }))
+                                                                                    }}
+                                                                                >
+                                                                                    <Image src={cross} alt="" height={10} />
+                                                                                </button>
+                                                                                <img className="img-uploaded" alt="" width={"100%"} src={item} />
                                                                             </div>
-                                                                        )}
-                                                                    </Draggable>
-                                                                ))}
-                                                                {provided.placeholder}
-                                                            </div>
-                                                        )}
-                                                    </Droppable>
-                                                </DragDropContext>
-                                            </div>
-                                            <ModalField
-                                                id={`${key}-qty`}
-                                                label={`Cantidad en el inventario`}
-                                                required
-                                                name="qty"
-                                                type="number"
-                                                value={value.qty}
-                                                onChange={(e) => {
-                                                    setForm(state => ({
-                                                        ...state,
-                                                        variants: {
-                                                            ...state.variants,
-                                                            [key]: {
-                                                                ...state.variants[key],
-                                                                [e.target.name]: e.target.value
-                                                            }
-                                                        }
-                                                    }))
-                                                }}
-                                            />
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            ))}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                            </DragDropContext>
                                         </div>
+                                        <ModalField
+                                            id={`${idx}-qty`}
+                                            label={`Cantidad en el inventario`}
+                                            required
+                                            name="qty"
+                                            type="number"
+                                            value={value.qty}
+                                            onChange={(e) => {
+                                                form.variants[idx] = {
+                                                    ...value,
+                                                    [e.target.name]: e.target.value,
+                                                }
+                                                setForm(state => ({
+                                                    ...state,
+                                                }))
+                                            }}
+                                        />
                                     </div>
-                                })}</div>
-                            ) : null
-                        }
+                                </div>
+                            })}</div>
+                        ) : null}
                         {form.use_variants
                             ? null
                             : (
@@ -625,15 +646,12 @@ export default function InventoryAdmin() {
                                                                     method: "PUT",
                                                                     body: file,
                                                                 })
+                                                                form.variants[defaultVariantIndex] = {
+                                                                    ...form.variants[defaultVariantIndex],
+                                                                    imgs: [...form.variants[defaultVariantIndex].imgs, url.origin + url.pathname],
+                                                                }
                                                                 setForm(state => ({
                                                                     ...state,
-                                                                    variants: {
-                                                                        ...state.variants,
-                                                                        'default': {
-                                                                            ...state.variants['default'],
-                                                                            imgs: [...state.variants['default'].imgs, url.origin + url.pathname],
-                                                                        }
-                                                                    }
                                                                 }))
                                                             } catch (e) {
                                                                 toast.error('Error while uploading')
@@ -644,7 +662,7 @@ export default function InventoryAdmin() {
                                             }} />
                                         </div>
                                         <div className="input-container images-container">
-                                            <DragDropContext onDragEnd={(result) => onDragEnd(result, form.variants['default'], 'default')}>
+                                            <DragDropContext onDragEnd={(result) => onDragEnd(result, form.variants[defaultVariantIndex], defaultVariantIndex)}>
                                                 <Droppable droppableId="droppable" direction="horizontal">
                                                     {(provided) => (
                                                         <div
@@ -656,7 +674,7 @@ export default function InventoryAdmin() {
                                                             }}
                                                             {...provided.droppableProps}
                                                         >
-                                                            {form.variants['default'].imgs.map((item, index) => (
+                                                            {form.variants[defaultVariantIndex].imgs.map((item, index) => (
                                                                 <Draggable key={item} draggableId={item} index={index}>
                                                                     {(provided, snapshot) => (
                                                                         <div
@@ -673,15 +691,12 @@ export default function InventoryAdmin() {
                                                                                     className="closeImgButton"
                                                                                     type="button"
                                                                                     onClick={() => {
+                                                                                        form.variants[defaultVariantIndex] = {
+                                                                                            ...form.variants[defaultVariantIndex],
+                                                                                            imgs: form.variants[defaultVariantIndex].imgs.filter(currImg => item !== currImg),
+                                                                                        }
                                                                                         setForm(state => ({
                                                                                             ...state,
-                                                                                            variants: {
-                                                                                                ...state.variants,
-                                                                                                'default': {
-                                                                                                    ...state.variants['default'],
-                                                                                                    imgs: state.variants['default'].imgs.filter(currImg => item !== currImg)
-                                                                                                }
-                                                                                            }
                                                                                         }))
                                                                                     }}
                                                                                 >
@@ -705,17 +720,14 @@ export default function InventoryAdmin() {
                                             required
                                             name="qty"
                                             type="number"
-                                            value={form.variants['default'].qty}
+                                            value={form.variants[defaultVariantIndex].qty}
                                             onChange={(e) => {
+                                                form.variants[defaultVariantIndex] = {
+                                                    ...form.variants[defaultVariantIndex],
+                                                    [e.target.name]: e.target.value,
+                                                }
                                                 setForm(state => ({
                                                     ...state,
-                                                    variants: {
-                                                        ...state.variants,
-                                                        'default': {
-                                                            ...state.variants['default'],
-                                                            [e.target.name]: e.target.value
-                                                        }
-                                                    }
                                                 }))
                                             }}
                                             pattern="\d*"
@@ -726,10 +738,20 @@ export default function InventoryAdmin() {
                             )
                         }
                         <div className="input-container">
-                            <label htmlFor="discount">Tags</label>
-                            <div className="checkboxes" style={{ display: 'flex', flexWrap: 'wrap', }}>
-
-                            </div>
+                            <label htmlFor="discount">Etiquetas</label>
+                            <TagsInput
+                                inputProps={{
+                                    placeholder: ''
+                                }}
+                                onlyUnique
+                                value={form.tags}
+                                onChange={(tags) => {
+                                    setForm(state => ({
+                                        ...state,
+                                        tags,
+                                    }))
+                                }}
+                            />
                         </div>
                         <button type="submit" className="fourb-button">Crear</button>
                     </form>
@@ -758,62 +780,70 @@ export default function InventoryAdmin() {
                 <tbody>
                     {searchProducts.data?.pages.map((page, index) => (
                         <Fragment key={index}>
-                            {page.items.map(product => (
-                                <Fragment key={product._id}>
-                                    <tr>
-                                        <td>
-                                            {product.use_variants
-                                                ? null
-                                                : <img className="img-table" alt="" width="100%" src={product.variants['default'].imgs[0]} />
-                                            }
-                                        </td>
-                                        <td>{product.name}</td>
-                                        <td>{product.description}</td>
-                                        <td>{product.use_variants ? null : product.variants['default'].sku }</td>
-                                        <td>{product.use_variants ? null : `$${toCurrency(String(product.variants['default'].price), '.')}`}</td>
-                                        <td>
-                                            {product.use_variants ? null : <input type="checkbox" checked={product.variants['default'].use_discount} readOnly />}
-                                        </td>
-                                        <td>{product.use_variants ? null : `$${toCurrency(String(product.variants['default'].discount_price), '.')}`}</td>
-                                        <td>
-                                            <input type="checkbox" checked={product.use_variants} readOnly />
-                                        </td>
-                                        <td>{product.use_variants ? null : product.variants['default'].available}</td>
-                                        <td>{product.use_variants ? null : product.variants['default'].total}</td>
-                                        <td>{product.tags.join(', ')}</td>
-                                        <td><EditProduct product={product} onSuccessEdit={() => {
-                                            searchProducts.refetch()
-                                        }} /></td>
-                                        <td><Link href={`/product/${product._id}`} className="fourb-button">VER</Link></td>
-                                    </tr>
-                                    {product.use_variants ? <tr>
-                                        <td colSpan={12}>
-                                            <table style={{ marginLeft: 40, borderCollapse: 'collapse' }}>
-                                                <thead>
-                                                    <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>
-                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Variante</th>
-                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Imagen</th>
-                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Disponible</th>
-                                                        <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Total</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {Object.values(product.variants).map((value) => {
-                                                        return <tr>
-                                                            <td>{value.combination.join(' / ')}</td>
-                                                            <td>
-                                                                <img className="img-table" alt="" width="100%" src={value.imgs[0]} />
-                                                            </td>
-                                                            <td>{value.available}</td>
-                                                            <td>{value.total}</td>
+                            {page.items.map(product => {
+                                const defaultVariantIndex = product.variants.findIndex(variant => variant.combination.map(combination => combination.name).every(name => name === 'default'))
+                                const defaultVariant = product.variants[defaultVariantIndex]
+                                return (
+                                    <Fragment key={product._id}>
+                                        <tr>
+                                            <td>
+                                                {product.use_variants
+                                                    ? null
+                                                    : <img className="img-table" alt="" width="100%" src={defaultVariant.imgs[0]} />
+                                                }
+                                            </td>
+                                            <td>{product.name}</td>
+                                            <td>{product.description}</td>
+                                            <td>{product.use_variants ? null : defaultVariant.sku}</td>
+                                            <td>{product.use_variants ? null : `$${toCurrency(String(defaultVariant.price), '.')}`}</td>
+                                            <td>
+                                                {product.use_variants ? null : <input type="checkbox" checked={defaultVariant.use_discount} readOnly />}
+                                            </td>
+                                            <td>{product.use_variants ? null : `$${toCurrency(String(defaultVariant.discount_price), '.')}`}</td>
+                                            <td>
+                                                <input type="checkbox" checked={product.use_variants} readOnly />
+                                            </td>
+                                            <td>{product.use_variants ? null : defaultVariant.available}</td>
+                                            <td>{product.use_variants ? null : defaultVariant.total}</td>
+                                            <td>{product.tags.join(', ')}</td>
+                                            <td><EditProduct product={product} onSuccessEdit={() => {
+                                                searchProducts.refetch()
+                                            }} /></td>
+                                            <td><Link href={`/product/${product._id}`} className="fourb-button">VER</Link></td>
+                                        </tr>
+                                        {product.use_variants ? <tr>
+                                            <td colSpan={12}>
+                                                <table style={{ marginLeft: 40, borderCollapse: 'collapse' }}>
+                                                    <thead>
+                                                        <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.2)', marginBottom: 10 }}>
+                                                            <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Variante</th>
+                                                            <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Imagen</th>
+                                                            <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Disponible</th>
+                                                            <th style={{ paddingRight: 20, paddingBottom: 10, textAlign: 'left' }}>Total</th>
                                                         </tr>
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </td>
-                                    </tr> : null}
-                                </Fragment>
-                            ))}
+                                                    </thead>
+                                                    <tbody>
+                                                        {product.variants.map((value) => {
+                                                            const variantName = value.combination.map(combination => combination.name).join(" / ")
+                                                            if (variantName === "default") {
+                                                                return null
+                                                            }
+                                                            return <tr key={value.inventory_variant_oid}>
+                                                                <td>{variantName}</td>
+                                                                <td>
+                                                                    <img className="img-table" alt="" width="100%" src={value.imgs[0]} />
+                                                                </td>
+                                                                <td>{value.available}</td>
+                                                                <td>{value.total}</td>
+                                                            </tr>
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr> : null}
+                                    </Fragment>
+                                )
+                            })}
                         </Fragment>
                     ))}
                 </tbody>

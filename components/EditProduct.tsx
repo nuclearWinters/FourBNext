@@ -7,10 +7,43 @@ import { ModalField } from "./ModalField";
 import { ModalCheckbox } from "./ModalCheckbox";
 import cross from '../public/cross.svg'
 import Image from "next/image";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { DragDropContext, Draggable, DropResult, Droppable } from "react-beautiful-dnd";
 import { getItemStyle, reorder } from "../pages/inventory-admin";
 import { toast } from "react-toastify";
 import { InventoryTRPC } from "../pages/product/[id]";
+import { Combination, Options } from "../server/types";
+import { nanoid } from "nanoid";
+import TagsInput from 'react-tagsinput'
+import drag from '../public/drag.svg'
+
+export const reorderOptions = (list: Options[], startIndex: number, endIndex: number) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+
+    return result;
+};
+
+export interface VariantEdit {
+    inventory_variant_oid: string;
+    imgs: string[]
+    increment: string
+    price: string
+    sku: string
+    use_discount: boolean
+    discount_price: string
+    combination: Combination[]
+    total: string
+    available: string
+}
+
+export interface ProductEdit {
+    name: string
+    description: string
+    use_variants: false
+    tags: string[]
+    variants: VariantEdit[]
+}
 
 export const EditProduct: FC<{
     product: InventoryTRPC
@@ -24,12 +57,44 @@ export const EditProduct: FC<{
         const onCloseCallback = () => {
             setShowModal(false)
         }
+        const [createNewOptions, setCreateNewOptions] = useState(false)
         const [form, setForm] = useState({
             ...product,
-            discount_price: toCurrency(String(product.discount_price), '.'),
-            price: toCurrency(String(product.price), '.'),
-            increment: '0',
-            tags: product.tags,
+            variants: product.variants.map(variant => ({
+                inventory_variant_oid: variant.inventory_variant_oid,
+                imgs: variant.imgs,
+                sku: variant.sku,
+                use_discount: variant.use_discount,
+                combination: variant.combination,
+                increment: '0',
+                price: toCurrency(String(variant.price), '.'),
+                discount_price: toCurrency(String(variant.discount_price), '.'),
+                available: String(variant.available),
+                total: String(variant.total),
+            }))
+        })
+        const defaultVariantIndex = form.variants.findIndex(variant => variant.combination.map(combination => combination.name).every(name => name === 'default'))
+        const [newOptions, setNewOptions] = useState({
+            options: [
+                {
+                    id: nanoid(5),
+                    name: '',
+                    values: [] as Combination[],
+                    type: 'string' as 'string' | 'color',
+                }
+            ],
+            variants: [
+                {
+                    imgs: form.variants[defaultVariantIndex].imgs,
+                    available: String(form.variants[defaultVariantIndex].available),
+                    total: String(form.variants[defaultVariantIndex].total),
+                    price: toCurrency(String(form.variants[defaultVariantIndex].price), '.'),
+                    sku: form.variants[defaultVariantIndex].sku,
+                    use_discount: form.variants[defaultVariantIndex].use_discount,
+                    discount_price: toCurrency(String(form.variants[defaultVariantIndex].discount_price), '.'),
+                    combination: form.variants[defaultVariantIndex].combination,
+                }
+            ]
         })
         const editProduct = trpc.editProduct.useMutation({
             onSuccess: () => {
@@ -39,18 +104,54 @@ export const EditProduct: FC<{
                 toast.error(e.message)
             }
         })
-        const onDragEnd = (result: any, value: any, key: string) => {
+        const onDragEnd = (result: any, value: VariantEdit, idx: number) => {
             if (!result.destination) {
                 return;
             }
             const items = reorder(
-                form.img,
+                value.imgs,
+                result.source.index,
+                result.destination.index
+            );
+            form.variants[idx] = {
+                ...value,
+                imgs: items
+            }
+            setForm(state => ({
+                ...state,
+                img: items,
+            }))
+        }
+        const onDragEndNewOptionsImgs = (result: any, value: VariantEdit, idx: number) => {
+            if (!result.destination) {
+                return;
+            }
+            const items = reorder(
+                value.imgs,
+                result.source.index,
+                result.destination.index
+            );
+            newOptions.variants[idx] = {
+                ...value,
+                imgs: items
+            }
+            setNewOptions(state => ({
+                ...state,
+                img: items,
+            }))
+        }
+        const onDragEndOptions = (result: DropResult) => {
+            if (!result.destination) {
+                return;
+            }
+            const items = reorderOptions(
+                form.options,
                 result.source.index,
                 result.destination.index
             );
             setForm(state => ({
                 ...state,
-                img: items,
+                options: items,
             }))
         }
         return <div>
@@ -67,14 +168,26 @@ export const EditProduct: FC<{
                             editProduct.mutate({
                                 id: product._id,
                                 name: form.name,
-                                sku: form.sku,
-                                increment: Number(form.increment),
-                                imgs: form.img,
-                                useDiscount: form.use_discount,
-                                useSmallAndBig: form.use,
-                                discountPrice: Number(form.discount_price) * 100,
-                                price: Number(form.price) * 100,
-                                tags: 
+                                description: form.description,
+                                tags: form.tags,
+                                use_variants: form.use_variants,
+                                options: form.options,
+                                variants: form.variants.map(variant => ({
+                                    ...variant,
+                                    increment: Number(variant.increment),
+                                    price: Number(variant.price) * 100,
+                                    discount_price: Number(variant.discount_price) * 100,
+                                    total: Number(variant.total),
+                                    available: Number(variant.available)
+                                })),
+                                create_new_variants: createNewOptions,
+                                new_variants: newOptions.variants.map(variant => ({
+                                    ...variant,
+                                    total: Number(variant.total),
+                                    available: Number(variant.available),
+                                    price: Number(variant.price) * 100,
+                                    discount_price: Number(variant.discount_price) * 100,
+                                })),
                             }, {
                                 onSuccess: () => {
                                     setShowModal(false)
@@ -94,54 +207,89 @@ export const EditProduct: FC<{
                                 }}
                             />
                             <ModalField
-                                id="code"
-                                label="Código"
+                                id="description"
+                                label="Descripcion"
                                 required
-                                name="code"
+                                name="description"
                                 type="text"
-                                value={form.code}
+                                value={form.description}
                                 onChange={(e) => {
                                     setForm(state => ({ ...state, [e.target.name]: e.target.value }))
                                 }}
                             />
-                            <ModalField
+                            {form.use_variants ? null : <ModalField
+                                id="sku"
+                                label="Código"
+                                required
+                                name="sku"
+                                type="text"
+                                value={form.variants[defaultVariantIndex].sku}
+                                onChange={(e) => {
+                                    form.variants[defaultVariantIndex] = {
+                                        ...form.variants[defaultVariantIndex],
+                                        [e.target.name]: e.target.value,
+                                    }
+                                    setForm(state => ({
+                                        ...state,
+                                    }))
+                                }}
+                            />}
+                            {form.use_variants ? null : <ModalField
                                 id="price"
                                 label="Precio"
                                 required
                                 name="price"
                                 type="number"
-                                value={form.price}
+                                value={form.variants[defaultVariantIndex].price}
                                 onChange={(e) => {
-                                    setForm(state => ({ ...state, [e.target.name]: toCurrency(e.target.value, '.') }))
+                                    form.variants[defaultVariantIndex] = {
+                                        ...form.variants[defaultVariantIndex],
+                                        [e.target.name]: toCurrency(e.target.value, '.'),
+                                    }
+                                    setForm(state => ({
+                                        ...state,
+                                    }))
                                 }}
                                 pattern="\d*"
                                 step="any"
-                            />
-                            <ModalCheckbox
+                            />}
+                            {form.use_variants ? null : <ModalCheckbox
                                 id="use_discount"
                                 label="Usar descuento"
                                 name="use_discount"
                                 type="checkbox"
-                                checked={form.use_discount}
+                                checked={form.variants[defaultVariantIndex].use_discount}
                                 onChange={(e) => {
-                                    setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
+                                    form.variants[defaultVariantIndex] = {
+                                        ...form.variants[defaultVariantIndex],
+                                        [e.target.name]: e.target.checked,
+                                    }
+                                    setForm(state => ({
+                                        ...state,
+                                    }))
                                 }}
-                            />
-                            <div style={{ opacity: form.use_discount ? '1' : '0.4', pointerEvents: form.use_discount ? 'auto' : 'none' }}>
+                            />}
+                            {form.use_variants ? null : <div style={{ opacity: form.variants[defaultVariantIndex].use_discount ? '1' : '0.4', pointerEvents: form.variants[defaultVariantIndex].use_discount ? 'auto' : 'none' }}>
                                 <ModalField
                                     id="discount_price"
                                     label="Precio de descuento"
                                     required
                                     name="discount_price"
                                     type="number"
-                                    value={form.discount_price}
+                                    value={form.variants[defaultVariantIndex].discount_price}
                                     onChange={(e) => {
-                                        setForm(state => ({ ...state, [e.target.name]: toCurrency(e.target.value, '.') }))
+                                        form.variants[defaultVariantIndex] = {
+                                            ...form.variants[defaultVariantIndex],
+                                            [e.target.name]: toCurrency(e.target.value, '.'),
+                                        }
+                                        setForm(state => ({
+                                            ...state,
+                                        }))
                                     }}
                                     pattern="\d*"
                                     step="any"
                                 />
-                            </div>
+                            </div>}
                             <ModalCheckbox
                                 id="use_variants"
                                 label="Opciones de compra"
@@ -152,39 +300,345 @@ export const EditProduct: FC<{
                                     setForm(state => ({ ...state, [e.target.name]: e.target.checked }))
                                 }}
                             />
-                            {form.use_small_and_big
-                                ? null
-                                : (
-                                    <>
-                                        <div className="img-title">
-                                            Imagenes
+                            {form.use_variants && !createNewOptions ? (
+                                <div style={{ margin: 'auto', width: '50%' }}>
+                                    <strong>Opciones</strong>
+                                    {form.options.map(option => (
+                                        <div key={option.id}>
+                                            <DragDropContext onDragEnd={onDragEndOptions}>
+                                                <Droppable droppableId="droppable" direction="horizontal">
+                                                    {(provided) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            style={{
+                                                                display: 'flex',
+                                                                padding: 8,
+                                                                overflow: 'auto',
+                                                            }}
+                                                            {...provided.droppableProps}
+                                                        >
+                                                            {form.options.map((item, index) => (
+                                                                <Draggable key={item.id} draggableId={item.id} index={index}>
+                                                                    {(provided, snapshot) => (
+                                                                        <div
+                                                                            ref={provided.innerRef}
+                                                                            {...provided.draggableProps}
+                                                                            {...provided.dragHandleProps}
+                                                                            style={getItemStyle(
+                                                                                snapshot.isDragging,
+                                                                                provided.draggableProps.style
+                                                                            )}
+                                                                        >
+                                                                            <div style={{ position: 'relative' }} key={item.id}>
+                                                                                <div>{option.name}</div>
+                                                                                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                                                                                    {option.values.map(option => (
+                                                                                        <div
+                                                                                            key={option.id}
+                                                                                            style={{
+                                                                                                backgroundColor: 'lightgray',
+                                                                                                borderRadius: '20px',
+                                                                                                margin: '4px',
+                                                                                                padding: '4px 12px',
+                                                                                            }}
+                                                                                        >
+                                                                                            {option.name}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            ))}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                            </DragDropContext>
                                         </div>
+                                    ))}
+                                </div>
+                            ) : null}
+                            {form.use_variants ? (
+                                <button
+                                    className="fourb-button"
+                                    type="button"
+                                    onClick={() => {
+                                        setCreateNewOptions(true)
+                                    }}>
+                                    Crear nuevas opciones
+                                </button>
+                            ) : null}
+                            {createNewOptions ? (
+                                <div>
 
+                                    <DragDropContext onDragEnd={onDragEndOptions}>
+                                        <Droppable droppableId="droppable" direction="horizontal">
+                                            {(provided) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    style={{
+                                                        display: 'flex',
+                                                        padding: 8,
+                                                        overflow: 'auto',
+                                                    }}
+                                                    {...provided.droppableProps}
+                                                >
+                                                    <div style={{ display: 'flex', flexDirection: "column" }}>
+                                                        {newOptions.options.map((option, idxOption) => (
+                                                            <Draggable key={option.id} draggableId={option.id} index={idxOption}>
+                                                                {(provided, snapshot) => (
+                                                                    <div
+                                                                        ref={provided.innerRef}
+                                                                        {...provided.draggableProps}
+                                                                        {...provided.dragHandleProps}
+                                                                        style={getItemStyle(
+                                                                            snapshot.isDragging,
+                                                                            provided.draggableProps.style
+                                                                        )}
+                                                                    >
+                                                                        <div key={idxOption} style={{ display: 'flex', flexDirection: 'row' }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30 }}>
+                                                                                <Image src={drag} alt="" />
+                                                                            </div>
+                                                                            <div style={{ display: 'flex', flexDirection: "column" }}>
+                                                                                <ModalField
+                                                                                    id={`${idxOption}-option-name`}
+                                                                                    label="Nombre de la opcion"
+                                                                                    required
+                                                                                    name="name"
+                                                                                    type="text"
+                                                                                    value={option.name}
+                                                                                    onChange={(e) => {
+                                                                                        newOptions.options[idxOption].name = e.target.value
+                                                                                        setNewOptions(state => ({
+                                                                                            ...state,
+                                                                                        }))
+                                                                                    }}
+                                                                                />
+                                                                                <div>Valor de la opcion</div>
+                                                                                {option.values.map((value, idxValue) => (
+                                                                                    <ModalField
+                                                                                        label=""
+                                                                                        id={`${idxOption}-${idxValue}-option-value`}
+                                                                                        key={value.id}
+                                                                                        value={value.name}
+                                                                                        onChange={(event) => {
+                                                                                            if (event.target.value === "") {
+                                                                                                const nextOptions = [...newOptions.options]
+                                                                                                nextOptions[idxOption].values.splice(idxValue)
+                                                                                                setNewOptions({ ...newOptions, options: nextOptions })
+                                                                                            } else {
+                                                                                                const nextOptions = [...newOptions.options]
+                                                                                                nextOptions[idxOption].values[idxValue].name = event.target.value
+                                                                                                setNewOptions({ ...newOptions, options: nextOptions })
+                                                                                            }
+                                                                                        }}
+                                                                                        placeholder="Añadir otro valor"
+                                                                                    />
+                                                                                ))}
+                                                                                <input
+                                                                                    value=""
+                                                                                    onChange={(event) => {
+                                                                                        const nextOptions = [...newOptions.options]
+                                                                                        nextOptions[idxOption].values.push({
+                                                                                            id: nanoid(5),
+                                                                                            name: event.target.value
+                                                                                        })
+                                                                                        setForm({ ...form, options: nextOptions })
+                                                                                    }}
+                                                                                    placeholder="Añadir otro valor"
+                                                                                />
+                                                                            </div>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    form.options.splice(idxOption, 1)
+                                                                                    setForm({ ...form, options: [...form.options] })
+                                                                                }}
+                                                                            >
+                                                                                Delete
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </Draggable>
+                                                        ))}
+                                                        {provided.placeholder}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                    </DragDropContext>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setNewOptions({
+                                                ...newOptions,
+                                                options: [...newOptions.options, { id: nanoid(5), name: '', values: [], type: 'string' }]
+                                            })
+                                        }}
+                                    >
+                                        Añadir otra opcion
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const variants = [
+                                                form.variants[defaultVariantIndex],
+                                            ]
+
+                                            let result = newOptions.options[0].values.map(value => ([value.name]));
+
+                                            for (var k = 1; k < newOptions.options.length; k++) {
+                                                const next: string[][] = [];
+                                                result.forEach(item => {
+                                                    newOptions.options[k].values.forEach(word => {
+                                                        var line = item.slice(0);
+                                                        line.push(word.name);
+                                                        next.push(line);
+                                                    })
+                                                });
+                                                result = next;
+                                            }
+
+                                            for (const combination of result) {
+                                                variants.push({
+                                                    imgs: [],
+                                                    price: '0.00',
+                                                    sku: '',
+                                                    use_discount: false,
+                                                    discount_price: '0.00',
+                                                    combination: combination.map(combination => ({
+                                                        id: nanoid(5),
+                                                        name: combination,
+                                                    })),
+                                                    increment: '0',
+                                                    inventory_variant_oid: '',
+                                                    total: '0',
+                                                    available: '0',
+                                                })
+                                            }
+
+                                            setNewOptions({ ...form, variants })
+                                        }}
+                                    >
+                                        Done
+                                    </button>
+                                </div>
+                            ) : null}
+                            {!createNewOptions && form.use_variants && form.variants.length > 1 ? (
+                                <div>{form.variants.map((value, idx) => {
+                                    const variantName = value.combination.map(combination => combination.name).join(" / ")
+                                    if (variantName === 'default') {
+                                        return null
+                                    }
+                                    return <div key={idx}>
+                                        <div className="img-title">
+                                            {variantName}
+                                        </div>
+                                        <ModalField
+                                            id={`${idx}-sku`}
+                                            label="Código"
+                                            required
+                                            name="sku"
+                                            type="text"
+                                            value={value.sku}
+                                            onChange={(e) => {
+                                                form.variants[idx] = {
+                                                    ...value,
+                                                    [e.target.name]: e.target.value,
+                                                }
+                                                setForm(state => ({
+                                                    ...state,
+                                                }))
+                                            }}
+                                        />
+                                        <ModalField
+                                            id={`${idx}-price`}
+                                            label="Precio"
+                                            required
+                                            name="price"
+                                            type="number"
+                                            value={value.price}
+                                            onChange={(e) => {
+                                                form.variants[idx] = {
+                                                    ...value,
+                                                    [e.target.name]: toCurrency(e.target.value, '.'),
+                                                }
+                                                setForm(state => ({
+                                                    ...state,
+                                                }))
+                                            }}
+                                            pattern="\d*"
+                                            step="any"
+                                        />
+                                        <ModalCheckbox
+                                            id={`${idx}-use_discount`}
+                                            label="Usar descuento"
+                                            name="use_discount"
+                                            type="checkbox"
+                                            checked={value.use_discount}
+                                            onChange={(e) => {
+                                                form.variants[idx] = {
+                                                    ...value,
+                                                    [e.target.name]: e.target.checked,
+                                                }
+                                                setForm(state => ({
+                                                    ...state,
+                                                }))
+                                            }}
+                                        />
+                                        <div style={{ opacity: value.use_discount ? '1' : '0.4', pointerEvents: value.use_discount ? 'auto' : 'none' }}>
+                                            <ModalField
+                                                id={`${idx}-discount_price`}
+                                                label="Precio de descuento"
+                                                required
+                                                name="discount_price"
+                                                type="number"
+                                                value={value.discount_price}
+                                                onChange={(e) => {
+                                                    form.variants[idx] = {
+                                                        ...value,
+                                                        [e.target.name]: toCurrency(e.target.value, '.'),
+                                                    }
+                                                    setForm(state => ({
+                                                        ...state,
+                                                    }))
+                                                }}
+                                                pattern="\d*"
+                                                step="any"
+                                            />
+                                        </div>
                                         <div style={{ marginLeft: 20 }}>
-                                            <div className="input-container images-container">
-                                                <input name="image" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
-                                                    const files = event.target.files
-                                                    if (files) {
-                                                        for (const file of files) {
-                                                            if (file.type) {
-                                                                try {
-                                                                    const data = await signedUrl.mutateAsync({ fileType: file.type })
-                                                                    const url = new URL(data.uploadUrl);
-                                                                    await fetch(data.uploadUrl, {
-                                                                        method: "PUT",
-                                                                        body: file,
-                                                                    })
-                                                                    setForm(state => ({ ...state, img: [...state.img, url.origin + url.pathname] }))
-                                                                } catch (e) {
-                                                                    toast.error('Error while uploading')
+                                            <input title="Subir fotos" name="image-big" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
+                                                const files = event.target.files
+                                                if (files) {
+                                                    for (const file of files) {
+                                                        if (file.type) {
+                                                            try {
+                                                                const data = await signedUrl.mutateAsync({ fileType: file.type })
+                                                                const url = new URL(data.uploadUrl);
+                                                                await fetch(data.uploadUrl, {
+                                                                    method: "PUT",
+                                                                    body: file,
+                                                                })
+                                                                form.variants[idx] = {
+                                                                    ...value,
+                                                                    imgs: [...form.variants[idx].imgs, url.origin + url.pathname],
                                                                 }
+                                                                setForm(state => ({
+                                                                    ...state,
+                                                                }))
+                                                            } catch (e) {
+                                                                toast.error('Error while uploading')
                                                             }
                                                         }
                                                     }
-                                                }} />
-                                            </div>
+                                                }
+                                            }} />
                                             <div className="input-container images-container">
-                                                <DragDropContext onDragEnd={onDragEnd}>
+                                                <DragDropContext onDragEnd={(result) => onDragEnd(result, form.variants[idx], idx)}>
                                                     <Droppable droppableId="droppable" direction="horizontal">
                                                         {(provided) => (
                                                             <div
@@ -196,7 +650,7 @@ export const EditProduct: FC<{
                                                                 }}
                                                                 {...provided.droppableProps}
                                                             >
-                                                                {form.img.map((item, index) => (
+                                                                {value.imgs.map((item, index) => (
                                                                     <Draggable key={item} draggableId={item} index={index}>
                                                                         {(provided, snapshot) => (
                                                                             <div
@@ -208,8 +662,317 @@ export const EditProduct: FC<{
                                                                                     provided.draggableProps.style
                                                                                 )}
                                                                             >
-                                                                                <div style={{ position: 'relative' }} key={index}>
-                                                                                    <button className="closeImgButton"><Image src={cross} alt="" height={10} /></button>
+                                                                                <div style={{ position: 'relative' }} key={item}>
+                                                                                    <button
+                                                                                        className="closeImgButton"
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            form.variants[idx] = {
+                                                                                                ...value,
+                                                                                                imgs: form.variants[idx].imgs.filter(currImg => item !== currImg)
+                                                                                            }
+                                                                                            setForm(state => ({
+                                                                                                ...state,
+                                                                                            }))
+                                                                                        }}
+                                                                                    >
+                                                                                        <Image src={cross} alt="" height={10} />
+                                                                                    </button>
+                                                                                    <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ))}
+                                                                {provided.placeholder}
+                                                            </div>
+                                                        )}
+                                                    </Droppable>
+                                                </DragDropContext>
+                                            </div>
+                                            <ModalField
+                                                id={`${idx}-qty`}
+                                                label={`Añadir al inventario (Disponible: ${value.available} de ${value.total})`}
+                                                required
+                                                name="increment"
+                                                type="number"
+                                                value={value.increment}
+                                                onChange={(e) => {
+                                                    form.variants[idx] = {
+                                                        ...value,
+                                                        [e.target.name]: e.target.value,
+                                                    }
+                                                    setForm(state => ({
+                                                        ...state,
+                                                    }))
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                })}</div>
+                            ) : null}
+                            {createNewOptions && form.use_variants && newOptions.variants.length > 1 ? (
+                                <div>{newOptions.variants.map((value, idx) => {
+                                    const variantName = value.combination.map(combination => combination.name).join(" / ")
+                                    if (variantName === 'default') {
+                                        return null
+                                    }
+                                    return <div key={idx}>
+                                        <div className="img-title">
+                                            {variantName}
+                                        </div>
+                                        <ModalField
+                                            id={`${idx}-sku`}
+                                            label="Código"
+                                            required
+                                            name="sku"
+                                            type="text"
+                                            value={value.sku}
+                                            onChange={(e) => {
+                                                newOptions.variants[idx] = {
+                                                    ...value,
+                                                    [e.target.name]: e.target.value,
+                                                }
+                                                setNewOptions(state => ({
+                                                    ...state,
+                                                }))
+                                            }}
+                                        />
+                                        <ModalField
+                                            id={`${idx}-price`}
+                                            label="Precio"
+                                            required
+                                            name="price"
+                                            type="number"
+                                            value={value.price}
+                                            onChange={(e) => {
+                                                newOptions.variants[idx] = {
+                                                    ...value,
+                                                    [e.target.name]: toCurrency(e.target.value, '.'),
+                                                }
+                                                setNewOptions(state => ({
+                                                    ...state,
+                                                }))
+                                            }}
+                                            pattern="\d*"
+                                            step="any"
+                                        />
+                                        <ModalCheckbox
+                                            id={`${idx}-use_discount`}
+                                            label="Usar descuento"
+                                            name="use_discount"
+                                            type="checkbox"
+                                            checked={value.use_discount}
+                                            onChange={(e) => {
+                                                newOptions.variants[idx] = {
+                                                    ...value,
+                                                    [e.target.name]: e.target.checked,
+                                                }
+                                                setNewOptions(state => ({
+                                                    ...state,
+                                                }))
+                                            }}
+                                        />
+                                        <div style={{ opacity: value.use_discount ? '1' : '0.4', pointerEvents: value.use_discount ? 'auto' : 'none' }}>
+                                            <ModalField
+                                                id={`${idx}-discount_price`}
+                                                label="Precio de descuento"
+                                                required
+                                                name="discount_price"
+                                                type="number"
+                                                value={value.discount_price}
+                                                onChange={(e) => {
+                                                    newOptions.variants[idx] = {
+                                                        ...value,
+                                                        [e.target.name]: toCurrency(e.target.value, '.'),
+                                                    }
+                                                    setNewOptions(state => ({
+                                                        ...state,
+                                                    }))
+                                                }}
+                                                pattern="\d*"
+                                                step="any"
+                                            />
+                                        </div>
+                                        <div style={{ marginLeft: 20 }}>
+                                            <input title="Subir fotos" name="image-big" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
+                                                const files = event.target.files
+                                                if (files) {
+                                                    for (const file of files) {
+                                                        if (file.type) {
+                                                            try {
+                                                                const data = await signedUrl.mutateAsync({ fileType: file.type })
+                                                                const url = new URL(data.uploadUrl);
+                                                                await fetch(data.uploadUrl, {
+                                                                    method: "PUT",
+                                                                    body: file,
+                                                                })
+                                                                newOptions.variants[idx] = {
+                                                                    ...value,
+                                                                    imgs: [...form.variants[idx].imgs, url.origin + url.pathname],
+                                                                }
+                                                                setNewOptions(state => ({
+                                                                    ...state,
+                                                                }))
+                                                            } catch (e) {
+                                                                toast.error('Error while uploading')
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }} />
+                                            <div className="input-container images-container">
+                                                <DragDropContext onDragEnd={(result) => onDragEndNewOptionsImgs(result, form.variants[idx], idx)}>
+                                                    <Droppable droppableId="droppable" direction="horizontal">
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    padding: 8,
+                                                                    overflow: 'auto',
+                                                                }}
+                                                                {...provided.droppableProps}
+                                                            >
+                                                                {value.imgs.map((item, index) => (
+                                                                    <Draggable key={item} draggableId={item} index={index}>
+                                                                        {(provided, snapshot) => (
+                                                                            <div
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                style={getItemStyle(
+                                                                                    snapshot.isDragging,
+                                                                                    provided.draggableProps.style
+                                                                                )}
+                                                                            >
+                                                                                <div style={{ position: 'relative' }} key={item}>
+                                                                                    <button
+                                                                                        className="closeImgButton"
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            newOptions.variants[idx] = {
+                                                                                                ...value,
+                                                                                                imgs: newOptions.variants[idx].imgs.filter(currImg => item !== currImg)
+                                                                                            }
+                                                                                            setNewOptions(state => ({
+                                                                                                ...state,
+                                                                                            }))
+                                                                                        }}
+                                                                                    >
+                                                                                        <Image src={cross} alt="" height={10} />
+                                                                                    </button>
+                                                                                    <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ))}
+                                                                {provided.placeholder}
+                                                            </div>
+                                                        )}
+                                                    </Droppable>
+                                                </DragDropContext>
+                                            </div>
+                                            <ModalField
+                                                id={`${idx}-qty`}
+                                                label={`Cantidad en el inventario`}
+                                                required
+                                                name="qty"
+                                                type="number"
+                                                value={value.available}
+                                                onChange={(e) => {
+                                                    newOptions.variants[idx] = {
+                                                        ...value,
+                                                        available: e.target.value,
+                                                        total: e.target.value,
+                                                    }
+                                                    setNewOptions(state => ({
+                                                        ...state,
+                                                    }))
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                })}</div>
+                            ) : null}
+                            {form.use_variants
+                                ? null
+                                : (
+                                    <>
+                                        <div className="img-title">
+                                            Imagenes
+                                        </div>
+                                        <div style={{ marginLeft: 20 }}>
+                                            <div className="input-container images-container">
+                                                <input title="Subir fotos" name="image" multiple type="file" accept="png,jpg,jpeg" onChange={async (event) => {
+                                                    const files = event.target.files
+                                                    if (files) {
+                                                        for (const file of files) {
+                                                            if (file.type) {
+                                                                try {
+                                                                    const response = await signedUrl.mutateAsync({ fileType: file.type })
+                                                                    const url = new URL(response.uploadUrl);
+                                                                    await fetch(response.uploadUrl, {
+                                                                        method: "PUT",
+                                                                        body: file,
+                                                                    })
+                                                                    form.variants[defaultVariantIndex] = {
+                                                                        ...form.variants[defaultVariantIndex],
+                                                                        imgs: [...form.variants[defaultVariantIndex].imgs, url.origin + url.pathname],
+                                                                    }
+                                                                    setForm(state => ({
+                                                                        ...state,
+                                                                    }))
+                                                                } catch (e) {
+                                                                    toast.error('Error while uploading')
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }} />
+                                            </div>
+                                            <div className="input-container images-container">
+                                                <DragDropContext onDragEnd={(result) => onDragEnd(result, form.variants[defaultVariantIndex], defaultVariantIndex)}>
+                                                    <Droppable droppableId="droppable" direction="horizontal">
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    padding: 8,
+                                                                    overflow: 'auto',
+                                                                }}
+                                                                {...provided.droppableProps}
+                                                            >
+                                                                {form.variants[defaultVariantIndex].imgs.map((item, index) => (
+                                                                    <Draggable key={item} draggableId={item} index={index}>
+                                                                        {(provided, snapshot) => (
+                                                                            <div
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                style={getItemStyle(
+                                                                                    snapshot.isDragging,
+                                                                                    provided.draggableProps.style
+                                                                                )}
+                                                                            >
+                                                                                <div style={{ position: 'relative' }} key={item}>
+                                                                                    <button
+                                                                                        className="closeImgButton"
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            form.variants[defaultVariantIndex] = {
+                                                                                                ...form.variants[defaultVariantIndex],
+                                                                                                imgs: form.variants[defaultVariantIndex].imgs.filter(currImg => item !== currImg),
+                                                                                            }
+                                                                                            setForm(state => ({
+                                                                                                ...state,
+                                                                                            }))
+                                                                                        }}
+                                                                                    >
+                                                                                        <Image src={cross} alt="" height={10} />
+                                                                                    </button>
                                                                                     <img className="img-uploaded" alt="" width="100%" src={item} />
                                                                                 </div>
                                                                             </div>
@@ -223,27 +986,40 @@ export const EditProduct: FC<{
                                                 </DragDropContext>
                                             </div>
                                         </div>
-                                        <ModalField
+                                        {form.use_variants ? null : <ModalField
                                             id="increment"
-                                            label={`Añadir al inventario (Disponible: ${product.available} de ${product.total})`}
-                                            required
+                                            label={`Añadir al inventario (Disponible: ${form.variants[defaultVariantIndex].available} de ${form.variants[defaultVariantIndex].total})`}
                                             name="increment"
                                             type="number"
-                                            value={toCurrency(String(form.increment), '.')}
+                                            value={form.variants[defaultVariantIndex].increment}
                                             onChange={(e) => {
-                                                setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                                                form.variants[defaultVariantIndex] = {
+                                                    ...form.variants[defaultVariantIndex],
+                                                    [e.target.name]: e.target.value,
+                                                }
+                                                setForm(state => ({
+                                                    ...state,
+                                                }))
                                             }}
-                                            pattern="\d*"
-                                            step="any"
-                                        />
+                                        />}
                                     </>
                                 )
                             }
                             <div className="input-container">
-                                <label htmlFor="discount">Tags</label>
-                                <div className="checkboxes" style={{ display: 'flex', flexWrap: 'wrap', }}>
-
-                                </div>
+                                <label htmlFor="discount">Etiquetas</label>
+                                <TagsInput
+                                    inputProps={{
+                                        placeholder: ''
+                                    }}
+                                    onlyUnique
+                                    value={form.tags}
+                                    onChange={(tags) => {
+                                        setForm(state => ({
+                                            ...state,
+                                            tags,
+                                        }))
+                                    }}
+                                />
                             </div>
                             <button type="submit" className="fourb-button">Actualizar</button>
                             <Link href={`/product/${product._id}`} type="button" className="fourb-button">VER</Link>

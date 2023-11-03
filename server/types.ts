@@ -62,6 +62,11 @@ export interface SessionJWT {
     phone_prefix: string | null;
 }
 
+export interface Combination {
+    id: string
+    name: string
+}
+
 export interface VariantMongo {
     inventory_variant_oid: ObjectId
     imgs: string[]
@@ -71,7 +76,14 @@ export interface VariantMongo {
     sku: string,
     use_discount: boolean,
     discount_price: number,
-    combination: string[]
+    combination: Combination[]
+}
+
+export interface Options {
+    id: string
+    name: string
+    values: Combination[]
+    type: 'string' | 'color'
 }
 
 export interface InventoryMongo {
@@ -79,17 +91,9 @@ export interface InventoryMongo {
     name: string;
     description: string;
     tags: string[]
-    options: {
-        id: string
-        name: string
-        values: {
-            id: string
-            name: string
-        }[]
-        type: 'string' | 'color'
-    }[]
+    options: Options[]
     use_variants: boolean
-    variants: Record<string, VariantMongo>
+    variants: VariantMongo[]
 }
 
 export interface InventoryVariantsMongo {
@@ -97,7 +101,7 @@ export interface InventoryVariantsMongo {
     inventory_id: ObjectId
     available: number
     total: number
-    combination: string[]
+    combination: Combination[]
 }
 
 export interface ItemsByCartMongo {
@@ -111,7 +115,7 @@ export interface ItemsByCartMongo {
     name: string;
     imgs: string[];
     sku: string;
-    combination: string[]
+    combination: Combination[]
     product_id: ObjectId
 }
 
@@ -127,7 +131,7 @@ export interface PurchasesMongo {
     date: Date;
     imgs: string[];
     sku: string;
-    combination: string[]
+    combination: Combination[]
     product_id: ObjectId,
 }
 

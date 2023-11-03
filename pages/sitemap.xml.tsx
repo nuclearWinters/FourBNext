@@ -32,13 +32,10 @@ function SiteMap() {
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     const products = await inventory.find().toArray()
     const newProducts = products.map(product => {
-        const newVariants: Record<string, VariantTRPC> = {}
-        for (const key in product.variants) {
-            newVariants[key] = {
-                ...product.variants[key],
-                inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
-            }
-        }
+        const newVariants: VariantTRPC[] = product.variants.map(variant => ({
+            ...variant,
+            inventory_variant_oid: variant.inventory_variant_oid.toHexString()
+        }))
         return {
             ...product,
             _id: product._id.toHexString(),

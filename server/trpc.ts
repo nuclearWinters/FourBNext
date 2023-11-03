@@ -42,7 +42,7 @@ export type VariantTRPC = Modify<VariantMongo, {
 
 export type InventoryTRPC = Modify<InventoryMongo, {
     _id: string
-    variants: Record<string, VariantTRPC>
+    variants: VariantTRPC[]
 }>
 
 export type ItemsByCartTRPC = Modify<ItemsByCartMongo, {
@@ -378,17 +378,13 @@ export const appRouter = router({
                     nextCursor = nextItem!._id.toHexString();
                 }
                 const newProducts = products.map(product => {
-                    const newVariants: Record<string, VariantTRPC> = {}
-                    for (const key in product.variants) {
-                        newVariants[key] = {
-                            ...product.variants[key],
-                            inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
-                        }
-                    }
                     return {
                         ...product,
                         _id: product._id.toHexString(),
-                        variants: newVariants
+                        variants: product.variants.map(variant => ({
+                            ...variant,
+                            inventory_variant_oid: variant.inventory_variant_oid.toHexString()
+                        }))
                     }
                 })
                 return {
@@ -408,17 +404,13 @@ export const appRouter = router({
                     nextCursor = nextItem!._id.toHexString();
                 }
                 const newProducts = products.map(product => {
-                    const newVariants: Record<string, VariantTRPC> = {}
-                    for (const key in product.variants) {
-                        newVariants[key] = {
-                            ...product.variants[key],
-                            inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
-                        }
-                    }
                     return {
                         ...product,
                         _id: product._id.toHexString(),
-                        variants: newVariants
+                        variants: product.variants.map(variant => ({
+                            ...variant,
+                            inventory_variant_oid: variant.inventory_variant_oid.toHexString()
+                        }))
                     }
                 })
                 return {
@@ -438,17 +430,13 @@ export const appRouter = router({
                     nextCursor = nextItem!._id.toHexString();
                 }
                 const newProducts = products.map(product => {
-                    const newVariants: Record<string, VariantTRPC> = {}
-                    for (const key in product.variants) {
-                        newVariants[key] = {
-                            ...product.variants[key],
-                            inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
-                        }
-                    }
                     return {
                         ...product,
                         _id: product._id.toHexString(),
-                        variants: newVariants
+                        variants: product.variants.map(variant => ({
+                            ...variant,
+                            inventory_variant_oid: variant.inventory_variant_oid.toHexString()
+                        }))
                     }
                 })
                 return {
@@ -466,17 +454,13 @@ export const appRouter = router({
                     nextCursor = nextItem!._id.toHexString();
                 }
                 const newProducts = products.map(product => {
-                    const newVariants: Record<string, VariantTRPC> = {}
-                    for (const key in product.variants) {
-                        newVariants[key] = {
-                            ...product.variants[key],
-                            inventory_variant_oid: product.variants[key].inventory_variant_oid.toHexString()
-                        }
-                    }
                     return {
                         ...product,
                         _id: product._id.toHexString(),
-                        variants: newVariants
+                        variants: product.variants.map(variant => ({
+                            ...variant,
+                            inventory_variant_oid: variant.inventory_variant_oid.toHexString()
+                        }))
                     }
                 })
                 return {
@@ -527,12 +511,17 @@ export const appRouter = router({
                     },
                     {
                         $set: {
-                            [`variants.${variantProduct.combination.join("")}.available`]: variantProduct.available,
-                            [`variants.${variantProduct.combination.join("")}.total`]: variantProduct.total,
+                            [`variants.$[variant].available`]: variantProduct.available,
+                            [`variants.$[variant].total`]: variantProduct.total,
                         },
                     },
                     {
                         returnDocument: 'after',
+                        arrayFilters: [
+                            {
+                                "variant.inventory_variant_oid": product_variant_oid,
+                            }
+                        ]
                     }
                 )
                 if (!product) {
@@ -720,12 +709,17 @@ export const appRouter = router({
                     },
                     {
                         $set: {
-                            [`variants.${variantProduct.combination.join("")}.available`]: variantProduct.available,
-                            [`variants.${variantProduct.combination.join("")}.total`]: variantProduct.total,
+                            [`variants.$[variant].available`]: variantProduct.available,
+                            [`variants.$[variant].total`]: variantProduct.total,
                         },
                     },
                     {
                         returnDocument: 'after',
+                        arrayFilters: [
+                            {
+                                "variant.inventory_variant_oid": product_variant_oid,
+                            }
+                        ]
                     }
                 )
                 if (!product) {
@@ -854,12 +848,17 @@ export const appRouter = router({
                     },
                     {
                         $set: {
-                            [`variants.${variantProduct.combination.join("")}.available`]: variantProduct.available,
-                            [`variants.${variantProduct.combination.join("")}.total`]: variantProduct.total,
+                            [`variants.$[variant].available`]: variantProduct.available,
+                            [`variants.$[variant].total`]: variantProduct.total,
                         },
                     },
                     {
                         returnDocument: 'after',
+                        arrayFilters: [
+                            {
+                                "variant.inventory_variant_oid": variantProduct._id,
+                            }
+                        ]
                     }
                 )
                 if (!product) {
@@ -1540,14 +1539,19 @@ export const appRouter = router({
         .input(z.object({
             name: z.string().min(1),
             description: z.string(),
-            variants: z.record(z.string(), z.object({
+            variants: z.array(z.object({
                 imgs: z.array(z.string()),
                 qty: z.number(),
                 price: z.number(),
                 sku: z.string(),
                 use_discount: z.boolean(),
                 discount_price: z.number(),
-                combination: z.array(z.string())
+                combination: z.array(
+                    z.object({
+                        id: z.string(),
+                        name: z.string(),
+                    })
+                )
             })),
             use_variants: z.boolean(),
             options: z.array(z.object({
@@ -1571,39 +1575,21 @@ export const appRouter = router({
                 const use_variants = input.use_variants
                 const tags = input.tags
                 const { inventory, variantInventory } = ctx
-                const variantsObject: Record<string, {
-                    inventory_variant_oid: ObjectId,
-                    imgs: string[],
-                    available: number;
-                    total: number;
-                    price: number;
-                    sku: string;
-                    use_discount: boolean,
-                    discount_price: number,
-                    combination: string[]
-                }> = {}
-                Object.entries(variants).forEach(([key, value]) => {
-                    variantsObject[key] = {
-                        inventory_variant_oid: new ObjectId(),
-                        imgs: value.imgs,
-                        price: value.price,
-                        sku: value.sku,
-                        available: value.qty,
-                        total: value.qty,
-                        use_discount: value.use_discount,
-                        discount_price: value.discount_price,
-                        combination: value.combination,
-                    }
-                })
+                const newVariants = variants.map(variant => ({
+                    ...variant,
+                    inventory_variant_oid: new ObjectId(),
+                    available: variant.qty,
+                    total: variant.qty,
+                }))
                 const product = await inventory.insertOne({
                     name,
                     tags,
                     description,
-                    variants: variantsObject,
+                    variants: newVariants,
                     options,
                     use_variants,
                 })
-                await variantInventory.insertMany(Object.values(variantsObject).map(variant => ({
+                await variantInventory.insertMany(newVariants.map(variant => ({
                     _id: variant.inventory_variant_oid,
                     inventory_id: product.insertedId,
                     available: variant.available,
@@ -1630,7 +1616,7 @@ export const appRouter = router({
             id: z.string().min(1),
             name: z.string().min(1),
             description: z.string(),
-            variants: z.record(z.string(), z.object({
+            variants: z.array(z.object({
                 inventory_variant_oid: z.string().min(1),
                 imgs: z.array(z.string()),
                 increment: z.number(),
@@ -1640,7 +1626,28 @@ export const appRouter = router({
                 sku: z.string(),
                 use_discount: z.boolean(),
                 discount_price: z.number(),
-                combination: z.array(z.string())
+                combination: z.array(
+                    z.object({
+                        id: z.string(),
+                        name: z.string()
+                    })
+                )
+            })),
+            create_new_variants: z.boolean(),
+            new_variants: z.array(z.object({
+                imgs: z.array(z.string()),
+                total: z.number(),
+                available: z.number(),
+                price: z.number(),
+                sku: z.string(),
+                use_discount: z.boolean(),
+                discount_price: z.number(),
+                combination: z.array(
+                    z.object({
+                        id: z.string(),
+                        name: z.string()
+                    })
+                )
             })),
             use_variants: z.boolean(),
             options: z.array(z.object({
@@ -1664,35 +1671,22 @@ export const appRouter = router({
                 const use_variants = input.use_variants
                 const options = input.options
                 const variants = input.variants
+                const new_variants = input.new_variants
+                const create_new_variants = input.create_new_variants
                 const { inventory, variantInventory } = ctx
                 const product_oid = new ObjectId(id)
                 const filter: Filter<InventoryMongo> = {
                     _id: product_oid,
                 }
-                const variantsObject: Record<string, {
-                    inventory_variant_oid: ObjectId,
-                    imgs: string[],
-                    available: number;
-                    total: number;
-                    price: number;
-                    sku: string;
-                    use_discount: boolean,
-                    discount_price: number,
-                    combination: string[],
-                }> = {}
-                Object.entries(variants).forEach(([key, value]) => {
-                    variantsObject[key] = {
-                        inventory_variant_oid: new ObjectId(value.inventory_variant_oid),
-                        imgs: value.imgs,
-                        price: value.price,
-                        sku: value.sku,
-                        available: value.available + value.increment,
-                        total: value.total + value.increment,
-                        use_discount: value.use_discount,
-                        discount_price: value.discount_price,
-                        combination: value.combination,
-                    }
-                })
+                const newVariants = variants.map(variant => ({
+                    ...variant,
+                    inventory_variant_oid: new ObjectId(variant.inventory_variant_oid),
+                }))
+                const nextVariants = new_variants.map(variant => ({
+                    ...variant,
+                    inventory_variant_oid: new ObjectId(),
+                    inventory_id: product_oid,
+                }))
                 const result = await inventory.findOneAndUpdate(
                     filter,
                     {
@@ -1701,7 +1695,7 @@ export const appRouter = router({
                             description,
                             tags,
                             options,
-                            variants: variantsObject,
+                            variants: create_new_variants ? nextVariants : newVariants,
                             use_variants,
                         }
                     },
@@ -1709,42 +1703,51 @@ export const appRouter = router({
                         returnDocument: "after",
                     }
                 )
-                for (const key in variants) {
-                    const variant = variants[key]
-                    if (variant.increment) {
-                        const filter: Filter<InventoryVariantsMongo> = {
-                            _id: new ObjectId(variant.inventory_variant_oid),
-                            available: {
-                                $gte: -variant.increment
+                if (create_new_variants) {
+                    await variantInventory.insertMany(nextVariants)
+                } else {
+                    for (const key in variants) {
+                        const variant = variants[key]
+                        if (variant.increment) {
+                            const filter: Filter<InventoryVariantsMongo> = {
+                                _id: new ObjectId(variant.inventory_variant_oid),
+                                available: {
+                                    $gte: -variant.increment
+                                }
                             }
-                        }
-                        const result = await variantInventory.findOneAndUpdate(
-                            filter,
-                            {
-                                ...(variant.increment ? {
-                                    $inc: {
-                                        available: variant.increment,
-                                        total: variant.increment,
-                                    }
-                                } : {}),
-                            },
-                            {
-                                returnDocument: "after",
-                            }
-                        )
-                        if (result) {
-                            await inventory.findOneAndUpdate(
-                                { _id: result?.inventory_id },
+                            const result = await variantInventory.findOneAndUpdate(
+                                filter,
                                 {
-                                    $set: {
-                                        [`variants.${key}.available`]: result.available,
-                                        [`variants.${key}.total`]: result.total,
-                                    }
+                                    ...(variant.increment ? {
+                                        $inc: {
+                                            available: variant.increment,
+                                            total: variant.increment,
+                                        }
+                                    } : {}),
                                 },
                                 {
                                     returnDocument: "after",
                                 }
                             )
+                            if (result) {
+                                await inventory.findOneAndUpdate(
+                                    { _id: result?.inventory_id },
+                                    {
+                                        $set: {
+                                            [`variants.$[variant].available`]: result.available,
+                                            [`variants.$[variant].total`]: result.total,
+                                        }
+                                    },
+                                    {
+                                        returnDocument: "after",
+                                        arrayFilters: [
+                                            {
+                                                "variant.inventory_variant_oid": result._id,
+                                            }
+                                        ],
+                                    }
+                                )
+                            }
                         }
                     }
                 }

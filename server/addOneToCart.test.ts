@@ -3,6 +3,7 @@ import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import FakeTimers, { InstalledClock } from "@sinonjs/fake-timers";
+import { nanoid } from "nanoid";
 
 jest.mock('conekta');
 jest.mock('@sendgrid/mail');
@@ -52,7 +53,10 @@ describe("AddOneToCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
-        const combination = ['default']
+        const combination = [{
+            id: nanoid(5),
+            name: 'default',
+        }]
         await inventory.insertOne({
             _id: inventory_oid,
             name,
@@ -60,8 +64,8 @@ describe("AddOneToCart tests", () => {
             tags,
             use_variants: false,
             options: [],
-            variants: {
-                'default': {
+            variants: [
+                {
                     inventory_variant_oid,
                     imgs: [],
                     available,
@@ -72,7 +76,7 @@ describe("AddOneToCart tests", () => {
                     discount_price,
                     combination,
                 }
-            }
+            ]
         })
         await variantInventory.insertOne({
             _id: inventory_variant_oid,
@@ -138,8 +142,8 @@ describe("AddOneToCart tests", () => {
             options: [],
             tags,
             use_variants: false,
-            variants: {
-                'default': {
+            variants: [
+                {
                     available: newAvailable,
                     combination,
                     discount_price,
@@ -150,7 +154,7 @@ describe("AddOneToCart tests", () => {
                     total,
                     use_discount,
                 },
-            },
+            ],
         })
         const variant = await variantInventory.findOne({ _id: inventory_variant_oid })
         expect(variant).toEqual({
@@ -208,7 +212,10 @@ describe("AddOneToCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
-        const combination = ['default']
+        const combination = [{
+            id: nanoid(5),
+            name: 'default',
+        }]
         const qty = 1
         const item_by_cart_oid = new ObjectId()
         const reserved_oid = new ObjectId()
@@ -239,8 +246,8 @@ describe("AddOneToCart tests", () => {
             tags,
             use_variants: false,
             options: [],
-            variants: {
-                'default': {
+            variants: [
+                {
                     inventory_variant_oid,
                     imgs: [],
                     available,
@@ -251,7 +258,7 @@ describe("AddOneToCart tests", () => {
                     discount_price,
                     combination,
                 }
-            }
+            ]
         })
         await variantInventory.insertOne({
             _id: inventory_variant_oid,
@@ -326,8 +333,8 @@ describe("AddOneToCart tests", () => {
                 options: [],
                 tags,
                 use_variants: false,
-                variants: {
-                    'default': {
+                variants: [
+                    {
                         available: newAvailable,
                         combination,
                         discount_price,
@@ -338,7 +345,7 @@ describe("AddOneToCart tests", () => {
                         total,
                         use_discount,
                     },
-                },
+                ],
             },
         )
         const variant = await variantInventory.findOne({ _id: inventory_variant_oid })
@@ -400,7 +407,10 @@ describe("AddOneToCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
-        const combination = ['default']
+        const combination = [{
+            id: nanoid(5),
+            name: 'default',
+        }]
         const user_oid = new ObjectId()
         const user_cart_oid = new ObjectId()
         const is_admin = false
@@ -412,8 +422,8 @@ describe("AddOneToCart tests", () => {
             tags,
             use_variants: false,
             options: [],
-            variants: {
-                'default': {
+            variants: [
+                {
                     inventory_variant_oid,
                     imgs: [],
                     available,
@@ -424,7 +434,7 @@ describe("AddOneToCart tests", () => {
                     discount_price,
                     combination,
                 }
-            }
+            ]
         })
         await variantInventory.insertOne({
             _id: inventory_variant_oid,
@@ -503,8 +513,8 @@ describe("AddOneToCart tests", () => {
                 options: [],
                 tags,
                 use_variants: false,
-                variants: {
-                    'default': {
+                variants: [
+                    {
                         available: newAvailable,
                         combination,
                         discount_price,
@@ -515,7 +525,7 @@ describe("AddOneToCart tests", () => {
                         total,
                         use_discount,
                     },
-                },
+                ],
             },
         )
         const variant = await variantInventory.findOne({ _id: inventory_variant_oid })
@@ -577,7 +587,10 @@ describe("AddOneToCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
-        const combination = ['default']
+        const combination = [{
+            id: nanoid(5),
+            name: 'default',
+        }]
         const user_oid = new ObjectId()
         const user_cart_oid = new ObjectId()
         const is_admin = false
@@ -612,8 +625,8 @@ describe("AddOneToCart tests", () => {
             tags,
             use_variants: false,
             options: [],
-            variants: {
-                'default': {
+            variants: [
+                {
                     inventory_variant_oid,
                     imgs: [],
                     available,
@@ -624,7 +637,7 @@ describe("AddOneToCart tests", () => {
                     discount_price,
                     combination,
                 }
-            }
+            ]
         })
         await variantInventory.insertOne({
             _id: inventory_variant_oid,
@@ -703,8 +716,8 @@ describe("AddOneToCart tests", () => {
                 options: [],
                 tags,
                 use_variants: false,
-                variants: {
-                    'default': {
+                variants: [
+                    {
                         available: newAvailable,
                         combination,
                         discount_price,
@@ -715,7 +728,7 @@ describe("AddOneToCart tests", () => {
                         total,
                         use_discount,
                     },
-                },
+                ],
             },
         )
         const variant = await variantInventory.findOne({ _id: inventory_variant_oid })

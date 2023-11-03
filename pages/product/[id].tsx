@@ -10,7 +10,7 @@ import Head from "next/head";
 import Script from "next/script";
 import { toast } from "react-toastify";
 
-type Modify<T, R> = Omit<T, keyof R> & R;
+export type Modify<T, R> = Omit<T, keyof R> & R;
 
 export type VariantTRPC = Modify<VariantMongo, {
     inventory_variant_oid: string
@@ -18,7 +18,7 @@ export type VariantTRPC = Modify<VariantMongo, {
 
 export type InventoryTRPC = Modify<InventoryMongo, {
     _id: string
-    variants: Record<string, VariantTRPC>
+    variants: VariantTRPC[]
 }>
 
 export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
@@ -35,9 +35,22 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
     })
     const qtyParsed = Number(qty) < 1 ? 1 : Number(qty)
     const title = `${product.name} - FOURB`
-    const [selectedOption, setSelectedOption] = useState(product.use_variants ? product.options.map(option => option.values[0].id) : ['default'])
-    const variant = product.variants[selectedOption.join("")]
+    const [selectedOption, setSelectedOption] = useState(
+        product.use_variants
+            ? product.options.filter(
+                option => !option.values.every(value => value.name === "default")
+            ).map(
+                option => option.values[0].id
+            )
+            : product.options.filter(
+                option => option.values.every(value => value.name === "default")
+            ).map(
+                option => option.values[0].id
+            )
+    )
+    const variant = product.variants[product.variants.findIndex(variant => variant.combination.every(combination => selectedOption.includes(combination.id)))]
     const disabled = variant.available === 0
+    const variantName = variant.combination.map(combination => combination.name).join(" / ")
     return <div className={css.productContainer} style={{ flex: 1, flexDirection: 'column' }}>
         <Head>
             <title>{title}</title>
@@ -50,7 +63,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                     "@context": "https://schema.org/",
                     "@type": "Product",
                     "name": product.name,
-                    "description": "",
+                    "description": product.description,
                     "image": variant.imgs,
                     "sku": variant.sku,
                     "offers": {
@@ -70,7 +83,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
             </div>
             <div className={css.infoBox}>
                 <h1 className={css.name}>
-                    {product.name}{product.use_variants ? `(${variant.combination.join(" / ")})` : ""}
+                    {product.name}{product.use_variants ? `(${variantName})` : ""}
                 </h1>
                 {product.use_variants && variant.available < 10 ? <div className={css.qtyWarning}>{variant.available === 0 ? "AGOTADOS" : "POCOS DISPONIBLES"}</div> : null}
                 <div className={css.code}>SKU: {variant.sku}</div>
@@ -85,16 +98,16 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                     return <div style={{ marginBottom: 10 }}>
                         {option.values.map(value => {
                             return <>
-                            <div>{value.name}</div>
-                            <button
-                                className={value.id === selectedOption[idxOption] ? css.selected : css.unselected}
-                                onClick={() => {
-                                    selectedOption[idxOption] = value.id
-                                    setSelectedOption([...selectedOption])
-                                }}
-                            >
-                                Grande
-                            </button>
+                                <div>{value.name}</div>
+                                <button
+                                    className={value.id === selectedOption[idxOption] ? css.selected : css.unselected}
+                                    onClick={() => {
+                                        selectedOption[idxOption] = value.id
+                                        setSelectedOption([...selectedOption])
+                                    }}
+                                >
+                                    Grande
+                                </button>
                             </>
                         })}
                     </div>
@@ -138,14 +151,16 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
             </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-            {!product.use_variants ? product.variants['default'].imgs.map(img => (
-                <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
-            )) : null}
-            {product.use_variants ? Object.values(product.variants).map(variant => {
-                const combination = variant.combination.join("")
-                if (combination === "default") {
-                    return null
-                }
+            {!product.use_variants ? product.variants.filter(
+                variant => variant.combination.every(value => value.name === "default")
+            ).map(variant => {
+                return variant.imgs.map(img => (
+                    <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
+                ))
+            }) : null}
+            {product.use_variants ? product.variants.filter(
+                variant => !variant.combination.every(value => value.name === "default")
+            ).map(variant => {
                 return variant.imgs.map(img => (
                     <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
                 ))

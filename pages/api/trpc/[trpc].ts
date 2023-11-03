@@ -52,10 +52,17 @@ const job = new CronJob(
                             },
                             {
                                 $set: {
-                                    [`variants.${variantProduct.combination.join("")}.available`]: variantProduct.available,
-                                    [`variants.${variantProduct.combination.join("")}.total`]: variantProduct.total,
+                                    [`variants.$[variant].available`]: variantProduct.available,
+                                    [`variants.$[variant].total`]: variantProduct.total,
                                 },
                             },
+                            {
+                                arrayFilters: [
+                                    {
+                                        "variant.inventory_variant_oid": variantProduct._id,
+                                    }
+                                ]
+                            }
                         )
                         revalidateProduct(variantProduct.inventory_id.toHexString())
                     }

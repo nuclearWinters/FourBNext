@@ -351,3 +351,16 @@ a.fourb-button {
 .checkboxes label {
   margin-left: 4px;
 }
+
+.react-tagsinput-tag {
+  background-color: lightgray;
+  border-radius: 20px;
+  margin: 4px;
+  padding: 4px 12px;
+}
+
+.react-tagsinput-remove::after {
+  content: 'x';
+  padding: 4px;
+  color: darkred;
+}
