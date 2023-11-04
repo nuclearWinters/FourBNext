@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { trpc } from '../utils/config';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { toast } from 'react-toastify';
 import { InventoryTRPC } from '../pages/product/[id]';
 

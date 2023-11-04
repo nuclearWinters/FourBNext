@@ -1,6 +1,6 @@
 import { CSSProperties, Fragment, useState } from "react"
 import { toCurrency, trpc } from "../utils/config"
-import { EditProduct, reorderOptions } from "../components/EditProduct";
+import { EditProduct, reorderNewOptions } from "../components/EditProduct";
 import Image from "next/image";
 import { Modal } from "../components/Modal";
 import { ModalClose } from "../components/ModalClose";
@@ -12,9 +12,16 @@ import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle,
 import Head from "next/head";
 import { toast } from "react-toastify";
 import { nanoid } from "nanoid";
-import { Combination } from "../server/types";
 import TagsInput from 'react-tagsinput'
 import drag from '../public/drag.svg'
+import trash from '../public/trash-can.svg'
+import { Combination } from "../server/types";
+
+export interface CombinationEdit {
+    id: string
+    name: string
+    focus: boolean
+}
 
 export interface VariantCreate {
     imgs: string[]
@@ -32,6 +39,7 @@ export interface ProductCreate {
     use_variants: false
     tags: string[]
     variants: VariantCreate[]
+    options: CombinationEdit[]
 }
 
 export const reorder = (list: string[], startIndex: number, endIndex: number) => {
@@ -74,14 +82,14 @@ export default function InventoryAdmin() {
                 discount_price: '0.00',
                 combination: [{
                     id: nanoid(5),
-                    name: 'default'
+                    name: 'default',
                 }]
             }
         ],
         options: [{
             id: nanoid(5),
             name: '',
-            values: [] as Combination[],
+            values: [] as CombinationEdit[],
             type: 'string' as 'string' | 'color',
         }]
     })
@@ -143,7 +151,7 @@ export default function InventoryAdmin() {
         if (!result.destination) {
             return;
         }
-        const items = reorderOptions(
+        const items = reorderNewOptions(
             form.options,
             result.source.index,
             result.destination.index
@@ -315,7 +323,7 @@ export default function InventoryAdmin() {
                                                                         provided.draggableProps.style
                                                                     )}
                                                                 >
-                                                                    <div key={idxOption} style={{ display: 'flex', flexDirection: 'row' }}>
+                                                                    <div key={idxOption} style={{ display: 'flex', flexDirection: 'row', borderBottom: '1px solid black', paddingBottom: 20 }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30 }}>
                                                                             <Image src={drag} alt="" />
                                                                         </div>
@@ -334,9 +342,10 @@ export default function InventoryAdmin() {
                                                                                     }))
                                                                                 }}
                                                                             />
-                                                                            <div>Valor de la opcion</div>
+                                                                            <div style={{ paddingBottom: 8 }}>Valor de la opcion</div>
                                                                             {option.values.map((value, idxValue) => (
                                                                                 <ModalField
+                                                                                    focusOnMount={value.focus}
                                                                                     label=""
                                                                                     id={`${idxOption}-${idxValue}-option-value`}
                                                                                     key={value.id}
@@ -361,7 +370,8 @@ export default function InventoryAdmin() {
                                                                                     const newOptions = [...form.options]
                                                                                     newOptions[idxOption].values.push({
                                                                                         id: nanoid(5),
-                                                                                        name: event.target.value
+                                                                                        name: event.target.value,
+                                                                                        focus: true,
                                                                                     })
                                                                                     setForm({ ...form, options: newOptions })
                                                                                 }}
@@ -369,12 +379,13 @@ export default function InventoryAdmin() {
                                                                             />
                                                                         </div>
                                                                         <button
+                                                                            style={{ width: 60, display: 'flex', padding: 20, alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer' }}
                                                                             onClick={() => {
                                                                                 form.options.splice(idxOption, 1)
                                                                                 setForm({ ...form, options: [...form.options] })
                                                                             }}
                                                                         >
-                                                                            Delete
+                                                                            <Image src={trash} alt="" width={20} height={30} />
                                                                         </button>
                                                                     </div>
                                                                 </div>
@@ -388,6 +399,7 @@ export default function InventoryAdmin() {
                                     </Droppable>
                                 </DragDropContext>
                                 <button
+                                    className="fourb-button"
                                     type="button"
                                     onClick={() => {
                                         setForm({
@@ -399,6 +411,7 @@ export default function InventoryAdmin() {
                                     Añadir otra opcion
                                 </button>
                                 <button
+                                    className="fourb-button"
                                     type="button"
                                     onClick={() => {
                                         const variants = [
@@ -408,7 +421,7 @@ export default function InventoryAdmin() {
                                         let result = form.options[0].values.map(value => ([value]));
 
                                         for (var k = 1; k < form.options.length; k++) {
-                                            const next: Combination[][] = [];
+                                            const next: CombinationEdit[][] = [];
                                             result.forEach(item => {
                                                 form.options[k].values.forEach(word => {
                                                     var line = item.slice(0);
@@ -436,7 +449,7 @@ export default function InventoryAdmin() {
                                         setForm({ ...form, variants })
                                     }}
                                 >
-                                    Done
+                                    Generar variantes
                                 </button>
                             </div>
                         ) : null}

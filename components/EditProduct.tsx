@@ -8,15 +8,31 @@ import { ModalCheckbox } from "./ModalCheckbox";
 import cross from '../public/cross.svg'
 import Image from "next/image";
 import { DragDropContext, Draggable, DropResult, Droppable } from "react-beautiful-dnd";
-import { getItemStyle, reorder } from "../pages/inventory-admin";
+import { CombinationEdit, getItemStyle, reorder } from "../pages/inventory-admin";
 import { toast } from "react-toastify";
 import { InventoryTRPC } from "../pages/product/[id]";
-import { Combination, Options } from "../server/types";
 import { nanoid } from "nanoid";
 import TagsInput from 'react-tagsinput'
 import drag from '../public/drag.svg'
+import trash from '../public/trash-can.svg'
+import { Combination, Options } from "../server/types";
+
+export interface OptionsEdit {
+    id: string
+    name: string
+    values: CombinationEdit[]
+    type: 'string' | 'color'
+}
 
 export const reorderOptions = (list: Options[], startIndex: number, endIndex: number) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+
+    return result;
+};
+
+export const reorderNewOptions = (list: OptionsEdit[], startIndex: number, endIndex: number) => {
     const result = Array.from(list);
     const [removed] = result.splice(startIndex, 1);
     result.splice(endIndex, 0, removed);
@@ -43,6 +59,7 @@ export interface ProductEdit {
     use_variants: false
     tags: string[]
     variants: VariantEdit[]
+    options: CombinationEdit[]
 }
 
 export const EditProduct: FC<{
@@ -79,7 +96,7 @@ export const EditProduct: FC<{
                 {
                     id: nanoid(5),
                     name: '',
-                    values: [] as Combination[],
+                    values: [] as CombinationEdit[],
                     type: 'string' as 'string' | 'color',
                 }
             ],
@@ -141,6 +158,20 @@ export const EditProduct: FC<{
             }))
         }
         const onDragEndOptions = (result: DropResult) => {
+            if (!result.destination) {
+                return;
+            }
+            const items = reorderOptions(
+                form.options,
+                result.source.index,
+                result.destination.index
+            );
+            setForm(state => ({
+                ...state,
+                options: items,
+            }))
+        }
+        const onDragEndNewOptions = (result: DropResult) => {
             if (!result.destination) {
                 return;
             }
@@ -303,20 +334,20 @@ export const EditProduct: FC<{
                             {form.use_variants && !createNewOptions ? (
                                 <div style={{ margin: 'auto', width: '50%' }}>
                                     <strong>Opciones</strong>
-                                    {form.options.map(option => (
-                                        <div key={option.id}>
-                                            <DragDropContext onDragEnd={onDragEndOptions}>
-                                                <Droppable droppableId="droppable" direction="horizontal">
-                                                    {(provided) => (
-                                                        <div
-                                                            ref={provided.innerRef}
-                                                            style={{
-                                                                display: 'flex',
-                                                                padding: 8,
-                                                                overflow: 'auto',
-                                                            }}
-                                                            {...provided.droppableProps}
-                                                        >
+                                    <div>
+                                        <DragDropContext onDragEnd={onDragEndOptions}>
+                                            <Droppable droppableId="droppable" direction="horizontal">
+                                                {(provided) => (
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        style={{
+                                                            display: 'flex',
+                                                            padding: 8,
+                                                            overflow: 'auto',
+                                                        }}
+                                                        {...provided.droppableProps}
+                                                    >
+                                                        <div style={{ display: 'flex', flexDirection: "column" }}>
                                                             {form.options.map((item, index) => (
                                                                 <Draggable key={item.id} draggableId={item.id} index={index}>
                                                                     {(provided, snapshot) => (
@@ -330,9 +361,9 @@ export const EditProduct: FC<{
                                                                             )}
                                                                         >
                                                                             <div style={{ position: 'relative' }} key={item.id}>
-                                                                                <div>{option.name}</div>
+                                                                                <div>{item.name}</div>
                                                                                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                                                                                    {option.values.map(option => (
+                                                                                    {item.values.map(option => (
                                                                                         <div
                                                                                             key={option.id}
                                                                                             style={{
@@ -353,11 +384,11 @@ export const EditProduct: FC<{
                                                             ))}
                                                             {provided.placeholder}
                                                         </div>
-                                                    )}
-                                                </Droppable>
-                                            </DragDropContext>
-                                        </div>
-                                    ))}
+                                                    </div>
+                                                )}
+                                            </Droppable>
+                                        </DragDropContext>
+                                    </div>
                                 </div>
                             ) : null}
                             {form.use_variants ? (
@@ -373,7 +404,7 @@ export const EditProduct: FC<{
                             {createNewOptions ? (
                                 <div>
 
-                                    <DragDropContext onDragEnd={onDragEndOptions}>
+                                    <DragDropContext onDragEnd={onDragEndNewOptions}>
                                         <Droppable droppableId="droppable" direction="horizontal">
                                             {(provided) => (
                                                 <div
@@ -398,7 +429,7 @@ export const EditProduct: FC<{
                                                                             provided.draggableProps.style
                                                                         )}
                                                                     >
-                                                                        <div key={idxOption} style={{ display: 'flex', flexDirection: 'row' }}>
+                                                                        <div key={idxOption} style={{ display: 'flex', flexDirection: 'row', borderBottom: '1px solid black', paddingBottom: 20 }}>
                                                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30 }}>
                                                                                 <Image src={drag} alt="" />
                                                                             </div>
@@ -417,9 +448,10 @@ export const EditProduct: FC<{
                                                                                         }))
                                                                                     }}
                                                                                 />
-                                                                                <div>Valor de la opcion</div>
+                                                                                <div style={{ paddingBottom: 8 }}>Valor de la opcion</div>
                                                                                 {option.values.map((value, idxValue) => (
                                                                                     <ModalField
+                                                                                        focusOnMount={value.focus}
                                                                                         label=""
                                                                                         id={`${idxOption}-${idxValue}-option-value`}
                                                                                         key={value.id}
@@ -444,7 +476,8 @@ export const EditProduct: FC<{
                                                                                         const nextOptions = [...newOptions.options]
                                                                                         nextOptions[idxOption].values.push({
                                                                                             id: nanoid(5),
-                                                                                            name: event.target.value
+                                                                                            name: event.target.value,
+                                                                                            focus: true,
                                                                                         })
                                                                                         setForm({ ...form, options: nextOptions })
                                                                                     }}
@@ -452,12 +485,13 @@ export const EditProduct: FC<{
                                                                                 />
                                                                             </div>
                                                                             <button
+                                                                                style={{ width: 60, display: 'flex', padding: 20, alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer' }}
                                                                                 onClick={() => {
                                                                                     form.options.splice(idxOption, 1)
                                                                                     setForm({ ...form, options: [...form.options] })
                                                                                 }}
                                                                             >
-                                                                                Delete
+                                                                                <Image src={trash} alt="" width={20} height={30} />
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -471,6 +505,7 @@ export const EditProduct: FC<{
                                         </Droppable>
                                     </DragDropContext>
                                     <button
+                                        className="fourb-button"
                                         type="button"
                                         onClick={() => {
                                             setNewOptions({
@@ -482,20 +517,21 @@ export const EditProduct: FC<{
                                         Añadir otra opcion
                                     </button>
                                     <button
+                                        className="fourb-button"
                                         type="button"
                                         onClick={() => {
                                             const variants = [
-                                                form.variants[defaultVariantIndex],
+                                                newOptions.variants[0],
                                             ]
 
-                                            let result = newOptions.options[0].values.map(value => ([value.name]));
+                                            let result = newOptions.options[0].values.map(value => ([value]));
 
                                             for (var k = 1; k < newOptions.options.length; k++) {
-                                                const next: string[][] = [];
+                                                const next: CombinationEdit[][] = [];
                                                 result.forEach(item => {
                                                     newOptions.options[k].values.forEach(word => {
                                                         var line = item.slice(0);
-                                                        line.push(word.name);
+                                                        line.push(word);
                                                         next.push(line);
                                                     })
                                                 });
@@ -511,16 +547,14 @@ export const EditProduct: FC<{
                                                     discount_price: '0.00',
                                                     combination: combination.map(combination => ({
                                                         id: nanoid(5),
-                                                        name: combination,
+                                                        name: combination.name,
                                                     })),
-                                                    increment: '0',
-                                                    inventory_variant_oid: '',
                                                     total: '0',
                                                     available: '0',
                                                 })
                                             }
 
-                                            setNewOptions({ ...form, variants })
+                                            setNewOptions({ ...newOptions, variants })
                                         }}
                                     >
                                         Done
