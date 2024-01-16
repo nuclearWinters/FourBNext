@@ -3,7 +3,6 @@ import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import FakeTimers, { InstalledClock } from "@sinonjs/fake-timers";
-import { nanoid } from "nanoid";
 
 jest.mock('conekta');
 jest.mock('@sendgrid/mail');
@@ -53,8 +52,9 @@ describe("UpdateOneCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
+        const idOne = '56789'
         const combination = [{
-            id: nanoid(5),
+            id: idOne,
             name: 'default',
         }]
         const qty = 1

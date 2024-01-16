@@ -53,7 +53,7 @@ export default function Checkout() {
                             state: defaultAddress.state,
                             phonePrefix: "+52",
                             phone: defaultAddress.phone,
-                            email: '',
+                            email: values.email,
                             address_id: values.default_address,
                         })
                     } else {
@@ -68,7 +68,7 @@ export default function Checkout() {
                             state: '',
                             phonePrefix: "+52",
                             phone: '',
-                            email: '',
+                            email: values.email,
                             address_id: '',
                         })
                     }

@@ -3,7 +3,6 @@ import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import FakeTimers, { InstalledClock } from "@sinonjs/fake-timers";
-import { nanoid } from "nanoid";
 
 jest.mock('conekta');
 jest.mock('@sendgrid/mail');
@@ -53,8 +52,9 @@ describe("AddOneToCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
+        const idOne = '12345'
         const combination = [{
-            id: nanoid(5),
+            id: idOne,
             name: 'default',
         }]
         await inventory.insertOne({
@@ -212,8 +212,9 @@ describe("AddOneToCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
+        const idOne = '23456'
         const combination = [{
-            id: nanoid(5),
+            id: idOne,
             name: 'default',
         }]
         const qty = 1
@@ -407,8 +408,9 @@ describe("AddOneToCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
+        const idOne = '34567'
         const combination = [{
-            id: nanoid(5),
+            id: idOne,
             name: 'default',
         }]
         const user_oid = new ObjectId()
@@ -587,8 +589,9 @@ describe("AddOneToCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
+        const idOne = '45678'
         const combination = [{
-            id: nanoid(5),
+            id: idOne,
             name: 'default',
         }]
         const user_oid = new ObjectId()

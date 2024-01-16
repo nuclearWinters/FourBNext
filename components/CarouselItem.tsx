@@ -1,7 +1,6 @@
 import { FC } from "react"
 import { InventoryTRPC } from "../server/trpc"
-import { trpc } from '../utils/config';
-import { toast } from 'react-toastify';
+import Link from "next/link";
 
 export const CarouselItem: FC<{
     product: InventoryTRPC
@@ -20,14 +19,6 @@ export const CarouselItem: FC<{
         : product.variants.findIndex(variant => variant.combination.every(combination => combination.name.includes('default')))
     const variant = product.variants[variantIndex]
     const variantName = variant.combination.map(combination => combination.name).join(" / ")
-    const addOneToCart = trpc.addOneToCart.useMutation({
-        onSuccess: () => {
-            toast.success("Añadido al carrito")
-        },
-        onError: (err) => {
-            toast.error(err.message)
-        }
-    })
     return <div
         style={{
             background: 'white',
@@ -71,13 +62,8 @@ export const CarouselItem: FC<{
             <span style={variant.use_discount ? { textDecorationLine: 'line-through' } : undefined}>${(variant.price / 100).toFixed(2)}</span>
             {variant.use_discount ? <span> ${(variant.discount_price / 100).toFixed(2)}</span> : null}
         </div>
-        <button
-            onClick={async () => {
-                addOneToCart.mutate({
-                    product_variant_id: product._id,
-                    qty: 1,
-                })
-            }}
+        <Link
+            href={"/product/" + product._id}
             style={{
                 background: '#d0c9c3',
                 fontSize: '13px',
@@ -92,6 +78,6 @@ export const CarouselItem: FC<{
             }}
         >
             LO QUIERO
-        </button>
+        </Link>
     </div>
 }

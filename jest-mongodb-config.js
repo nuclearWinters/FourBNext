@@ -6,6 +6,4 @@ module.exports = {
     autoStart: false,
     instance: {},
   },
-
-  useSharedDBForAllJestWorkers: false,
 };

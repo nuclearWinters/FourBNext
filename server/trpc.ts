@@ -1274,17 +1274,12 @@ export const appRouter = router({
         .input(z.object({
             type: z.enum(['card', 'cash', 'bank_transfer']),
         }))
-        .mutation(async ({ ctx, input }): Promise<void> => {
+        .mutation(async ({ ctx, input }): Promise<string> => {
             try {
                 const { type } = input
                 const { users, cartsByUser, purchases, itemsByCart, sessionData, userData, res } = ctx
                 const new_cart_id = new ObjectId()
                 const previous_cart_id = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
-                const session = sessionToBase64({
-                    ...sessionData,
-                    cart_id: new_cart_id.toHexString(),
-                })
-                res.setHeader("Session-Token", session)
                 if (userData) {
                     const user_oid = new ObjectId(userData.user._id)
                     await users.updateOne(
@@ -1358,8 +1353,13 @@ export const appRouter = router({
                         secure: true,
                     }))
                     res.setHeader("Access-Token", newAccessToken)
-                    return
+                    return new_cart_id.toHexString()
                 } else {
+                    const session = sessionToBase64({
+                        ...sessionData,
+                        cart_id: new_cart_id.toHexString(),
+                    })
+                    res.setHeader("Session-Token", session)
                     if (type === "card") {
                         await cartsByUser.updateOne(
                             {
@@ -1388,7 +1388,7 @@ export const appRouter = router({
                         }))
                         await purchases.insertMany(purchasedProducts)
                     }
-                    return
+                    return new_cart_id.toHexString()
                 }
             } catch (e) {
                 if (e instanceof Error) {

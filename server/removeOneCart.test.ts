@@ -2,7 +2,6 @@ import { MongoClient, Db, ObjectId } from "mongodb";
 import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, ReservedInventoryMongo, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
-import { nanoid } from "nanoid";
 
 jest.mock('conekta');
 jest.mock('@sendgrid/mail');
@@ -47,8 +46,9 @@ describe("RemoveOneCart tests", () => {
         const sku = 'TEST'
         const use_discount = false
         const discount_price = 0
+        const idOne = '56789'
         const combination = [{
-            id: nanoid(5),
+            id: idOne,
             name: 'default',
         }]
         const qty = 1
