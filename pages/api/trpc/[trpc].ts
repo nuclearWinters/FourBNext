@@ -6,7 +6,7 @@ import * as trpcNext from '@trpc/server/adapters/next';
 import { appRouter } from '../../../server/trpc';
 import { MongoClient } from 'mongodb';
 import { MONGO_DB, getSessionData, getSessionToken, getTokenData, revalidateProduct } from '../../../server/utils';
-import { CartsByUserMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, ReservedInventoryMongo, UserMongo } from '../../../server/types';
+import { CartsByUserMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from '../../../server/types';
 import { CronJob } from 'cron';
 
 const client = await MongoClient.connect(MONGO_DB || "mongodb://127.0.0.1:27017", {})
@@ -16,7 +16,6 @@ export const cartsByUser = db.collection<CartsByUserMongo>("carts_by_user")
 export const inventory = db.collection<InventoryMongo>("inventory")
 export const variantInventory = db.collection<InventoryVariantsMongo>("variants_inventory")
 export const itemsByCart = db.collection<ItemsByCartMongo>("items_by_cart")
-export const reservedInventory = db.collection<ReservedInventoryMongo>("reserved_inventory")
 export const purchases = db.collection<PurchasesMongo>("purchases")
 
 const job = new CronJob(
@@ -67,7 +66,6 @@ const job = new CronJob(
                         revalidateProduct(variantProduct.inventory_id.toHexString())
                     }
                     await itemsByCart.deleteMany({ cart_id: cart._id })
-                    await reservedInventory.deleteMany({ cart_id: cart._id })
                     await cartsByUser.updateOne({ _id: cart._id }, { $set: { expire_date: null } })
                 }
             }
@@ -109,7 +107,6 @@ export default trpcNext.createNextApiHandler({
             cartsByUser,
             inventory,
             itemsByCart,
-            reservedInventory,
             purchases,
             variantInventory
         })

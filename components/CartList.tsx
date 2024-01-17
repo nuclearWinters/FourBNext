@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FC, useState } from "react"
+import { FC, useRef, useState } from "react"
 import { trpc } from "../utils/config";
 import css from './CartList.module.css'
 import trash from '../public/trash-can.svg'
@@ -30,6 +30,15 @@ export const CartList: FC<{
             toast.error(e.message)
         }
     });
+    const addOneToCart = trpc.addOneToCart.useMutation({
+        onSuccess: () => {
+            toast.success("Producto actualizado en el carrito")
+            refetch()
+        },
+        onError: (e) => {
+            toast.error(e.message)
+        }
+    });
     const removeOneCart = trpc.removeOneCart.useMutation({
         onSuccess: () => {
             toast.success("Producto eliminado en el carrito")
@@ -39,6 +48,8 @@ export const CartList: FC<{
             toast.error(e.message)
         }
     });
+    const isLoading = removeOneCart.isLoading || addOneToCart.isLoading || updateOneCart.isLoading
+    const inputRef = useRef(String(product.qty))
     const [input, setInput] = useState(String(product.qty))
     const variantName = product.combination.map(combination => combination.name).join(" / ")
     return <tr className={css.productCard}>
@@ -59,6 +70,7 @@ export const CartList: FC<{
             <div style={{ display: 'flex', alignItems: 'center' }} className={css.inputBox}>
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', marginTop: 10 }}>
                     <InputNumberCart
+                        disabled={isLoading}
                         label={"Cantidad"}
                         required
                         type="number"
@@ -68,28 +80,71 @@ export const CartList: FC<{
                         }}
                         onBlur={() => {
                             if (Number(input) < 1) {
-                                setInput("1")
+                                updateOneCart.mutate(
+                                    {
+                                        item_by_cart_id: product._id,
+                                        product_variant_id: product.product_variant_id,
+                                        qty: product.qty ? 1 : 0,
+                                    },
+                                    {
+                                        onSuccess: () => {
+                                            setInput("1")
+                                            inputRef.current = "1"
+                                        }
+                                    }
+                                )
+                            } else {
+                                updateOneCart.mutate(
+                                    {
+                                        item_by_cart_id: product._id,
+                                        product_variant_id: product.product_variant_id,
+                                        qty: product.qty ? Number(input) : 0,
+                                    },
+                                    {
+                                        onError: () => {
+                                            setInput(inputRef.current)
+                                        }
+                                    }
+                                )
                             }
                         }}
                         onMinus={() => {
                             if (Number(input) < 2) {
                                 return
                             }
-                            setInput(state => String(Number(state) - 1))
+                            updateOneCart.mutate(
+                                {
+                                    item_by_cart_id: product._id,
+                                    product_variant_id: product.product_variant_id,
+                                    qty: product.qty ? Number(input) - 1 : 0,
+                                },
+                                {
+                                    onSuccess: () => {
+                                        setInput(state => {
+                                            inputRef.current = String(Number(state) - 1)
+                                            return String(Number(state) - 1)
+                                        })
+                                    }
+                                }
+                            )
                         }}
                         onPlus={() => {
-                            setInput(state => String(Number(state) + 1))
+                            addOneToCart.mutate(
+                                {
+                                    product_variant_id: product.product_variant_id,
+                                    qty: 1,
+                                },
+                                {
+                                    onSuccess: () => {
+                                        setInput(state => {
+                                            inputRef.current = String(Number(state) + 1)
+                                            return String(Number(state) + 1)
+                                        })
+                                    },
+                                }
+                            )
                         }}
                     />
-                    <button className="fourb-button" onClick={() => {
-                        updateOneCart.mutate({
-                            item_by_cart_id: product._id,
-                            product_variant_id: product.product_variant_id,
-                            qty: product.qty ? Number(input) : 0,
-                        })
-                    }}>
-                        Actualizar
-                    </button>
                 </div>
                 <button
                     style={{ width: 20, height: 30, display: 'flex', padding: 0, alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer' }}

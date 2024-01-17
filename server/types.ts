@@ -152,13 +152,6 @@ export interface CartsByUserMongo {
     checkout_id: string | null
 }
 
-export interface ReservedInventoryMongo {
-    _id?: ObjectId;
-    cart_id: ObjectId;
-    product_variant_id: ObjectId;
-    qty: number;
-}
-
 export interface ContextLocals {
     req: NextApiRequest,
     res: NextApiResponse
@@ -168,7 +161,6 @@ export interface ContextLocals {
     inventory: Collection<InventoryMongo>;
     itemsByCart: Collection<ItemsByCartMongo>;
     cartsByUser: Collection<CartsByUserMongo>;
-    reservedInventory: Collection<ReservedInventoryMongo>;
     purchases: Collection<PurchasesMongo>
     variantInventory: Collection<InventoryVariantsMongo>
 }

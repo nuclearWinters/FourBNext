@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, ReservedInventoryMongo, UserMongo } from "./types";
+import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import FakeTimers, { InstalledClock } from "@sinonjs/fake-timers";
@@ -39,7 +39,6 @@ describe("UpdateOneCart tests", () => {
         const variantInventory = dbInstance.collection<InventoryVariantsMongo>("variants_inventory");
         const itemsByCart = dbInstance.collection<ItemsByCartMongo>("items_by_cart");
         const users = dbInstance.collection<UserMongo>("users");
-        const reservedInventory = dbInstance.collection<ReservedInventoryMongo>("reserved_inventory");
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
         const inventory_oid = new ObjectId()
         const inventory_variant_oid = new ObjectId()
@@ -59,14 +58,7 @@ describe("UpdateOneCart tests", () => {
         }]
         const qty = 1
         const item_by_cart_oid = new ObjectId()
-        const reserved_oid = new ObjectId()
         const newQty = 3
-        await reservedInventory.insertOne({
-            _id: reserved_oid,
-            product_variant_id: inventory_variant_oid,
-            qty: 1,
-            cart_id: cart_oid,
-        })
         await itemsByCart.insertOne({
             _id: item_by_cart_oid,
             cart_id: cart_oid,
@@ -135,7 +127,6 @@ describe("UpdateOneCart tests", () => {
             inventory,
             variantInventory,
             itemsByCart,
-            reservedInventory,
             cartsByUser,
         } as ContextLocals)
         const response = await caller.updateOneCart({ item_by_cart_id: item_by_cart_oid.toHexString(), qty: newQty, product_variant_id: inventory_variant_oid.toHexString() })
@@ -202,16 +193,6 @@ describe("UpdateOneCart tests", () => {
             combination,
             product_id: inventory_oid
         }])
-        const reserved = await reservedInventory.findOne({ product_variant_id: inventory_variant_oid })
-        if (!reserved) {
-            throw new Error('Reserved not found')
-        }
-        expect({ ...reserved, _id: ObjectId.isValid(reserved._id) }).toEqual({
-            _id: true,
-            cart_id: cart_oid,
-            product_variant_id: inventory_variant_oid,
-            qty: newQty,
-        })
         expect(response).toBe(undefined)
     });
 })

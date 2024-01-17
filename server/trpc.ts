@@ -2,7 +2,7 @@ import { TRPCError, initTRPC } from '@trpc/server';
 import { CartsByUserMongo, ContextLocals, InventoryVariantsMongo, VariantMongo } from './types';
 import { z } from 'zod';
 import { Filter, ObjectId } from 'mongodb';
-import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, VIRTUAL_HOST, jwt, revalidateProduct, sessionToBase64 } from './utils';
+import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, SENDGRID_API_KEY, VIRTUAL_HOST, jwt, revalidateProduct, sessionToBase64 } from './utils';
 import { InventoryMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from './types';
 import bcrypt from "bcryptjs"
 import cookie from "cookie"
@@ -12,6 +12,8 @@ import { isAxiosError } from 'axios';
 import { randomUUID } from 'crypto';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import sgMail from '@sendgrid/mail';
+
+sgMail.setApiKey(SENDGRID_API_KEY)
 
 type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -145,13 +147,14 @@ export const appRouter = router({
             try {
                 const email = input.email
                 const password = input.password
-                const { users, res, itemsByCart, sessionData } = ctx
+                const { users, res, itemsByCart, sessionData, cartsByUser } = ctx
                 const user = await users.findOne({
                     email,
                 })
                 if (!user) throw new Error("El usuario no existe.");
                 const hash = await bcrypt.compare(password, user.password);
                 if (!hash) throw new Error("La contraseña no coincide.");
+                //mover items en el carrito anonimo al carrito del usuario
                 await itemsByCart.updateMany(
                     {
                         cart_id: new ObjectId(sessionData.cart_id)
@@ -162,11 +165,37 @@ export const appRouter = router({
                         }
                     }
                 )
-                const session = sessionToBase64({
-                    ...sessionData,
-                    cart_id: user.cart_id.toHexString(),
-                })
-                res.setHeader("Session-Token", session)
+                const expireDate = new Date()
+                expireDate.setDate(expireDate.getDate() + 7)
+                //crear carrito si no existe
+                await cartsByUser.updateOne(
+                    {
+                        _id: user.cart_id,
+                    },
+                    {
+                        $set: {
+                            expire_date: expireDate
+                        },
+                        $setOnInsert: {
+                            _id: user.cart_id,
+                            pay_in_cash: false,
+                            user_id: user._id,
+                            status: 'waiting',
+                            email: user.email,
+                            order_id: null,
+                            sent: false,
+                            delivered: false,
+                            delivery: null,
+                            address: null,
+                            phone: null,
+                            name: null,
+                            checkout_id: null
+                        }
+                    },
+                    {
+                        upsert: true
+                    }
+                )
                 const now = new Date();
                 now.setMilliseconds(0);
                 const nowTime = now.getTime() / 1000;
@@ -476,20 +505,20 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { inventory, variantInventory, itemsByCart, reservedInventory, cartsByUser, sessionData, userData, res } = ctx
+                const { inventory, variantInventory, itemsByCart, cartsByUser, sessionData, userData } = ctx
                 const product_variant_id = input.product_variant_id
-                const qty = input.qty || 0
+                const qty = input.qty
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                /* ---- Restar del inventario ---- */
                 const product_variant_oid = new ObjectId(product_variant_id)
-                const filter: Filter<InventoryVariantsMongo> = {
-                    _id: product_variant_oid
+                if (qty === 0) {
+                    throw new Error('Quantity must not be zero or less.')
                 }
-                if (qty) {
-                    filter.available = {
+                const filter: Filter<InventoryVariantsMongo> = {
+                    _id: product_variant_oid,
+                    available: {
                         $gte: qty
                     }
-                } else {
-                    throw new Error('Quantity must not be zero.')
                 }
                 const variantProduct = await variantInventory.findOneAndUpdate(
                     filter,
@@ -502,9 +531,11 @@ export const appRouter = router({
                         returnDocument: "after"
                     }
                 )
+                /* ---- Restar del inventario ---- */
                 if (!variantProduct) {
                     throw new Error("Not enough inventory or product not found.")
                 }
+                /* ---- Actualizar inventario duplicado ---- */
                 const product = await inventory.findOneAndUpdate(
                     {
                         _id: variantProduct.inventory_id
@@ -524,37 +555,18 @@ export const appRouter = router({
                         ]
                     }
                 )
+                /* ---- Actualizar inventario duplicado ---- */
                 if (!product) {
                     throw new Error("Product not found.")
                 }
                 revalidateProduct(product._id.toHexString())
                 const expireDate = new Date()
                 expireDate.setDate(expireDate.getDate() + 7)
-                const reserved = await reservedInventory.updateOne(
-                    {
-                        cart_id: cart_oid,
-                        product_variant_id: product_variant_oid,
-                    },
-                    {
-                        $inc: {
-                            qty,
-                        },
-                        $setOnInsert: {
-                            cart_id: cart_oid,
-                            product_variant_id: product_variant_oid,
-                        },
-                    },
-                    {
-                        upsert: true
-                    }
-                )
-                if (!(reserved.modifiedCount || reserved.upsertedCount)) {
-                    throw new Error("Item not reserved.")
-                }
                 const variant = Object.values(product.variants).find(variant => variant.inventory_variant_oid.toHexString() === product_variant_id)
                 if (!variant) {
                     throw new Error('Variant not found.')
                 }
+                /* ---- Actualizar/crear items en el carrito ---- */
                 const result = await itemsByCart.updateOne(
                     {
                         product_variant_id: product_variant_oid,
@@ -574,16 +586,18 @@ export const appRouter = router({
                             imgs: variant.imgs,
                             sku: variant.sku,
                             combination: variant.combination,
-                            product_id: product._id
+                            product_id: product._id,
                         }
                     },
                     {
                         upsert: true
                     }
                 )
+                /* ---- Actualizar/crear items en el carrito ---- */
                 if (!(result.modifiedCount || result.upsertedCount)) {
                     throw new Error("Item not added to cart.")
                 }
+                /* ---- Actualizar/crear carrito ---- */
                 await cartsByUser.updateOne(
                     {
                         _id: cart_oid,
@@ -612,13 +626,7 @@ export const appRouter = router({
                         upsert: true
                     }
                 )
-                if (userData?.user.cart_id) {
-                    const session = sessionToBase64({
-                        ...sessionData,
-                        cart_id: cart_oid.toHexString(),
-                    })
-                    res.setHeader("Session-Token", session)
-                }
+                /* ---- Actualizar/crear carrito ---- */
                 return
             } catch (e) {
                 if (e instanceof Error) {
@@ -667,42 +675,50 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { inventory, variantInventory, itemsByCart, reservedInventory, cartsByUser, userData, sessionData } = ctx
+                const { inventory, variantInventory, itemsByCart, cartsByUser, userData, sessionData } = ctx
                 const item_by_cart_id = input.item_by_cart_id
                 const product_variant_id = input.product_variant_id
                 const qty = input.qty || 0
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
                 const product_variant_oid = new ObjectId(product_variant_id)
-                const reserved = await reservedInventory.findOneAndDelete({
-                    cart_id: cart_oid,
-                    product_variant_id: product_variant_oid,
-                })
-                if (!reserved) {
-                    throw new Error("Item not reserved.")
+                const item_by_cart_oid = new ObjectId(item_by_cart_id)
+                if (qty <= 0) {
+                    throw new Error('Quantity must not be zero or less.')
                 }
+                /* ---- Eliminar item en el carrito ---- */
+                const deletedCart = await itemsByCart.findOneAndDelete(
+                    {
+                        _id: item_by_cart_oid,
+                    },
+                )
+                /* ---- Eliminar item en el carrito ---- */
+                if (!deletedCart) {
+                    throw new Error("Item in cart not modified.")
+                }
+                /* ---- Actualizar inventario ---- */
                 const filter: Filter<InventoryVariantsMongo> = {
                     _id: product_variant_oid,
-                }
-                if (qty) {
-                    filter.available = {
-                        $gte: qty - reserved.qty,
+                    available: {
+                        $gte: qty - deletedCart.qty,
                     }
-                } else {
-                    throw new Error('Quantity must not be zero.')
                 }
                 const variantProduct = await variantInventory.findOneAndUpdate(
                     filter,
                     {
                         $inc: {
-                            available: reserved.qty - qty,
+                            available: deletedCart.qty - qty,
                         },
                     },
                     {
                         returnDocument: "after"
-                    })
+                    }
+                )
+                /* ---- Actualizar inventario ---- */
                 if (!variantProduct) {
+                    await itemsByCart.insertOne(deletedCart)
                     throw new Error("Not enough inventory or product not found.")
                 }
+                /* ---- Actualizar inventario duplicado ---- */
                 const product = await inventory.findOneAndUpdate(
                     {
                         _id: variantProduct.inventory_id
@@ -722,35 +738,22 @@ export const appRouter = router({
                         ]
                     }
                 )
+                /* ---- Actualizar inventario duplicado ---- */
                 if (!product) {
                     throw new Error("Product not found.")
                 }
                 revalidateProduct(product._id.toHexString())
-                const item_by_cart_oid = new ObjectId(item_by_cart_id)
-                const result = await itemsByCart.updateOne(
+                /* ---- Crear item en el carrito ---- */
+                await itemsByCart.insertOne(
                     {
-                        _id: item_by_cart_oid,
-                        cart_id: cart_oid,
-                    },
-                    {
-                        $set: {
-                            qty,
-                        },
+                        ...deletedCart,
+                        qty,
                     },
                 )
-                if (!result.modifiedCount) {
-                    throw new Error("Item in cart not modified.")
-                }
+                /* ---- Crear item en el carrito ---- */
                 const expireDate = new Date()
                 expireDate.setDate(expireDate.getDate() + 7)
-                const newReserved = await reservedInventory.insertOne({
-                    qty,
-                    cart_id: cart_oid,
-                    product_variant_id: product_variant_oid,
-                })
-                if (!newReserved.insertedId) {
-                    throw new Error("Item not reserved.")
-                }
+                /* ---- Actualizar carrito ---- */
                 await cartsByUser.updateOne(
                     {
                         _id: cart_oid,
@@ -779,6 +782,7 @@ export const appRouter = router({
                         upsert: true
                     }
                 )
+                /* ---- Actualizar carrito ---- */
                 return
             } catch (e) {
                 if (e instanceof Error) {
@@ -799,7 +803,7 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { inventory, itemsByCart, reservedInventory, variantInventory, userData, sessionData } = ctx
+                const { inventory, itemsByCart, variantInventory } = ctx
                 const item_by_cart_id = input.item_by_cart_id
                 if (item_by_cart_id && typeof item_by_cart_id !== "string") {
                     throw new Error("Product ID is required and must be a string")
@@ -807,41 +811,36 @@ export const appRouter = router({
                 if (item_by_cart_id.length !== 24) {
                     throw new Error("Product ID must contain 24 characters")
                 }
-                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                /* ---- Eliminar item en el carrito ---- */
                 const item_by_cart_oid = new ObjectId(item_by_cart_id)
                 const result = await itemsByCart.findOneAndDelete(
                     {
                         _id: item_by_cart_oid,
-                        cart_id: cart_oid
                     },
                 )
+                /* ---- Eliminar item en el carrito ---- */
                 if (!result) {
                     throw new Error("Item in cart was not deleted.")
                 }
-                const reservation = await reservedInventory.findOneAndDelete(
-                    {
-                        product_variant_id: result.product_variant_id,
-                        cart_id: cart_oid,
-                    })
-                if (!reservation) {
-                    throw new Error("Item in reservation was not deleted.")
-                }
+                /* ---- Actualizar inventario ---- */
                 const variantProduct = await variantInventory.findOneAndUpdate(
                     {
                         _id: result.product_variant_id,
                     },
                     {
                         $inc: {
-                            available: reservation.qty,
+                            available: result.qty,
                         },
                     },
                     {
                         returnDocument: 'after'
                     }
                 )
+                /* ---- Actualizar inventario ---- */
                 if (!variantProduct) {
                     throw new Error("Inventory not modified.")
                 }
+                /* ---- Actualizar inventario duplicado ---- */
                 const product = await inventory.findOneAndUpdate(
                     {
                         _id: variantProduct.inventory_id
@@ -861,6 +860,7 @@ export const appRouter = router({
                         ]
                     }
                 )
+                /* ---- Actualizar inventario duplicado ---- */
                 if (!product) {
                     throw new Error("Product not found.")
                 }
@@ -918,15 +918,6 @@ export const appRouter = router({
                         if (!email) {
                             throw new Error("Email is required and must be a string")
                         }
-                        const session = sessionToBase64({
-                            ...sessionData,
-                            email,
-                            phone,
-                            phone_prefix,
-                            apellidos,
-                            name,
-                        })
-                        res.setHeader("Session-Token", session)
                         await cartsByUser.updateOne(
                             {
                                 _id: cart_oid
@@ -938,10 +929,36 @@ export const appRouter = router({
                                     delivery: input.delivery,
                                     phone: `${phone_prefix}${phone}`,
                                     name: `${name} ${apellidos}`,
-                                    user_id: userData?.user._id ? new ObjectId(userData.user._id) : null
+                                    user_id: userData?.user._id ? new ObjectId(userData.user._id) : null,
+                                    order_id: null,
+                                    checkout_id: null,
                                 }
                             }
                         )
+                        const new_cart_id = new ObjectId()
+                        if (userData) {
+                            const user_oid = new ObjectId(userData.user._id)
+                            await users.updateOne(
+                                {
+                                    _id: user_oid
+                                },
+                                {
+                                    $set: {
+                                        cart_id: new_cart_id
+                                    }
+                                },
+                            )
+                        }
+                        const session = sessionToBase64({
+                            ...sessionData,
+                            email,
+                            phone,
+                            phone_prefix,
+                            apellidos,
+                            name,
+                            ...(userData ? {} : { cart_id: new_cart_id.toHexString() }),
+                        })
+                        res.setHeader("Session-Token", session)
                         await sgMail.send({
                             to: email,
                             from: 'asistencia@fourb.mx',
@@ -1055,6 +1072,8 @@ export const appRouter = router({
                                     address: `${street}, ${neighborhood}, ${zip} ${city} ${state}, ${country}`,
                                     phone: `${phone_prefix}${phone}`,
                                     name: `${name} ${apellidos}`,
+                                    order_id: null,
+                                    checkout_id: null,
                                 }
                             }
                         )
@@ -1065,15 +1084,46 @@ export const appRouter = router({
                             text: `Envíanos un mensaje a nuestro Instagram o Facebook con este código en mano: ${cart_oid.toHexString()}`,
                             html: `<strong>Envíanos un mensaje a nuestro <a href='https://www.instagram.com/fourb_mx/' target='_blank'>Instagram</a> o <a href='https://www.facebook.com/fourbmx/' target='_blank'>Facebook</a> con este código en mano: ${cart_oid.toHexString()}</strong>`,
                         });
+                        const new_cart_id = new ObjectId()
+                        if (userData) {
+                            const user_oid = new ObjectId(userData.user._id)
+                            await users.updateOne(
+                                {
+                                    _id: user_oid
+                                },
+                                {
+                                    $set: {
+                                        cart_id: new_cart_id
+                                    }
+                                },
+                            )
+                        }
+                        const session = sessionToBase64({
+                            ...sessionData,
+                            email,
+                            country,
+                            street,
+                            neighborhood,
+                            zip,
+                            city,
+                            state,
+                            phone,
+                            name,
+                            apellidos,
+                            phone_prefix,
+                            ...(userData ? {} : { cart_id: new_cart_id.toHexString() }),
+                        })
+                        res.setHeader("Session-Token", session)
                         return ''
                     } else {
                         if (address_id && userData) {
                             const address_oid = new ObjectId(address_id)
                             const user_oid = new ObjectId(userData.user._id)
-                            const result = await users.findOneAndUpdate({
-                                _id: user_oid,
-                                "addresses._id": address_oid,
-                            },
+                            const result = await users.findOneAndUpdate(
+                                {
+                                    _id: user_oid,
+                                    "addresses._id": address_oid,
+                                },
                                 {
                                     $set: {
                                         default_address: address_oid,

@@ -225,6 +225,7 @@ describe("CheckoutPhase tests", () => {
             sessionData,
             cartsByUser,
             userData,
+            users,
         } as ContextLocals)
         const response = await caller.checkoutPhase({
             delivery,
