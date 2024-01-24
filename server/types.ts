@@ -133,6 +133,8 @@ export interface PurchasesMongo {
     sku: string;
     combination: Combination[]
     product_id: ObjectId,
+    cart_id: ObjectId,
+    cart_item: ItemsByCartMongo,
 }
 
 export interface CartsByUserMongo {

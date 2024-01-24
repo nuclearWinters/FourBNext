@@ -48,7 +48,7 @@ describe("SignInMutation tests", () => {
             state: null,
             phone_prefix: null,
         }
-        const caller = appRouter.createCaller({ req, res, users, sessionData } as ContextLocals)
+        const caller = appRouter.createCaller({ req: req as any, res: res as any, users, sessionData } as ContextLocals)
         const response = await caller.getUser()
         expect(response).toEqual({
             _id: '',
@@ -151,7 +151,7 @@ describe("SignInMutation tests", () => {
             exp: expritation,
             refreshTokenExpireTime: expritation,
         }
-        const caller = appRouter.createCaller({ req, res, users, sessionData, userData } as ContextLocals)
+        const caller = appRouter.createCaller({ req: req as any, res: res as any, users, sessionData, userData } as ContextLocals)
         const response = await caller.getUser()
         expect(response).toEqual({
             _id: user_id.toHexString(),

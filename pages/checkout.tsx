@@ -27,8 +27,11 @@ export default function Checkout() {
     const mounted = useRef(false)
     const products = trpc.getCart.useQuery();
     const checkout = trpc.checkoutPhase.useMutation({
-        onSuccess() {
+        onSuccess(value) {
             toast.success('Carrito revisado correctamente.')
+            if (value.cart_id) {
+                localStorage?.setItem("cart_id", value.cart_id)
+            }
             router.push('/payment')
         },
         onError: (e) => {

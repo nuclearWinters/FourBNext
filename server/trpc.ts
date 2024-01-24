@@ -908,7 +908,10 @@ export const appRouter = router({
                     delivery: z.enum(["city", "national"]),
                 }),
             ]))
-        .mutation(async ({ ctx, input }): Promise<string | undefined> => {
+        .mutation(async ({ ctx, input }): Promise<{
+            cart_id?: string,
+            checkout_id?: string
+        }> => {
             try {
                 const { itemsByCart, users, userData, sessionData, res, cartsByUser } = ctx
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
@@ -932,6 +935,7 @@ export const appRouter = router({
                                     user_id: userData?.user._id ? new ObjectId(userData.user._id) : null,
                                     order_id: null,
                                     checkout_id: null,
+                                    status: "waiting"
                                 }
                             }
                         )
@@ -966,7 +970,9 @@ export const appRouter = router({
                             text: `Envíanos un mensaje a nuestro Instagram o Facebook con este código en mano: ${cart_oid.toHexString()}`,
                             html: `<strong>Envíanos un mensaje a nuestro <a href='https://www.instagram.com/fourb_mx/' target='_blank'>Instagram</a> o <a href='https://www.facebook.com/fourbmx/' target='_blank'>Facebook</a> con este código en mano: ${cart_oid.toHexString()}</strong>`,
                         });
-                        return ''
+                        return {
+                            cart_id: new_cart_id.toHexString()
+                        }
                     } else {
                         if (userData) {
                             const user_oid = new ObjectId(userData.user._id)
@@ -1007,7 +1013,9 @@ export const appRouter = router({
                                     }
                                 }
                             )
-                            return order?.data?.checkout?.id
+                            return {
+                                checkout_id: order?.data?.checkout?.id
+                            }
                         } else {
                             if (!email) {
                                 throw new Error("Email is required and must be a string")
@@ -1054,7 +1062,9 @@ export const appRouter = router({
                                     }
                                 }
                             )
-                            return order?.data?.checkout?.id
+                            return {
+                                checkout_id: order?.data?.checkout?.id
+                            }
                         }
                     }
                 } else {
@@ -1074,6 +1084,7 @@ export const appRouter = router({
                                     name: `${name} ${apellidos}`,
                                     order_id: null,
                                     checkout_id: null,
+                                    status: "waiting",
                                 }
                             }
                         )
@@ -1114,7 +1125,9 @@ export const appRouter = router({
                             ...(userData ? {} : { cart_id: new_cart_id.toHexString() }),
                         })
                         res.setHeader("Session-Token", session)
-                        return ''
+                        return {
+                            cart_id: new_cart_id.toHexString()
+                        }
                     } else {
                         if (address_id && userData) {
                             const address_oid = new ObjectId(address_id)
@@ -1178,7 +1191,9 @@ export const appRouter = router({
                                     }
                                 }
                             )
-                            return order?.data?.checkout?.id
+                            return {
+                                checkout_id: order?.data?.checkout?.id
+                            }
                         } else if (userData) {
                             const address_id = new ObjectId()
                             const user_oid = new ObjectId(userData.user._id)
@@ -1244,7 +1259,9 @@ export const appRouter = router({
                                     }
                                 }
                             )
-                            return order?.data?.checkout?.id
+                            return {
+                                checkout_id: order?.data?.checkout?.id
+                            }
                         } else {
                             if (!email) {
                                 throw new Error("Email is required and must be a string")
@@ -1298,7 +1315,9 @@ export const appRouter = router({
                                     }
                                 }
                             )
-                            return order?.data?.checkout?.id
+                            return {
+                                checkout_id: order?.data?.checkout?.id
+                            }
                         }
                     }
                 }
@@ -1367,6 +1386,8 @@ export const appRouter = router({
                             sku: product.sku,
                             product_id: product.product_id,
                             combination: product.combination,
+                            cart_id: product.cart_id,
+                            cart_item: product,
                         }))
                         await purchases.insertMany(purchasedProducts)
                     }
@@ -1434,7 +1455,9 @@ export const appRouter = router({
                             imgs: product.imgs,
                             sku: product.sku,
                             combination: product.combination,
-                            product_id: product.product_id
+                            product_id: product.product_id,
+                            cart_id: product.cart_id,
+                            cart_item: product,
                         }))
                         await purchases.insertMany(purchasedProducts)
                     }
@@ -1858,6 +1881,8 @@ export const appRouter = router({
                             sku: product.sku,
                             combination: product.combination,
                             product_id: product.product_id,
+                            cart_id: product.cart_id,
+                            cart_item: product,
                         }))
                         await purchases.insertMany(purchasedProducts)
                     }
@@ -1988,11 +2013,12 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { cartsByUser } = ctx
+                const { cartsByUser, purchases, itemsByCart, users } = ctx
                 const { cart_id, status, delivered, sent } = input
+                const cart_oid = new ObjectId(cart_id)
                 await cartsByUser.updateOne(
                     {
-                        _id: new ObjectId(cart_id)
+                        _id: cart_oid
                     },
                     {
                         $set: {
@@ -2002,6 +2028,30 @@ export const appRouter = router({
                         }
                     }
                 )
+                if (status === "paid") {
+                    const productsInCart = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                    const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
+                        name: product.name,
+                        product_variant_id: product.product_variant_id,
+                        qty: product.qty,
+                        price: product.price,
+                        discount_price: product.discount_price,
+                        use_discount: product.use_discount,
+                        user_id: null,
+                        date: new Date(),
+                        imgs: product.imgs,
+                        sku: product.sku,
+                        product_id: product.product_id,
+                        combination: product.combination,
+                        cart_id: product.cart_id,
+                        cart_item: product,
+                    }))
+                    await purchases.insertMany(purchasedProducts)
+                    await itemsByCart.deleteMany({ cart_id: cart_oid })
+                } else if (status === "waiting") {
+                    const items = await purchases.find({ cart_id: cart_oid }).toArray()
+                    await itemsByCart.insertMany(items.map(item => item.cart_item))
+                }
                 return
             } catch (e) {
                 if (e instanceof Error) {

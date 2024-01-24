@@ -99,9 +99,9 @@ export default trpcNext.createNextApiHandler({
         }
         const sessionData = getSessionData(sessionToken)
         return ({
-            req,
-            res,
-            sessionData: sessionData,
+            req: req as any,
+            res: res as any,
+            sessionData,
             userData: tokenData?.payload,
             users,
             cartsByUser,

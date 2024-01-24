@@ -120,8 +120,8 @@ describe("UpdateOneCart tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             users,
             sessionData,
             inventory,

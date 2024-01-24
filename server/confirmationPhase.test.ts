@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { CartsByUserMongo, ContextLocals, ItemsByCartMongo, UserMongo } from "./types";
+import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import { ACCESS_TOKEN_EXP_NUMBER } from "./utils";
@@ -38,7 +38,7 @@ describe("CheckoutPhase tests", () => {
         const cart_id = cart_oid.toHexString()
         const users = dbInstance.collection<UserMongo>("users");
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
-        const purchases = dbInstance.collection<CartsByUserMongo>("purchases")
+        const purchases = dbInstance.collection<PurchasesMongo>("purchases")
         const expire_date = new Date('2019-01-08T00:00:00.000Z')
         const status = 'waiting'
         const delivered = false
@@ -133,8 +133,8 @@ describe("CheckoutPhase tests", () => {
             refreshTokenExpireTime: expritation,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             purchases,
@@ -188,7 +188,7 @@ describe("CheckoutPhase tests", () => {
         const cart_id = cart_oid.toHexString()
         const users = dbInstance.collection<UserMongo>("users");
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
-        const purchases = dbInstance.collection<CartsByUserMongo>("purchases")
+        const purchases = dbInstance.collection<PurchasesMongo>("purchases")
         const expire_date = new Date('2019-01-08T00:00:00.000Z')
         const status = 'waiting'
         const delivered = false
@@ -283,8 +283,8 @@ describe("CheckoutPhase tests", () => {
             refreshTokenExpireTime: expritation,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             purchases,
@@ -316,6 +316,21 @@ describe("CheckoutPhase tests", () => {
             combination: [],
             product_id: productIdOne,
             user_id,
+            cart_id: cart_oid,
+            cart_item: {
+                _id: itemInCartIdOne,
+                product_variant_id: variantIdOne,
+                cart_id: cart_oid,
+                qty: 1,
+                price: 10000,
+                discount_price: 0,
+                use_discount: false,
+                name: "Test 1",
+                imgs: [],
+                sku: "122435",
+                combination: [],
+                product_id: productIdOne,
+            }
         }])
         expect(user).toEqual({
             _id: user_id,
@@ -356,7 +371,7 @@ describe("CheckoutPhase tests", () => {
         const cart_id = cart_oid.toHexString()
         const users = dbInstance.collection<UserMongo>("users");
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
-        const purchases = dbInstance.collection<CartsByUserMongo>("purchases")
+        const purchases = dbInstance.collection<PurchasesMongo>("purchases")
         const expire_date = new Date('2019-01-08T00:00:00.000Z')
         const status = 'waiting'
         const delivered = false
@@ -451,8 +466,8 @@ describe("CheckoutPhase tests", () => {
             refreshTokenExpireTime: expritation,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             purchases,
@@ -510,7 +525,7 @@ describe("CheckoutPhase tests", () => {
         const cart_id = cart_oid.toHexString()
         const users = dbInstance.collection<UserMongo>("users");
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
-        const purchases = dbInstance.collection<CartsByUserMongo>("purchases")
+        const purchases = dbInstance.collection<PurchasesMongo>("purchases")
         const expire_date = new Date('2019-01-08T00:00:00.000Z')
         const status = 'waiting'
         const delivered = false
@@ -554,7 +569,6 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        const address_id = new ObjectId()
         const { req, res } = createMocks({
             method: 'GET',
         })
@@ -574,8 +588,8 @@ describe("CheckoutPhase tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             purchases,
@@ -587,7 +601,6 @@ describe("CheckoutPhase tests", () => {
         })
         const cart = await cartsByUser.findOne({ _id: cart_oid })
         const allPurchases = await purchases.find({ user_id }).toArray()
-        const user = await users.findOne({ _id: user_id })
         expect(allPurchases).toEqual([])
         expect(cart).toEqual({
             _id: cart_oid,
@@ -613,7 +626,7 @@ describe("CheckoutPhase tests", () => {
         const cart_id = cart_oid.toHexString()
         const users = dbInstance.collection<UserMongo>("users");
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
-        const purchases = dbInstance.collection<CartsByUserMongo>("purchases")
+        const purchases = dbInstance.collection<PurchasesMongo>("purchases")
         const expire_date = new Date('2019-01-08T00:00:00.000Z')
         const status = 'waiting'
         const delivered = false
@@ -674,8 +687,8 @@ describe("CheckoutPhase tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             purchases,
@@ -705,6 +718,21 @@ describe("CheckoutPhase tests", () => {
             combination: [],
             product_id: productIdOne,
             user_id: null,
+            cart_id: cart_oid,
+            cart_item: {
+                _id: itemInCartIdOne,
+                product_variant_id: variantIdOne,
+                cart_id: cart_oid,
+                qty: 1,
+                price: 10000,
+                discount_price: 0,
+                use_discount: false,
+                name: "Test 1",
+                imgs: [],
+                sku: "122435",
+                combination: [],
+                product_id: productIdOne,
+            }
         }])
         expect(cart).toEqual({
             _id: cart_oid,
@@ -730,7 +758,7 @@ describe("CheckoutPhase tests", () => {
         const cart_id = cart_oid.toHexString()
         const users = dbInstance.collection<UserMongo>("users");
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
-        const purchases = dbInstance.collection<CartsByUserMongo>("purchases")
+        const purchases = dbInstance.collection<PurchasesMongo>("purchases")
         const expire_date = new Date('2019-01-08T00:00:00.000Z')
         const status = 'waiting'
         const delivered = false
@@ -792,8 +820,8 @@ describe("CheckoutPhase tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             purchases,

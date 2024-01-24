@@ -1,5 +1,5 @@
 import { CONEKTA_PUBLIC_KEY, trpc } from '../utils/config'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import facebook from '../public/facebook.svg'
 import instagram from '../public/instagram.svg'
 import Image from 'next/image'
@@ -10,6 +10,7 @@ export default function Payment() {
     const cart = trpc.getUserCartData.useQuery(undefined, {
         refetchOnWindowFocus: false,
     })
+    const [cartId, setCartId] = useState('')
     const checkoutId = cart.data?.checkout_id
     const confirmationPhase = trpc.confirmationPhase.useMutation({
         onSuccess: () => {
@@ -40,7 +41,12 @@ export default function Payment() {
         }
         return
     }, [checkoutId])
-    console.log(cart.data)
+    useEffect(() => {
+        const cart_id = localStorage.getItem('cart_id')
+        if (cart_id) {
+            setCartId(cart_id)
+        }
+    }, [])
     return <div>
         <Head>
             <title>Pago - FOURB</title>
@@ -58,13 +64,13 @@ export default function Payment() {
                         </form>
                     </>
                 )
-                : cart.data?.pay_in_cash
+                : cartId
                     ? (
                         <div>
                             <div style={{ textAlign: 'center', margin: 30 }}>Por favor, envíanos un mensaje en nuestra página de <a href='https://www.facebook.com/fourbmx/' target='_blank'>Facebook</a> o página de <a href='https://www.instagram.com/fourb_mx/' target='_blank'>Instagram</a> con el siguiente código:</div>
                             <div className="payBox" style={{ display: "flex", justifyContent: 'center', margin: 'auto', background: '#e7ebee', flexDirection: 'column' }}>
                                 <div style={{ display: 'flex', padding: 20, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                    <div style={{ fontSize: 16, fontWeight: 500 }}>{cart?.data?._id || ""}</div>
+                                    <div style={{ fontSize: 16, fontWeight: 500 }}>{cartId}</div>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: 40, alignItems: 'center', justifyContent: 'center', margin: 40 }}>

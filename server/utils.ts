@@ -17,9 +17,16 @@ export const CONEKTA_API_KEY = process.env.CONEKTA_API_KEY || ""
 export const BUCKET_NAME = process.env.BUCKET_NAME || ""
 
 export const jwt = {
-  decode: (token: string): string | DecodeJWT | null => {
-    const decoded = jsonwebtoken.decode(token);
-    return decoded as string | DecodeJWT | null;
+  decode: (token: string): DecodeJWT | null => {
+    try {
+      const payload = jsonwebtoken.decode(token);
+      if (typeof payload === "string") {
+        throw new Error("payload is not string")
+      }
+      return payload as DecodeJWT;
+    } catch(e) {
+      return null
+    }
   },
   verify: (token: string, password: string): DecodeJWT | null => {
     try {

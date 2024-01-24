@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, UserMongo } from "./types";
+import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import FakeTimers, { InstalledClock } from "@sinonjs/fake-timers";
@@ -40,6 +40,7 @@ describe("AddOneToCart tests", () => {
         const itemsByCart = dbInstance.collection<ItemsByCartMongo>("items_by_cart");
         const users = dbInstance.collection<UserMongo>("users");
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
+        const purchases = dbInstance.collection<PurchasesMongo>("purchases")
         const inventory_oid = new ObjectId()
         const inventory_variant_oid = new ObjectId()
         const name = 'PRODUCTOTEST'
@@ -103,8 +104,8 @@ describe("AddOneToCart tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             users,
             sessionData,
             inventory,
@@ -206,7 +207,6 @@ describe("AddOneToCart tests", () => {
         }]
         const qty = 1
         const item_by_cart_oid = new ObjectId()
-        const reserved_oid = new ObjectId()
         await itemsByCart.insertOne({
             _id: item_by_cart_oid,
             cart_id: cart_oid,
@@ -268,8 +268,8 @@ describe("AddOneToCart tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             users,
             sessionData,
             inventory,
@@ -444,8 +444,8 @@ describe("AddOneToCart tests", () => {
             refreshTokenExpireTime: 0,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             users,
             sessionData,
             inventory,
@@ -629,8 +629,8 @@ describe("AddOneToCart tests", () => {
             refreshTokenExpireTime: 0,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             users,
             sessionData,
             inventory,

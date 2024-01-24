@@ -54,11 +54,11 @@ describe("LogOutMutation tests", () => {
             state: null,
             phone_prefix: null,
         }
-        const caller = appRouter.createCaller({ req, res, sessionData } as ContextLocals)
+        const caller = appRouter.createCaller({ req: req as any, res: res as any, sessionData } as ContextLocals)
         await caller.logOut()
-        const cookies = (res as NextApiResponse).getHeader('Set-Cookie')
+        const cookies = res.getHeader('Set-Cookie')
         expect(cookies).toBe("refreshToken=; Expires=Tue, 01 Jan 2019 00:00:00 GMT; HttpOnly; Secure")
-        const accessToken = (res as NextApiResponse).getHeader('Access-Token')
+        const accessToken = res.getHeader('Access-Token')
         expect(accessToken).toBe("")
     });
 });

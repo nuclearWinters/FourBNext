@@ -85,7 +85,7 @@ describe("getCart tests", () => {
             state: null,
             phone_prefix: null,
         }
-        const caller = appRouter.createCaller({ req, res, users, sessionData, itemsByCart } as ContextLocals)
+        const caller = appRouter.createCaller({ req: req as any, res: res as any, users, sessionData, itemsByCart } as ContextLocals)
         const response = await caller.getCart()
         expect(response).toEqual([
             {
@@ -212,7 +212,7 @@ describe("getCart tests", () => {
             exp: expritation,
             refreshTokenExpireTime: expritation,
         }
-        const caller = appRouter.createCaller({ req, res, users, sessionData, userData, itemsByCart } as ContextLocals)
+        const caller = appRouter.createCaller({ req: req as any, res: res as any, users, sessionData, userData, itemsByCart } as ContextLocals)
         const response = await caller.getCart()
         expect(response).toEqual([
             {

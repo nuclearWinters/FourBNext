@@ -3,7 +3,6 @@ import { CartsByUserMongo, ContextLocals, ItemsByCartMongo, UserMongo } from "./
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import bcrypt from "bcryptjs"
-import { NextApiResponse } from "next";
 import { getSessionData } from "./utils";
 
 jest.mock('conekta');
@@ -81,8 +80,8 @@ describe("CheckoutPhase tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
         } as ContextLocals)
@@ -112,7 +111,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        expect(response).toBe("")
+        expect(response.cart_id).toBeTruthy()
     });
 
     it("checkoutPhase: user cart / store / cash", async () => {
@@ -220,8 +219,8 @@ describe("CheckoutPhase tests", () => {
             refreshTokenExpireTime: 0,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             userData,
@@ -254,7 +253,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: user_oid
         })
-        expect(response).toBe("")
+        expect(response.cart_id).toBeTruthy()
     });
 
     it("checkoutPhase: session cart / store / conekta", async () => {
@@ -311,8 +310,8 @@ describe("CheckoutPhase tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             itemsByCart,
@@ -343,7 +342,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        expect(response).toBe("checkout_id")
+        expect(response).toEqual({"checkout_id": "checkout_id"})
     });
 
     it("checkoutPhase: user cart / store / conekta", async () => {
@@ -454,8 +453,8 @@ describe("CheckoutPhase tests", () => {
             refreshTokenExpireTime: 0,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             itemsByCart,
@@ -488,7 +487,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        expect(response).toBe("checkout_id")
+        expect(response).toEqual({ checkout_id: "checkout_id" })
     });
 
     it("checkoutPhase: session cart / city or national / cash", async () => {
@@ -508,7 +507,6 @@ describe("CheckoutPhase tests", () => {
         const sent = false
         const pay_in_cash = false
         const email = 'anrp1@gmail.com'
-        const user_cart_oid = new ObjectId()
         const city = 'Chetumal'
         const country = 'Mexico'
         const neighborhood = 'Neighborhood'
@@ -551,8 +549,8 @@ describe("CheckoutPhase tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             itemsByCart,
@@ -591,7 +589,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        expect(response).toBe("")
+        expect(response.cart_id).toBeTruthy()
     });
 
     it("checkoutPhase: user cart / city or national / cash", async () => {
@@ -701,8 +699,8 @@ describe("CheckoutPhase tests", () => {
             refreshTokenExpireTime: 0,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             itemsByCart,
@@ -743,7 +741,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        expect(response).toBe("")
+        expect(response.cart_id).toBeTruthy()
     });
 
     it("checkoutPhase: user cart / city or national / conekta (with address_id)", async () => {
@@ -862,8 +860,8 @@ describe("CheckoutPhase tests", () => {
             refreshTokenExpireTime: 0,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             itemsByCart,
@@ -903,7 +901,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        expect(response).toBe("checkout_id")
+        expect(response).toEqual({"checkout_id": "checkout_id"})
     });
 
     it("checkoutPhase: user cart / city or national / conekta (with NO address_id)", async () => {
@@ -999,8 +997,8 @@ describe("CheckoutPhase tests", () => {
             refreshTokenExpireTime: 0,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             itemsByCart,
@@ -1040,7 +1038,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        expect(response).toBe("checkout_id")
+        expect(response).toEqual({"checkout_id": "checkout_id"})
     });
 
     it("checkoutPhase: session cart / city or national / conekta", async () => {
@@ -1105,8 +1103,8 @@ describe("CheckoutPhase tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             sessionData,
             cartsByUser,
             itemsByCart,
@@ -1145,7 +1143,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         });
-        const token = (res as NextApiResponse).getHeader('Session-Token')
+        const token = res.getHeader('Session-Token')
         const session = getSessionData(token as string)
         expect(session).toEqual({
             email,
@@ -1162,6 +1160,6 @@ describe("CheckoutPhase tests", () => {
             state,
             phone_prefix,
         })
-        expect(response).toBe("checkout_id")
+        expect(response).toEqual({"checkout_id": "checkout_id"})
     });
 })

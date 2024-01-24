@@ -52,7 +52,6 @@ describe("RemoveOneCart tests", () => {
         }]
         const qty = 1
         const item_by_cart_oid = new ObjectId()
-        const reserved_oid = new ObjectId()
         await itemsByCart.insertOne({
             _id: item_by_cart_oid,
             cart_id: cart_oid,
@@ -130,8 +129,8 @@ describe("RemoveOneCart tests", () => {
             phone_prefix: null,
         }
         const caller = appRouter.createCaller({
-            req,
-            res,
+            req: req as any,
+            res: res as any,
             users,
             sessionData,
             inventory,
