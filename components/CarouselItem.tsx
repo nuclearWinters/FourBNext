@@ -33,6 +33,7 @@ export const CarouselItem: FC<{
             style={{
                 height: '263px',
                 width: '280px',
+                objectFit: 'cover',
             }}
             alt=""
             src={variant.imgs[0]}

@@ -7,8 +7,8 @@ import portada from '../public/portada.jpeg'
 import homePic from '../public/homePic.jpeg'
 import homeHuggie from '../public/homeHuggie.jpeg'
 import homeEnvio from '../public/homeEnvio.jpeg'
-import homeProduct from '../public/homeProduct.webp'
-import homeWaterproof from '../public/homeWaterproof.webp'
+import homeProduct from '../public/homeProduct.png'
+import homeWaterproof from '../public/homeWaterproof.png'
 import { HomeTitle } from '../components/HomeTitle';
 import { HomeSubtitle } from '../components/HomeSubtitle';
 import Carousel from '../components/Carousel';
@@ -25,7 +25,7 @@ import anillos from '../public/anillos.jpeg'
 import nuevaColeccion from '../public/nuevaColeccion.jpeg'
 import piercing from '../public/piercing.png'
 import pulseras from '../public/pulseras.jpeg'
-import descuentos from '../public/descuentos.jpeg'
+import descuentos from '../public/descuentos.png'
 import Image from 'next/image';
 import { TitleLinks } from '../components/TitleLinks';
 import { DescriptionMaterial } from '../components/DescriptionMaterial';
@@ -86,8 +86,9 @@ export default function Home() {
       </div>
       <div
         style={{
-          height: '658px',
           display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          height: isMobile ? '1316px' : '658px',
         }}
       >
         <HomeHalf
@@ -119,8 +120,9 @@ export default function Home() {
       </div>
       <div
         style={{
-          height: '658px',
           display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          height: isMobile ? '1316px' : '658px',
         }}
       >
         <HomeHalf
