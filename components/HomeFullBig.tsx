@@ -1,6 +1,8 @@
 import { FC } from "react"
+import { useMediaQuery } from "../hooks/mediaQuery";
 
 export const HomeFullBig: FC<{ src: string; children: string }> = ({ src, children }) => {
+    const isMobile = useMediaQuery('(max-width: 800px)')
     return <div
         style={{
             backgroundImage: `url(${src})`,
@@ -17,7 +19,7 @@ export const HomeFullBig: FC<{ src: string; children: string }> = ({ src, childr
             style={{
                 fontWeight: '400',
                 color: 'rgb(255, 255, 255)',
-                fontSize: '180px',
+                fontSize: isMobile ? '60px' : '180px',
                 textTransform: 'capitalize',
                 fontFamily: 'Kage',
             }}

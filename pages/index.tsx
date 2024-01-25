@@ -32,6 +32,7 @@ import { DescriptionMaterial } from '../components/DescriptionMaterial';
 import { InformationTitle } from '../components/InformationTitle';
 import { InformationText } from '../components/InformationText';
 import { InformationStreet } from '../components/InformationStreet';
+import { useMediaQuery } from '../hooks/mediaQuery';
 
 export default function Home() {
   const lastProducts = trpc.inventory.useQuery({ limit: 8 });
@@ -55,6 +56,7 @@ export default function Home() {
       })
     }
   }, [])
+  const isMobile = useMediaQuery('(max-width: 800px)')
   return (
     <div>
       <Head>
@@ -67,6 +69,7 @@ export default function Home() {
       <div
         style={{
           background: '#fffbf9',
+          paddingBottom: 80,
         }}
       >
         <HomeTitle>
@@ -96,9 +99,12 @@ export default function Home() {
           title={<HomeTitleHalf>ACERO INOXIDABLE</HomeTitleHalf>}
         />
       </div>
-      <div style={{
-        backgroundColor: '#fffbf9',
-      }}>
+      <div
+        style={{
+          backgroundColor: '#fffbf9',
+          paddingBottom: 80,
+        }}
+      >
         <HomeTitle>
           PIERCING
         </HomeTitle>
@@ -127,9 +133,12 @@ export default function Home() {
           title={<HomeTitleHalf>HUGGIES</HomeTitleHalf>}
         />
       </div>
-      <div style={{
-        backgroundColor: '#fffbf9',
-      }}>
+      <div
+        style={{
+          backgroundColor: '#fffbf9',
+          paddingBottom: 80,
+        }}
+      >
         <HomeTitle>
           SUS FAVORITOS
         </HomeTitle>
@@ -142,12 +151,17 @@ export default function Home() {
           )) || []}
         </Carousel> : null}
       </div>
-      <HomeFullBig src={homeWaterproof.src}>
+      <HomeFullBig
+        src={homeWaterproof.src}
+      >
         WATERPROOF
       </HomeFullBig>
-      <div style={{
-        backgroundColor: '#fffbf9',
-      }}>
+      <div
+        style={{
+          backgroundColor: '#fffbf9',
+          paddingBottom: 80,
+        }}
+      >
         <HomeTitle>
           WATERPROOF
         </HomeTitle>
@@ -162,7 +176,7 @@ export default function Home() {
       </div>
       <div
         style={{
-          padding: '0px 100px',
+          padding: isMobile ? '0px 40px' : '0px 100px',
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: '#fffbf9',
@@ -303,7 +317,9 @@ export default function Home() {
         </div>
         <div
           style={{
-            display: 'flex'
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '30px' : undefined
           }}
         >
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
@@ -362,6 +378,10 @@ export default function Home() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '30px' : undefined,
+          paddingTop: 10,
+          paddingBottom: 20,
         }}
       >
         <div
@@ -383,17 +403,22 @@ export default function Home() {
           flexDirection: 'column',
           background: '#fffbf9',
           paddingTop: 80,
+          paddingBottom: 60,
         }}
       >
         <div
           style={{
             display: 'flex',
-            flexDirection: 'row',
+            flexDirection: isMobile ? 'column' : 'row',
             justifyContent: 'center',
             gap: 80,
           }}
         >
-          <div>
+          <div
+            style={{
+              marginLeft: isMobile ? '40px' : ''
+            }}
+          >
             <InformationTitle>
               MÁS INFORMACIÓN
             </InformationTitle>
@@ -404,7 +429,11 @@ export default function Home() {
             <InformationText>Mayoreo</InformationText>
             <InformationText>Aviso de privacidad</InformationText>
           </div>
-          <div>
+          <div
+            style={{
+              marginLeft: isMobile ? '40px' : ''
+            }}
+          >
             <InformationTitle>
               CONTACTO
             </InformationTitle>
@@ -413,7 +442,11 @@ export default function Home() {
             <InformationText>Tiktok: fourb</InformationText>
             <InformationText>Correo: fourboutiquemx@gmail.com</InformationText>
           </div>
-          <div>
+          <div
+            style={{
+              marginLeft: isMobile ? '40px' : ''
+            }}
+          >
             <InformationTitle>
               HORARIO
             </InformationTitle>
@@ -424,16 +457,22 @@ export default function Home() {
             <InformationText>DOMINGO: 11 A 7 PM</InformationText>
           </div>
         </div>
-        <img alt=""
-          src={map.src}
-          width={'80%'}
+        <a
+          href={"https://www.google.com/maps/place/Capital+Center/@18.5252084,-88.3146199,17z/data=!3m1!4b1!4m6!3m5!1s0x8f5ba4af89369c8d:0xb5992a95eb821e8b!8m2!3d18.5252084!4d-88.3146199!16s%2Fg%2F11byp6nm15?entry=ttu"}
+          target='_blank'
           style={{
-            paddingTop: 40,
+            width: '80%',
             margin: 'auto',
             alignSelf: 'center',
+            paddingTop: 40,
             paddingBottom: 40,
           }}
-        />
+        >
+          <img alt=""
+            src={map.src}
+            width={'100%'}
+          />
+        </a>
         <InformationStreet>
           Av. Erick Paolo Martínez Chetumal Quintana, Roo
         </InformationStreet>

@@ -7,7 +7,7 @@ export const TitleLinks: FC<{ children: string }> = ({ children }) => {
             color: 'black',
             fontSize: '58px',
             textTransform: 'capitalize',
-            marginTop: '80px',
+            marginTop: '0px',
             fontFamily: 'Kage',
             marginBottom: '40px',
         }}

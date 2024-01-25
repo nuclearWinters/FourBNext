@@ -18,12 +18,12 @@
 }
 
 .header-button {
-    color: rgb(181, 157, 139);
+    color: black;
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .header-button-top {
@@ -45,12 +45,15 @@
 }
 
 .fourb-header {
-    background: white;
+    background: #FFFBF9;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 20px;
-    padding: 10px 20px;
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-bottom: 10px;
+    padding-right: 20px;
     flex-wrap: wrap;
 }
 
@@ -225,6 +228,10 @@
    width: 16px;
    size: 1;
 }
+
+.searchIcon {
+    width: 24px;
+ }
 
 .cartMobile {
     display: flex;

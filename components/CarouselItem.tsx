@@ -33,7 +33,6 @@ export const CarouselItem: FC<{
             style={{
                 height: '263px',
                 width: '280px',
-                
             }}
             alt=""
             src={variant.imgs[0]}

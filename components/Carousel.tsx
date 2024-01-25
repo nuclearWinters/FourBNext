@@ -1,21 +1,25 @@
-import React, { Component, FC, ReactNode } from "react";
+import React, { FC, ReactNode, useState } from "react";
 import chevron from '../public/chevron.svg'
 import Image from "next/image";
+import { useMediaQuery } from "../hooks/mediaQuery";
 
 export const CarouselContainer: FC<{
     sliding: boolean,
     children: ReactNode,
     direction: 'prev' | 'next'
 }> = ({ sliding, children, direction }) => {
+    const isMobile1000 = useMediaQuery('(max-width: 1000px)')
+    const isMobile800 = useMediaQuery('(max-width: 800px)')
+    const isMobile600 = useMediaQuery('(max-width: 600px)')
     return (
         <div style={{
             display: 'flex',
             margin: '0px 0px 0px 0px',
             transition: sliding ? "none" : "transform 1s ease",
             transform: !sliding
-                ? "translateX(calc(-25%))"
+                ? `translateX(calc(-${isMobile600 ? "100%" : isMobile800 ? "50%" : isMobile1000 ? "33%" : "25%" }))`
                 : direction === "prev"
-                    ? "translateX(calc(2 * (-25%)))"
+                    ? `translateX(calc(2 * (-${isMobile600 ? "100%" : isMobile800 ? "50%" : isMobile1000 ? "33%" : "25%" })))`
                     : "translateX(0%)"
 
         }}>
@@ -36,9 +40,12 @@ export const Wrapper: FC<{ children: ReactNode }> = ({ children }) => {
 }
 
 export const CarouselSlot: FC<{ children: ReactNode, order: number }> = ({ order, children }) => {
+    const isMobile1000 = useMediaQuery('(max-width: 1000px)')
+    const isMobile800 = useMediaQuery('(max-width: 800px)')
+    const isMobile600 = useMediaQuery('(max-width: 600px)')
     return (
         <div style={{
-            flex: '1 0 25%',
+            flex: `1 0 ${isMobile600 ? "100%" : isMobile800 ? "50%" : isMobile1000 ? "33%" : "25%" }`,
             marginRight: '0px',
             order,
         }}>
@@ -47,19 +54,14 @@ export const CarouselSlot: FC<{ children: ReactNode, order: number }> = ({ order
     )
 }
 
-class Carousel extends Component<{ children: any[] }, { direction: 'prev' | 'next', position: number, sliding: boolean }> {
-    constructor(props: { children: any[] }) {
-        super(props);
-        this.state = {
-            position: 0,
-            direction: props.children.length === 2 ? "prev" : "next",
-            sliding: false
-        };
-    }
+const Carousel: FC<{
+    children: ReactNode[]
+}> = ({ children }) => {
+    const [position, setPosition] = useState(0)
+    const [direction, setDirection] = useState<"prev" | "next">(children?.length === 2 ? "prev" : "next")
+    const [sliding, setSliding] = useState(false)
 
-    getOrder(itemIndex: number) {
-        const { position } = this.state;
-        const { children } = this.props;
+    const getOrder = (itemIndex: number) => {
         const numItems = children.length;
 
         if (numItems === 2) return itemIndex;
@@ -69,100 +71,89 @@ class Carousel extends Component<{ children: any[] }, { direction: 'prev' | 'nex
         return itemIndex - position;
     }
 
-    doSliding = (direction: 'prev' | 'next', position: number) => {
-        this.setState({
-            sliding: true,
-            direction,
-            position
-        });
+    const doSliding = (direction: 'prev' | 'next', position: number) => {
+        setSliding(true)
+        setDirection(direction)
+        setPosition(position)
 
         setTimeout(() => {
-            this.setState({
-                sliding: false
-            });
+            setSliding(false)
         }, 50);
     };
 
-    nextSlide = () => {
-        const { position } = this.state;
-        const { children } = this.props;
+    const nextSlide = () => {
         const numItems = children.length;
 
         if (numItems === 2 && position === 1) return;
 
-        this.doSliding("next", position === numItems - 1 ? 0 : position + 1);
+        doSliding("next", position === numItems - 1 ? 0 : position + 1);
     };
 
-    prevSlide = () => {
-        const { position } = this.state;
-        const { children } = this.props;
+    const prevSlide = () => {
         const numItems = children.length;
 
         if (numItems === 2 && position === 0) return;
 
-        this.doSliding("prev", position === 0 ? numItems - 1 : position - 1);
+        doSliding("prev", position === 0 ? numItems - 1 : position - 1);
     };
 
-    render() {
-        const { children } = this.props;
-        const { sliding, direction } = this.state;
+    const isMobile = useMediaQuery('(max-width: 800px)')
 
-        return (
-            <div
+    return (
+        <div
+            style={{
+                margin: isMobile ? '0px 10px' : '0px 100px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
+        >
+            <button
                 style={{
-                    margin: '0px 100px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    transform: 'rotate(180deg)',
+                    height: '51px',
+                    width: '27px',
+                    padding: '0px',
+                    marginRight: '16px',
+                    cursor: 'pointer',
+                }}
+                onClick={() => prevSlide()}
+            >
+                <Image src={chevron} alt="" height={51} width={27} />
+            </button>
+            <Wrapper>
+                <CarouselContainer
+                    sliding={sliding}
+                    direction={direction}
+                >
+                    {children.map((child, index) => (
+                        <CarouselSlot
+                            key={index}
+                            order={getOrder(index)}
+                        >
+                            {child}
+                        </CarouselSlot>
+                    ))}
+                </CarouselContainer>
+            </Wrapper>
+            <button
+                onClick={() => nextSlide()}
+                style={{
+                    background: 'transparent',
+                    border: 'none',
+                    height: '51px',
+                    width: '27px',
+                    padding: '0px',
+                    marginLeft: '16px',
+                    cursor: 'pointer',
                 }}
             >
-                <button
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        transform: 'rotate(180deg)',
-                        height: '51px',
-                        width: '27px',
-                        padding: '0px',
-                        marginRight: '16px',
-                        cursor: 'pointer',
-                    }}
-                    onClick={() => this.prevSlide()}
-                >
-                    <Image src={chevron} alt="" height={51} width={27} />
-                </button>
-                <Wrapper>
-                    <CarouselContainer
-                        sliding={sliding}
-                        direction={direction}
-                    >
-                        {children.map((child, index) => (
-                            <CarouselSlot
-                                key={index}
-                                order={this.getOrder(index)}
-                            >
-                                {child}
-                            </CarouselSlot>
-                        ))}
-                    </CarouselContainer>
-                </Wrapper>
-                <button
-                    onClick={() => this.nextSlide()}
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        height: '51px',
-                        width: '27px',
-                        padding: '0px',
-                        marginLeft: '16px',
-                        cursor: 'pointer',
-                    }}
-                >
-                    <Image src={chevron} alt="" height={51} width={27} />
-                </button>
-            </div>
-        );
-    }
+                <Image src={chevron} alt="" height={51} width={27} />
+            </button>
+        </div>
+    );
 }
 
 export default Carousel;
