@@ -4,7 +4,6 @@ import { Modal } from "./Modal"
 import css from './Layout.module.css'
 import Link from "next/link"
 import Image from 'next/image'
-import { useRouter } from "next/router"
 import { ModalClose } from "./ModalClose"
 import { ModalField } from "./ModalField"
 import menu from '../public/menu.svg'
@@ -53,7 +52,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     const logOut = trpc.logOut.useMutation({
         onSuccess: () => {
             localStorage.removeItem('Access-Token')
-            window.location.reload()
+            window.location.href = "/"
         },
         onError: (e) => {
             toast.error(e.message)
@@ -277,7 +276,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                 {logged ? <button className={css["header-button-top"]} onClick={() => {
                     logOut.mutate()
                 }}>Cerrar Sesión</button> : null}
-                <button
+                {logged ? null : <button
                     style={{
                         background: 'transparent',
                         border: 'none',
@@ -289,7 +288,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                     }}
                 >
                     <Image className={css.searchIcon} src={userSVG} alt="" />
-                </button>
+                </button>}
                 <Link
                     href="/cart"
                     style={{
@@ -375,7 +374,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                 >
                     FOURB
                 </Link>
-                <button
+                {logged ? null : <button
                     style={{
                         background: 'transparent',
                         border: 'none',
@@ -387,7 +386,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                     }}
                 >
                     <Image className={css.searchIcon} src={userSVG} alt="" />
-                </button>
+                </button>}
                 <Link className={css.cartMobile} href={"/cart"}><Image src={cart} alt="" width={30} /></Link>
             </div>
             <div className={css["fourb-header"]} style={{ width: '100%', paddingBottom: '24px' }}>
