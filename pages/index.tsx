@@ -33,6 +33,8 @@ import { InformationTitle } from '../components/InformationTitle';
 import { InformationText } from '../components/InformationText';
 import { InformationStreet } from '../components/InformationStreet';
 import { useMediaQuery } from '../hooks/mediaQuery';
+import facebook from '../public/facebook.svg'
+import instagram from '../public/instagram.svg'
 
 export default function Home() {
   const lastProducts = trpc.inventory.useQuery({ limit: 8 });
@@ -458,6 +460,18 @@ export default function Home() {
             <InformationText>LUNES - SÁBADO: 11 A 9 PM</InformationText>
             <InformationText>DOMINGO: 11 A 7 PM</InformationText>
           </div>
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            paddingTop: 20,
+          }}
+        >
+          <a href='https://www.facebook.com/fourbmx/' target='_blank'><Image src={facebook} alt="" width={40} /></a>
+          <a href='https://www.instagram.com/fourb_mx/' target='_blank'><Image src={instagram} alt="" width={40} /></a>
         </div>
         <a
           href={"https://www.google.com/maps/place/Capital+Center/@18.5252084,-88.3146199,17z/data=!3m1!4b1!4m6!3m5!1s0x8f5ba4af89369c8d:0xb5992a95eb821e8b!8m2!3d18.5252084!4d-88.3146199!16s%2Fg%2F11byp6nm15?entry=ttu"}
