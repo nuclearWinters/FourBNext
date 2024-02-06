@@ -1763,14 +1763,13 @@ export const appRouter = router({
                 const filter: Filter<InventoryMongo> = {
                     _id: product_oid,
                 }
-                const newVariants = variants.map(variant => ({
+                const updateVariants = variants.map(variant => ({
                     ...variant,
                     inventory_variant_oid: new ObjectId(variant.inventory_variant_oid),
                 }))
-                const nextVariants = new_variants.map(variant => ({
+                const newVariants = new_variants.map(variant => ({
                     ...variant,
                     inventory_variant_oid: new ObjectId(),
-                    inventory_id: product_oid,
                 }))
                 const result = await inventory.findOneAndUpdate(
                     filter,
@@ -1780,7 +1779,7 @@ export const appRouter = router({
                             description,
                             tags,
                             options: create_new_variants ? new_options : options,
-                            variants: create_new_variants ? nextVariants : newVariants,
+                            variants: create_new_variants ? newVariants : updateVariants,
                             use_variants,
                         }
                     },
@@ -1789,6 +1788,10 @@ export const appRouter = router({
                     }
                 )
                 if (create_new_variants) {
+                    const nextVariants = new_variants.map(variant => ({
+                        ...variant,
+                        inventory_id: product_oid,
+                    }))
                     await variantInventory.insertMany(nextVariants)
                 } else {
                     for (const key in variants) {

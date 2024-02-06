@@ -112,7 +112,6 @@ const NewProduct = () => {
         }))
     }
     const signedUrl = trpc.signedUrl.useMutation()
-    console.log('form:', form)
     return <div>
         <Head>
             <title>New Product</title>

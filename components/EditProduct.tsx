@@ -13,10 +13,10 @@ import { toast } from "react-toastify";
 import { InventoryTRPC } from "../pages/product/[id]";
 import { nanoid } from "nanoid";
 import TagsInput from 'react-tagsinput'
-import drag from '../public/drag.svg'
-import trash from '../public/trash-can.svg'
 import { Combination, Options } from "../server/types";
-import { DraggableValues } from "./DraggableValues";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { DropZoneOptionsEdit } from "./DropZoneOptionsEdit";
 
 export interface OptionsEdit {
     id: string
@@ -114,7 +114,6 @@ export const EditProduct: FC<{
                 }
             ]
         })
-        console.log('newOptions:', newOptions)
         const editProduct = trpc.editProduct.useMutation({
             onSuccess: () => {
                 toast.success("Producto actualizado con exito.")
@@ -405,6 +404,113 @@ export const EditProduct: FC<{
                                 </button>
                             ) : null}
                             {createNewOptions ? (
+                                <DndProvider backend={HTML5Backend}>
+                                    <div style={{ display: 'flex', flexDirection: "column" }}>
+                                        <DropZoneOptionsEdit
+                                            options={newOptions.options}
+                                            setForm={setNewOptions}
+                                        />
+                                        <button
+                                            className="fourb-button"
+                                            type="button"
+                                            onClick={() => {
+                                                setNewOptions(form => (
+                                                    {
+                                                        ...form,
+                                                        options: [
+                                                            ...form.options,
+                                                            {
+                                                                id: nanoid(5),
+                                                                name: '',
+                                                                values: [],
+                                                                type: 'string',
+                                                            },
+                                                        ],
+                                                    }
+                                                ))
+                                            }}
+                                        >
+                                            Añadir otra opción
+                                        </button>
+                                        <button
+                                            className="fourb-button"
+                                            type="button"
+                                            onClick={() => {
+                                                setNewOptions(form => (
+                                                    {
+                                                        ...form,
+                                                        options: [
+                                                            ...form.options,
+                                                            {
+                                                                id: nanoid(5),
+                                                                name: 'Color',
+                                                                values: [
+                                                                    {
+                                                                        id: nanoid(5),
+                                                                        name: "Dorado",
+                                                                        focus: false,
+                                                                    },
+                                                                    {
+                                                                        id: nanoid(5),
+                                                                        name: "Plateado",
+                                                                        focus: false,
+                                                                    },
+                                                                ],
+                                                                type: 'color'
+                                                            },
+                                                        ],
+                                                    }
+                                                ))
+                                            }}
+                                        >
+                                            Añadir otra opción de color
+                                        </button>
+                                        <button
+                                            className="fourb-button"
+                                            type="button" onClick={() => {
+                                                const variants = [
+                                                    newOptions.variants[0],
+                                                ]
+
+                                                let result = newOptions.options[0].values.map(value => ([value]));
+
+                                                for (var k = 1; k < newOptions.options.length; k++) {
+                                                    const next: CombinationEdit[][] = [];
+                                                    result.forEach(item => {
+                                                        newOptions.options[k].values.forEach(word => {
+                                                            var line = item.slice(0);
+                                                            line.push(word);
+                                                            next.push(line);
+                                                        })
+                                                    });
+                                                    result = next;
+                                                }
+
+                                                for (const combination of result) {
+                                                    variants.push({
+                                                        imgs: [],
+                                                        price: '0.00',
+                                                        sku: '',
+                                                        use_discount: false,
+                                                        discount_price: '0.00',
+                                                        combination: combination.map(combination => ({
+                                                            id: combination.id,
+                                                            name: combination.name,
+                                                        })),
+                                                        total: '0',
+                                                        available: '0',
+                                                    })
+                                                }
+
+                                                setNewOptions({ ...newOptions, variants })
+                                            }}
+                                        >
+                                            Generar variantes
+                                        </button>
+                                    </div>
+                                </DndProvider>
+                            ) : null}
+                            {/*createNewOptions ? (
                                 <div>
                                     <DragDropContext onDragEnd={onDragEndNewOptions}>
                                         <Droppable droppableId="droppable" direction="horizontal">
@@ -581,10 +687,10 @@ export const EditProduct: FC<{
                                             setNewOptions({ ...newOptions, variants })
                                         }}
                                     >
-                                        Terminar
+                                        Generar variantes
                                     </button>
                                 </div>
-                            ) : null}
+                            ) : null*/}
                             {!createNewOptions && form.use_variants && form.variants.length > 1 ? (
                                 <div>{form.variants.map((value, idx) => {
                                     const variantName = value.combination.map(combination => combination.name).join(" / ")

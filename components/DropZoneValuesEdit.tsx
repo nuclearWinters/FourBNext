@@ -1,15 +1,11 @@
-import React, { Dispatch, FC, SetStateAction, useCallback, useState } from "react";
-import { DraggableValues } from "./DraggableValues";
+import React, { Dispatch, FC, SetStateAction, useCallback } from "react";
 import { CombinationEdit } from "../pages/inventory-admin";
 import { Combination } from "../server/types";
+import { DraggableValuesEdit } from "./DraggableValuesEdit";
 
-export const DropZoneValues: FC<{
+export const DropZoneValuesEdit: FC<{
     type: "string" | "color"
     setForm: Dispatch<SetStateAction<{
-        name: string;
-        description: string;
-        use_variants: boolean;
-        tags: string[];
         options: {
             id: string;
             name: string;
@@ -18,7 +14,8 @@ export const DropZoneValues: FC<{
         }[];
         variants: {
             imgs: string[];
-            qty: string;
+            available: string,
+            total: string,
             price: string;
             sku: string;
             use_discount: boolean;
@@ -40,7 +37,7 @@ export const DropZoneValues: FC<{
     }, []);
     const renderDndCharacterCards = () =>
         values.map((value, index) => (
-            <DraggableValues
+            <DraggableValuesEdit
                 optionIndex={optionIndex}
                 optionId={optionId}
                 index={index}

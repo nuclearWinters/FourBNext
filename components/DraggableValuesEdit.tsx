@@ -4,7 +4,7 @@ import { CombinationEdit } from "../pages/inventory-admin";
 import { ModalField } from "./ModalField";
 import { Combination } from "../server/types";
 
-export const DraggableValues: FC<{
+export const DraggableValuesEdit: FC<{
   type: "string" | "color"
   optionIndex: number
   optionId: string
@@ -12,10 +12,6 @@ export const DraggableValues: FC<{
   moveRow: (dragIndex: number, hoverIndex: number) => void
   index: number
   setForm: Dispatch<SetStateAction<{
-    name: string;
-    description: string;
-    use_variants: boolean;
-    tags: string[];
     options: {
       id: string;
       name: string;
@@ -24,7 +20,8 @@ export const DraggableValues: FC<{
     }[];
     variants: {
       imgs: string[];
-      qty: string;
+      available: string,
+      total: string;
       price: string;
       sku: string;
       use_discount: boolean;

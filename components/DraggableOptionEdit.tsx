@@ -1,13 +1,13 @@
 import React, { Dispatch, FC, SetStateAction, useRef } from "react";
 import { DropTargetMonitor, useDrag, useDrop } from "react-dnd";
-import { DropZoneValues } from "./DropZoneValues";
 import { CombinationEdit } from "../pages/inventory-admin";
 import Image from "next/image";
 import { ModalField } from "./ModalField";
 import { Combination } from "../server/types";
 import { nanoid } from "nanoid";
+import { DropZoneValuesEdit } from "./DropZoneValuesEdit";
 
-export const DraggableOption: FC<{
+export const DraggableOptionEdit: FC<{
     option: {
         id: string;
         name: string;
@@ -17,10 +17,6 @@ export const DraggableOption: FC<{
     moveRow: (dragIndex: number, hoverIndex: number) => void
     index: number
     setForm: Dispatch<SetStateAction<{
-        name: string;
-        description: string;
-        use_variants: boolean;
-        tags: string[];
         options: {
             id: string;
             name: string;
@@ -29,7 +25,8 @@ export const DraggableOption: FC<{
         }[];
         variants: {
             imgs: string[];
-            qty: string;
+            available: string,
+            total: string,
             price: string;
             sku: string;
             use_discount: boolean;
@@ -88,7 +85,7 @@ export const DraggableOption: FC<{
         <div
             ref={ref}
             style={{
-                width: "50%",
+                width: "80%",
                 padding: "2px 12px",
                 backgroundColor: bgColor
             }}
@@ -116,7 +113,7 @@ export const DraggableOption: FC<{
                         }}
                     />
                     <div style={{ paddingBottom: 8 }}>Valores de la opción</div>
-                    <DropZoneValues
+                    <DropZoneValuesEdit
                         optionIndex={index}
                         optionId={id}
                         values={values}
