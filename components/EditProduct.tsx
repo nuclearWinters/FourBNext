@@ -16,6 +16,7 @@ import TagsInput from 'react-tagsinput'
 import drag from '../public/drag.svg'
 import trash from '../public/trash-can.svg'
 import { Combination, Options } from "../server/types";
+import { DraggableValues } from "./DraggableValues";
 
 export interface OptionsEdit {
     id: string
@@ -113,6 +114,7 @@ export const EditProduct: FC<{
                 }
             ]
         })
+        console.log('newOptions:', newOptions)
         const editProduct = trpc.editProduct.useMutation({
             onSuccess: () => {
                 toast.success("Producto actualizado con exito.")
@@ -219,6 +221,7 @@ export const EditProduct: FC<{
                                     price: Number(variant.price) * 100,
                                     discount_price: Number(variant.discount_price) * 100,
                                 })),
+                                new_options: newOptions.options,
                             }, {
                                 onSuccess: () => {
                                     setShowModal(false)
@@ -403,7 +406,6 @@ export const EditProduct: FC<{
                             ) : null}
                             {createNewOptions ? (
                                 <div>
-
                                     <DragDropContext onDragEnd={onDragEndNewOptions}>
                                         <Droppable droppableId="droppable" direction="horizontal">
                                             {(provided) => (
@@ -430,13 +432,14 @@ export const EditProduct: FC<{
                                                                         )}
                                                                     >
                                                                         <div key={idxOption} style={{ display: 'flex', flexDirection: 'row', borderBottom: '1px solid black', paddingBottom: 20 }}>
-                                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30 }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', width: 30 }}>
                                                                                 <Image src={drag} alt="" />
                                                                             </div>
                                                                             <div style={{ display: 'flex', flexDirection: "column" }}>
                                                                                 <ModalField
                                                                                     id={`${idxOption}-option-name`}
-                                                                                    label="Nombre de la opcion"
+                                                                                    label={option.type === "color" ? "Nombre de la opción de color" : "Nombre de la opción"}
+                                                                                    disabled={option.type === "color"}
                                                                                     required
                                                                                     name="name"
                                                                                     type="text"
@@ -448,47 +451,37 @@ export const EditProduct: FC<{
                                                                                         }))
                                                                                     }}
                                                                                 />
-                                                                                <div style={{ paddingBottom: 8 }}>Valor de la opcion</div>
-                                                                                {option.values.map((value, idxValue) => (
-                                                                                    <ModalField
-                                                                                        focusOnMount={value.focus}
-                                                                                        label=""
-                                                                                        id={`${idxOption}-${idxValue}-option-value`}
-                                                                                        key={value.id}
-                                                                                        value={value.name}
+                                                                                <div style={{ paddingBottom: 8 }}>Valores de la opción</div>
+                                                                                <DraggableValues
+                                                                                    setNewOptions={setNewOptions}
+                                                                                    values={option.values}
+                                                                                    index={idxOption}
+                                                                                    type={option.type}
+                                                                                    newOptions={newOptions}
+                                                                                />
+                                                                                {option.type === "color" ? null : (
+                                                                                    <input
+                                                                                        value=""
+                                                                                        type={"text"}
                                                                                         onChange={(event) => {
-                                                                                            if (event.target.value === "") {
-                                                                                                const nextOptions = [...newOptions.options]
-                                                                                                nextOptions[idxOption].values.splice(idxValue)
-                                                                                                setNewOptions({ ...newOptions, options: nextOptions })
-                                                                                            } else {
-                                                                                                const nextOptions = [...newOptions.options]
-                                                                                                nextOptions[idxOption].values[idxValue].name = event.target.value
-                                                                                                setNewOptions({ ...newOptions, options: nextOptions })
-                                                                                            }
+                                                                                            const nextOptions = [...newOptions.options]
+                                                                                            nextOptions[idxOption].values.push({
+                                                                                                id: nanoid(5),
+                                                                                                name: event.target.value,
+                                                                                                focus: true,
+                                                                                            })
+                                                                                            setForm({ ...form, options: nextOptions })
                                                                                         }}
                                                                                         placeholder="Añadir otro valor"
                                                                                     />
-                                                                                ))}
-                                                                                <input
-                                                                                    value=""
-                                                                                    onChange={(event) => {
-                                                                                        const nextOptions = [...newOptions.options]
-                                                                                        nextOptions[idxOption].values.push({
-                                                                                            id: nanoid(5),
-                                                                                            name: event.target.value,
-                                                                                            focus: true,
-                                                                                        })
-                                                                                        setForm({ ...form, options: nextOptions })
-                                                                                    }}
-                                                                                    placeholder="Añadir otro valor"
-                                                                                />
+                                                                                )}
                                                                             </div>
                                                                             <button
-                                                                                style={{ width: 60, display: 'flex', padding: 20, alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                                                                type="button"
+                                                                                style={{ width: 60, display: 'flex', padding: 20, alignItems: 'flex-start', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer' }}
                                                                                 onClick={() => {
-                                                                                    form.options.splice(idxOption, 1)
-                                                                                    setForm({ ...form, options: [...form.options] })
+                                                                                    newOptions.options.splice(idxOption, 1)
+                                                                                    setNewOptions({ ...newOptions, options: newOptions.options })
                                                                                 }}
                                                                             >
                                                                                 <Image src={trash} alt="" width={20} height={30} />
@@ -514,7 +507,38 @@ export const EditProduct: FC<{
                                             })
                                         }}
                                     >
-                                        Añadir otra opcion
+                                        Añadir otra opción
+                                    </button>
+                                    <button
+                                        className="fourb-button"
+                                        type="button"
+                                        onClick={() => {
+                                            setNewOptions({
+                                                ...newOptions,
+                                                options: [
+                                                    ...newOptions.options,
+                                                    {
+                                                        id: nanoid(5),
+                                                        name: 'Color',
+                                                        values: [
+                                                            {
+                                                                id: nanoid(5),
+                                                                name: "Dorado",
+                                                                focus: false,
+                                                            },
+                                                            {
+                                                                id: nanoid(5),
+                                                                name: "Plateado",
+                                                                focus: false,
+                                                            }
+                                                        ],
+                                                        type: 'color',
+                                                    },
+                                                ],
+                                            })
+                                        }}
+                                    >
+                                        Añadir otra opción de color
                                     </button>
                                     <button
                                         className="fourb-button"
@@ -546,7 +570,7 @@ export const EditProduct: FC<{
                                                     use_discount: false,
                                                     discount_price: '0.00',
                                                     combination: combination.map(combination => ({
-                                                        id: nanoid(5),
+                                                        id: combination.id,
                                                         name: combination.name,
                                                     })),
                                                     total: '0',
@@ -557,7 +581,7 @@ export const EditProduct: FC<{
                                             setNewOptions({ ...newOptions, variants })
                                         }}
                                     >
-                                        Done
+                                        Terminar
                                     </button>
                                 </div>
                             ) : null}

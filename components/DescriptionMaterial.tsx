@@ -12,7 +12,7 @@ export const DescriptionMaterial: FC<{ children: string }> = ({ children }) => {
       width: isMobile ? undefined : '450px',
       textAlign: 'center',
       marginBottom: '20px',
-      padding: isMobile ? '20px' : ''
+      padding: isMobile ? '20px' : undefined
     }}
   >
     {children}

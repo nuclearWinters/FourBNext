@@ -1735,6 +1735,17 @@ export const appRouter = router({
                 type: z.enum(['string', 'color'])
             })),
             tags: z.array(z.string()),
+            new_options: z.array(z.object({
+                id: z.string().min(1),
+                name: z.string().min(1),
+                values: z.array(
+                    z.object({
+                        id: z.string(),
+                        name: z.string()
+                    })
+                ),
+                type: z.enum(['string', 'color'])
+            })),
         })).mutation(async ({ ctx, input }): Promise<void> => {
             try {
                 const id = input.id
@@ -1746,6 +1757,7 @@ export const appRouter = router({
                 const variants = input.variants
                 const new_variants = input.new_variants
                 const create_new_variants = input.create_new_variants
+                const new_options = input.new_options
                 const { inventory, variantInventory } = ctx
                 const product_oid = new ObjectId(id)
                 const filter: Filter<InventoryMongo> = {
@@ -1767,7 +1779,7 @@ export const appRouter = router({
                             name,
                             description,
                             tags,
-                            options,
+                            options: create_new_variants ? new_options : options,
                             variants: create_new_variants ? nextVariants : newVariants,
                             use_variants,
                         }

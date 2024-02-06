@@ -106,6 +106,33 @@
     margin-left: 40px;
 }
 
+.selectedColor {
+    background-color: transparent;
+    border: 2px solid black;
+    width: 60px;
+    height: 60px;
+    border-radius: 100%;
+    margin-right: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 30px;
+    margin-top: 10px;
+}
+
+.unselectedColor {
+    margin-top: 10px;
+    background-color: transparent;
+    border: none;
+    width: 60px;
+    height: 60px;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 30px;
+}
+
 @media only screen and (max-width: 700px) {
     .productContainer {
         flex-direction: column;

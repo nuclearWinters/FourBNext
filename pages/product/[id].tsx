@@ -100,7 +100,20 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                         <div>{option.name}</div>
                         <div style={{ marginBottom: 10, display: 'flex' }}>
                             {option.values.map(value => {
-                                return <>
+                                return option.type === "color" ? (
+                                    <>
+                                        <button
+                                            style={{
+                                                background: value.name === "Dorado" ? "#FFD700" : value.name === "Plateado" ? "#C0C0C0" : value.name,
+                                            }}
+                                            className={value.id === selectedOption[idxOption] ? css.selectedColor : css.unselectedColor}
+                                            onClick={() => {
+                                                selectedOption[idxOption] = value.id
+                                                setSelectedOption([...selectedOption])
+                                            }}
+                                        />
+                                    </>
+                                ) : (
                                     <button
                                         className={value.id === selectedOption[idxOption] ? css.selected : css.unselected}
                                         onClick={() => {
@@ -110,7 +123,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                                     >
                                         {value.name}
                                     </button>
-                                </>
+                                )
                             })}
                         </div>
                     </div>

@@ -279,6 +279,7 @@ export default function Home() {
             },
           ].map(colletion => {
             return <Link
+              key={colletion.title}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
