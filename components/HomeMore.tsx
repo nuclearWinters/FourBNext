@@ -1,45 +1,41 @@
 import Link from "next/link"
-import { FC, ReactNode, useState } from "react"
+import { FC, useState } from "react"
 import { trpc } from "../utils/config";
 import { toast } from "react-toastify";
 import { Modal } from "./Modal";
 import { ModalClose } from "./ModalClose";
 import css from './Layout.module.css'
-import picture from '../public/picture.svg'
 import { HomeNames } from "../server/types";
 import Image from "next/image"
+import picture from '../public/picture.svg'
 
-export const HomeHalf: FC<{
-    src: string;
-    moreButtonLink?: string
-    title?: ReactNode
+export const HomeMore: FC<{
+    title: string;
+    href: string;
+    img: JSX.Element;
     name: HomeNames
     isAdmin?: boolean
-}> = ({ src, moreButtonLink, title, name }) => {
+}> = (collection) => {
     const [showImageModal, setShowImageModal] = useState(false)
-  const updateHome = trpc.updateHome.useMutation({
-    onSuccess: () => {
-      toast.success('Imagen actualizada con éxito.')
-      setShowImageModal(false)
-      window.location.reload()
-    },
-    onError: (e) => {
-      toast.error(e.message)
-    }
-  })
-  const signedUrl = trpc.signedUrl.useMutation()
-  const [newURL, setNewURL] = useState('')
-    return <div style={{
-        flex: 1,
-        backgroundImage: `url(${src})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexDirection: 'column',
-        position: 'relative',
-    }}>
+    const updateHome = trpc.updateHome.useMutation({
+        onSuccess: () => {
+            toast.success('Imagen actualizada con éxito.')
+            setShowImageModal(false)
+            window.location.reload()
+        },
+        onError: (e) => {
+            toast.error(e.message)
+        }
+    })
+    const signedUrl = trpc.signedUrl.useMutation()
+    const [newURL, setNewURL] = useState('')
+    return <div
+        style={{
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
+        }}
+    >
         {showImageModal ? <Modal onClose={() => {
             setShowImageModal(false)
         }}>
@@ -80,7 +76,7 @@ export const HomeHalf: FC<{
                         className={css["fourb-button"]}
                         onClick={(e) => {
                             e.preventDefault()
-                            updateHome.mutate({ url: newURL, name })
+                            updateHome.mutate({ url: newURL, name: collection.name })
                         }}
                         type="submit"
                     >
@@ -89,7 +85,7 @@ export const HomeHalf: FC<{
                 </form>
             </ModalClose>
         </Modal> : null}
-        <button
+        {collection.isAdmin ? <button
             style={{
                 position: 'absolute',
                 top: 0,
@@ -99,29 +95,29 @@ export const HomeHalf: FC<{
                 cursor: 'pointer',
                 margin: '10px',
             }}
-            onClick={() => {
+            onClick={(e) => {
                 setShowImageModal(true)
             }}
         >
             <Image src={picture} alt="" height={51} width={27} />
-        </button>
-        {title}
-        {moreButtonLink ? <Link
-            href={moreButtonLink}
-            style={{
-                background: "rgb(253, 240, 224)",
-                border: "none",
-                color: "black",
-                fontSize: '24px',
-                lineHeight: '33px',
-                padding: '8px 60px',
-                cursor: "pointer",
-                textAlign: 'center',
-                borderRadius: '100px',
-                marginBottom: '66px',
-            }}
+        </button> : null}
+        <Link
+            href={collection.href}
         >
-            VER MÁS
-        </Link> : null}
+            {collection.img}
+            <div
+                style={{
+                    fontWeight: '600',
+                    color: 'rgb(0, 0, 0)',
+                    fontFamily: 'Montserrat',
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    marginTop: '10px',
+                    marginBottom: '16px',
+                }}
+            >
+                {collection.title}
+            </div>
+        </Link>
     </div>
 }

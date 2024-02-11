@@ -2,7 +2,7 @@ import { TRPCError, initTRPC } from '@trpc/server';
 import { CartsByUserMongo, ContextLocals, InventoryVariantsMongo, VariantMongo } from './types';
 import { z } from 'zod';
 import { Filter, ObjectId } from 'mongodb';
-import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, SENDGRID_API_KEY, VIRTUAL_HOST, jwt, revalidateProduct, sessionToBase64 } from './utils';
+import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, CONEKTA_API_KEY, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, SENDGRID_API_KEY, VIRTUAL_HOST, jwt, revalidateHome, revalidateProduct, sessionToBase64 } from './utils';
 import { InventoryMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from './types';
 import bcrypt from "bcryptjs"
 import cookie from "cookie"
@@ -2201,5 +2201,61 @@ export const appRouter = router({
                     message: 'An unexpected error occurred, please try again later.',
                 });
             }
-        })
+        }),
+    updateHome: publicProcedure
+        .input(z.object({
+            name: z.enum([
+                'home',
+                'nuevo1',
+                'nuevo2',
+                'piercing1',
+                'piercing2',
+                'waterproof',
+                'collares',
+                'anillos',
+                'pulseras',
+                'aretes',
+                'piercings',
+                'favoritos',
+                'nuevo3',
+                'descuentos',
+                'insta1',
+                'insta2'
+            ]),
+            url: z.string().min(1),
+        }))
+        .mutation(async ({ ctx, input }): Promise<void | null> => {
+            try {
+                const { imagesHome } = ctx
+                const { name, url } = input
+                await imagesHome.updateOne(
+                    {
+                        name
+                    },
+                    {
+                        $set: {
+                            url,
+                        },
+                        $setOnInsert: {
+                            name,
+                        }
+                    },
+                    {
+                        upsert: true
+                    },
+                )
+                revalidateHome()
+            } catch (e) {
+                if (e instanceof Error) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: e.message,
+                    });
+                }
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'An unexpected error occurred, please try again later.',
+                });
+            }
+        }),
 });

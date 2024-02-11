@@ -96,6 +96,30 @@ export interface InventoryMongo {
     variants: VariantMongo[]
 }
 
+export type HomeNames =
+    'home' |
+    'nuevo1' |
+    'nuevo2' |
+    'piercing1' |
+    'piercing2' |
+    'waterproof' |
+    'collares' |
+    'anillos' |
+    'pulseras' |
+    'aretes' |
+    'piercings' |
+    'favoritos' |
+    'nuevo3' |
+    'descuentos' |
+    'insta1' |
+    'insta2'
+
+export interface ImagesDBMongo {
+    _id?: ObjectId;
+    url: string;
+    name: HomeNames
+}
+
 export interface InventoryVariantsMongo {
     _id?: ObjectId
     inventory_id: ObjectId
@@ -165,6 +189,7 @@ export interface ContextLocals {
     cartsByUser: Collection<CartsByUserMongo>;
     purchases: Collection<PurchasesMongo>
     variantInventory: Collection<InventoryVariantsMongo>
+    imagesHome: Collection<ImagesDBMongo>
 }
 
 export interface UserJWT {

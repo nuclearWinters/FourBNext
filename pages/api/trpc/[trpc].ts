@@ -1,12 +1,8 @@
-/**
- * This is the API-handler of your app that contains all your API routes.
- * On a bigger app, you will probably want to split this file up into multiple files.
- */
 import * as trpcNext from '@trpc/server/adapters/next';
 import { appRouter } from '../../../server/trpc';
 import { MongoClient } from 'mongodb';
 import { MONGO_DB, getSessionData, getSessionToken, getTokenData, revalidateProduct } from '../../../server/utils';
-import { CartsByUserMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from '../../../server/types';
+import { CartsByUserMongo, ImagesDBMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from '../../../server/types';
 import { CronJob } from 'cron';
 
 const client = await MongoClient.connect(MONGO_DB || "mongodb://127.0.0.1:27017", {})
@@ -17,6 +13,7 @@ export const inventory = db.collection<InventoryMongo>("inventory")
 export const variantInventory = db.collection<InventoryVariantsMongo>("variants_inventory")
 export const itemsByCart = db.collection<ItemsByCartMongo>("items_by_cart")
 export const purchases = db.collection<PurchasesMongo>("purchases")
+export const imagesHome = db.collection<ImagesDBMongo>("images")
 
 const job = new CronJob(
     '00 00 03 * * *',
@@ -108,7 +105,8 @@ export default trpcNext.createNextApiHandler({
             inventory,
             itemsByCart,
             purchases,
-            variantInventory
+            variantInventory,
+            imagesHome,
         })
     },
 });
