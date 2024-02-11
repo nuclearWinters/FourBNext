@@ -952,6 +952,39 @@ export const appRouter = router({
                                     }
                                 },
                             )
+                            const newAccessToken = jwt.sign(
+                                {
+                                    user: {
+                                        _id: userData.user._id,
+                                        cart_id: new_cart_id.toHexString(),
+                                        is_admin: userData.user.is_admin,
+                                        email: userData.user.email,
+                                    },
+                                    refreshTokenExpireTime: userData.refreshTokenExpireTime,
+                                    exp: userData.exp,
+                                },
+                                ACCESSSECRET
+                            );
+                            const refreshToken = jwt.sign(
+                                {
+                                    user: {
+                                        _id: userData.user._id,
+                                        cart_id: new_cart_id.toHexString(),
+                                        is_admin: userData.user.is_admin,
+                                        email: userData.user.email,
+                                    },
+                                    refreshTokenExpireTime: userData.refreshTokenExpireTime,
+                                    exp: userData.refreshTokenExpireTime,
+                                },
+                                REFRESHSECRET
+                            );
+                            const refreshTokenExpireDate = new Date(userData.refreshTokenExpireTime * 1000);
+                            res.setHeader("Set-Cookie", cookie.serialize("refreshToken", refreshToken, {
+                                httpOnly: true,
+                                expires: refreshTokenExpireDate,
+                                secure: true,
+                            }))
+                            res.setHeader("Access-Token", newAccessToken)
                         }
                         const session = sessionToBase64({
                             ...sessionData,
@@ -1108,6 +1141,39 @@ export const appRouter = router({
                                     }
                                 },
                             )
+                            const newAccessToken = jwt.sign(
+                                {
+                                    user: {
+                                        _id: userData.user._id,
+                                        cart_id: new_cart_id.toHexString(),
+                                        is_admin: userData.user.is_admin,
+                                        email: userData.user.email,
+                                    },
+                                    refreshTokenExpireTime: userData.refreshTokenExpireTime,
+                                    exp: userData.exp,
+                                },
+                                ACCESSSECRET
+                            );
+                            const refreshToken = jwt.sign(
+                                {
+                                    user: {
+                                        _id: userData.user._id,
+                                        cart_id: new_cart_id.toHexString(),
+                                        is_admin: userData.user.is_admin,
+                                        email: userData.user.email,
+                                    },
+                                    refreshTokenExpireTime: userData.refreshTokenExpireTime,
+                                    exp: userData.refreshTokenExpireTime,
+                                },
+                                REFRESHSECRET
+                            );
+                            const refreshTokenExpireDate = new Date(userData.refreshTokenExpireTime * 1000);
+                            res.setHeader("Set-Cookie", cookie.serialize("refreshToken", refreshToken, {
+                                httpOnly: true,
+                                expires: refreshTokenExpireDate,
+                                secure: true,
+                            }))
+                            res.setHeader("Access-Token", newAccessToken)
                         }
                         const session = sessionToBase64({
                             ...sessionData,

@@ -82,7 +82,7 @@ export default function Home() {
         </HomeSubtitle>
         {lastProducts.isLoading ? <div className="loading" /> : lastProducts.data?.items.length ? <Carousel>
           {(lastProducts.data?.items || []).map(product => (
-            <CarouselItem product={product} />
+            <CarouselItem product={product} key={product._id} />
           )) || []}
         </Carousel> : null}
       </div>
@@ -116,7 +116,7 @@ export default function Home() {
         </HomeSubtitle>
         {piercingProducts.data?.items.length ? <Carousel>
           {(piercingProducts.data?.items || []).map(product => (
-            <CarouselItem product={product} />
+            <CarouselItem product={product} key={product._id} />
           )) || []}
         </Carousel> : null}
       </div>
@@ -151,7 +151,7 @@ export default function Home() {
         </HomeSubtitle>
         {piercingProducts.isLoading ? <div className="loading" /> : piercingProducts.data?.items.length ? <Carousel>
           {(piercingProducts.data?.items || []).map(product => (
-            <CarouselItem product={product} />
+            <CarouselItem product={product} key={product._id} />
           )) || []}
         </Carousel> : null}
       </div>
@@ -174,7 +174,7 @@ export default function Home() {
         </HomeSubtitle>
         {waterproofProducts.isLoading ? <div className="loading" /> : waterproofProducts.data?.items.length ? <Carousel>
           {(waterproofProducts.data?.items || []).map(product => (
-            <CarouselItem product={product} />
+            <CarouselItem product={product} key={product._id} />
           )) || []}
         </Carousel> : null}
       </div>

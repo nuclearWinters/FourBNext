@@ -12,6 +12,7 @@ export default function Payment() {
     })
     const [cartId, setCartId] = useState('')
     const checkoutId = cart.data?.checkout_id
+    const isFetching = cart.isFetching
     const confirmationPhase = trpc.confirmationPhase.useMutation({
         onSuccess: () => {
             toast.success('Carritos pagado correctamente.')
@@ -21,7 +22,7 @@ export default function Payment() {
         }
     })
     useEffect(() => {
-        if (checkoutId) {
+        if (checkoutId && !isFetching) {
             const config = {
                 checkoutRequestId: checkoutId,
                 publicKey: CONEKTA_PUBLIC_KEY,
@@ -40,7 +41,7 @@ export default function Payment() {
             (window as any).ConektaCheckoutComponents.Integration({ config, callbacks });
         }
         return
-    }, [checkoutId])
+    }, [checkoutId, isFetching])
     useEffect(() => {
         const cart_id = localStorage.getItem('cart_id')
         if (cart_id) {

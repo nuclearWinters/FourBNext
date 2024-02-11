@@ -220,7 +220,7 @@ export const EditProduct: FC<{
                                     price: Number(variant.price) * 100,
                                     discount_price: Number(variant.discount_price) * 100,
                                 })),
-                                new_options: newOptions.options,
+                                new_options: createNewOptions ? newOptions.options : [],
                             }, {
                                 onSuccess: () => {
                                     setShowModal(false)
