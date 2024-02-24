@@ -15,7 +15,7 @@ export const HomeHalf: FC<{
     title?: ReactNode
     name: HomeNames
     isAdmin?: boolean
-}> = ({ src, moreButtonLink, title, name }) => {
+}> = ({ src, moreButtonLink, title, name, isAdmin }) => {
     const [showImageModal, setShowImageModal] = useState(false)
   const updateHome = trpc.updateHome.useMutation({
     onSuccess: () => {
@@ -89,7 +89,7 @@ export const HomeHalf: FC<{
                 </form>
             </ModalClose>
         </Modal> : null}
-        <button
+        {isAdmin ? <button
             style={{
                 position: 'absolute',
                 top: 0,
@@ -104,7 +104,7 @@ export const HomeHalf: FC<{
             }}
         >
             <Image src={picture} alt="" height={51} width={27} />
-        </button>
+        </button> : null}
         {title}
         {moreButtonLink ? <Link
             href={moreButtonLink}
