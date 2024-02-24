@@ -13,6 +13,13 @@ import userSVG from '../public/user.svg'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { SearchModal } from "./SearchModal"
+import { InformationStreet } from '../components/InformationStreet';
+import { InformationTitle } from "./InformationTitle"
+import { InformationText } from "./InformationText"
+import { useMediaQuery } from "../hooks/mediaQuery"
+import facebook from '../public/facebook.svg'
+import instagram from '../public/instagram.svg'
+import map from '../public/map.png'
 
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
     const user = trpc.getUser.useQuery();
@@ -67,6 +74,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
             toast.error(e.message)
         }
     })
+    const isMobile = useMediaQuery('(max-width: 800px)')
     return <>
         <div
             className={css.fourbHeaderContainer}
@@ -436,8 +444,102 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
             </div>
         </div>
         {children}
-        <div style={{ padding: '30px', background: 'black', marginTop: '30px' }}>
-            <Link href={"/privacy-policy"} style={{ color: 'white' }}>Aviso de privacidad</Link>
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                background: '#fffbf9',
+                paddingTop: 80,
+                paddingBottom: 60,
+            }}
+        >
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    justifyContent: 'center',
+                    gap: 80,
+                }}
+            >
+                <div
+                    style={{
+                        marginLeft: isMobile ? '40px' : ''
+                    }}
+                >
+                    <InformationTitle>
+                        MÁS INFORMACIÓN
+                    </InformationTitle>
+                    <InformationText>Envíos</InformationText>
+                    <InformationText>Cambios y devoluciones</InformationText>
+                    <InformationText>Tallas</InformationText>
+                    <InformationText>Cuidados y limpieza</InformationText>
+                    <InformationText>Mayoreo</InformationText>
+                    <Link href={'/privacy-policy'}>
+                        <InformationText>Aviso de privacidad</InformationText>
+                    </Link>
+                </div>
+                <div
+                    style={{
+                        marginLeft: isMobile ? '40px' : ''
+                    }}
+                >
+                    <InformationTitle>
+                        CONTACTO
+                    </InformationTitle>
+                    <a href="https://www.instagram.com/fourb_mx/"><InformationText>Instagram: fourb_mx</InformationText></a>
+                    <a href="https://www.facebook.com/fourbmx/"><InformationText>Facebook: fourb</InformationText></a>
+                    <a href="https://www.tiktok.com/@fourb_mx"><InformationText>Tiktok: fourb</InformationText></a>
+                    <a href="mailto:fourboutiquemx@gmail.com"><InformationText>Correo: fourboutiquemx@gmail.com</InformationText></a>
+                </div>
+                <div
+                    style={{
+                        marginLeft: isMobile ? '40px' : ''
+                    }}
+                >
+                    <InformationTitle>
+                        HORARIO
+                    </InformationTitle>
+                    <InformationText>PERFORACIONES</InformationText>
+                    <InformationText>LUNES - SÁBADO</InformationText>
+                    <InformationText>TIENDA</InformationText>
+                    <InformationText>LUNES - SÁBADO: 11 A 9 PM</InformationText>
+                    <InformationText>DOMINGO: 11 A 7 PM</InformationText>
+                </div>
+            </div>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
+                    paddingTop: 20,
+                }}
+            >
+                <a href='https://www.facebook.com/fourbmx/' target='_blank'><Image src={facebook} alt="" width={40} /></a>
+                <a href='https://www.instagram.com/fourb_mx/' target='_blank'><Image src={instagram} alt="" width={40} /></a>
+            </div>
+            <a
+                href={"https://www.google.com/maps/place/Capital+Center/@18.5252084,-88.3146199,17z/data=!3m1!4b1!4m6!3m5!1s0x8f5ba4af89369c8d:0xb5992a95eb821e8b!8m2!3d18.5252084!4d-88.3146199!16s%2Fg%2F11byp6nm15?entry=ttu"}
+                target='_blank'
+                style={{
+                    width: '80%',
+                    margin: 'auto',
+                    alignSelf: 'center',
+                    paddingTop: 40,
+                    paddingBottom: 40,
+                }}
+            >
+                <img alt=""
+                    src={map.src}
+                    width={'100%'}
+                />
+            </a>
+            <InformationStreet>
+                Av. Erick Paolo Martínez Chetumal Quintana, Roo
+            </InformationStreet>
+            <InformationStreet>
+                Plaza Capital Center planta alta.
+            </InformationStreet>
         </div>
     </>
 }
