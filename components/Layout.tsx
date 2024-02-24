@@ -436,5 +436,8 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
             </div>
         </div>
         {children}
+        <div style={{ padding: '30px', background: 'black', marginTop: '30px' }}>
+            <Link href={"/privacy-policy"} style={{ color: 'white' }}>Aviso de privacidad</Link>
+        </div>
     </>
 }
