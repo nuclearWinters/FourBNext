@@ -43,13 +43,23 @@ export const ProductList: FC<{
                 <div></div>
             ))
         ) : null}
-        <button className="fourb-button" onClick={async () => {
-            addOneToCart.mutate({
-                product_variant_id: product._id,
-                qty: 1,
-            })
-        }}>
-            AÑADIR AL CARRITO
-        </button>
+        <Link
+            href={"/product/" + product._id}
+            style={{
+                background: '#d0c9c3',
+                fontSize: '13px',
+                color: 'black',
+                fontWeight: '700',
+                lineHeight: '18px',
+                letterSpacing: '1px',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'ArimoBold',
+                padding: '6px 30px',
+                margin: 'auto',
+            }}
+        >
+            LO QUIERO
+        </Link>
     </div>
 }
