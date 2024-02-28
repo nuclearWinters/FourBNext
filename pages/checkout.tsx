@@ -104,6 +104,8 @@ export default function Checkout() {
         const total = ((product.use_discount ? product.discount_price : product.price) * product.qty) / 100
         return curr + total
     }, 0)
+    const deliveryCost = delivery === "city" ? 35 : delivery === "national" ? 119 : 0
+    const totalWithDelivery = (total || 0) + deliveryCost
     return <div>
         <Head>
             <title>Revision - FOURB</title>
@@ -120,7 +122,7 @@ export default function Checkout() {
                 <div className="payBox" style={{ display: "flex", background: '#e7ebee', flexDirection: 'column', marginBottom: 30 }}>
                     <div style={{ display: 'flex', padding: 20, flex: 1, justifyContent: 'space-between' }}>
                         <div style={{ fontSize: 16, fontWeight: 500 }}>Total</div>
-                        <div style={{ fontSize: 16, fontWeight: 500 }}>$ {total?.toFixed(2)}</div>
+                        <div style={{ fontSize: 16, fontWeight: 500 }}>$ {totalWithDelivery?.toFixed(2)} {deliveryCost ? `(incluyendo envio)` : ''}</div>
                     </div>
                 </div>
             </div>
@@ -192,6 +194,9 @@ export default function Checkout() {
                         />
                     </div>
                 </div>
+                {delivery === "city" || delivery === "national" ? <div className="input-container-checkout">
+                    El costo de entrega seran: {delivery === "city" ? '$35' : '$119' }
+                </div> : null}
                 {!user.data?._id
                     ? <div className="input-container-checkout">
                         <label htmlFor="email">Email</label>

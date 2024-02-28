@@ -1226,16 +1226,31 @@ export const appRouter = router({
                                 throw new Error("No user updated")
                             }
                             const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                            const line_items = products.map(product => ({
+                                name: product.name,
+                                unit_price: product.use_discount ? product.discount_price : product.price,
+                                quantity: product.qty,
+                            }))
+                            if (input.delivery === "city") {
+                                line_items.push({
+                                    name: 'Envío',
+                                    unit_price: 3500,
+                                    quantity: 1,
+                                })
+                            }
+                            if (input.delivery === "national") {
+                                line_items.push({
+                                    name: 'Envío',
+                                    unit_price: 11900,
+                                    quantity: 1,
+                                })
+                            }
                             const order = await orderClient.createOrder({
                                 currency: "MXN",
                                 customer_info: {
                                     customer_id: result.conekta_id,
                                 },
-                                line_items: products.map(product => ({
-                                    name: product.name,
-                                    unit_price: product.use_discount ? product.discount_price : product.price,
-                                    quantity: product.qty,
-                                })),
+                                line_items,
                                 checkout: {
                                     type: 'Integration',
                                     allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
@@ -1294,16 +1309,31 @@ export const appRouter = router({
                                 throw new Error("No user updated")
                             }
                             const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                            const line_items = products.map(product => ({
+                                name: product.name,
+                                unit_price: product.use_discount ? product.discount_price : product.price,
+                                quantity: product.qty,
+                            }))
+                            if (input.delivery === "city") {
+                                line_items.push({
+                                    name: 'Envío',
+                                    unit_price: 3500,
+                                    quantity: 1,
+                                })
+                            }
+                            if (input.delivery === "national") {
+                                line_items.push({
+                                    name: 'Envío',
+                                    unit_price: 11900,
+                                    quantity: 1,
+                                })
+                            }
                             const order = await orderClient.createOrder({
                                 currency: "MXN",
                                 customer_info: {
                                     customer_id: result.conekta_id,
                                 },
-                                line_items: products.map(product => ({
-                                    name: product.name,
-                                    unit_price: product.use_discount ? product.discount_price : product.price,
-                                    quantity: product.qty,
-                                })),
+                                line_items,
                                 checkout: {
                                     type: 'Integration',
                                     allowed_payment_methods: ['card', 'cash', 'bank_transfer'],
@@ -1350,16 +1380,31 @@ export const appRouter = router({
                             })
                             res.setHeader("Session-Token", session)
                             const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                            const line_items = products.map(product => ({
+                                name: product.name,
+                                unit_price: product.use_discount ? product.discount_price : product.price,
+                                quantity: product.qty,
+                            }))
+                            if (input.delivery === "city") {
+                                line_items.push({
+                                    name: 'Envío',
+                                    unit_price: 3500,
+                                    quantity: 1,
+                                })
+                            }
+                            if (input.delivery === "national") {
+                                line_items.push({
+                                    name: 'Envío',
+                                    unit_price: 11900,
+                                    quantity: 1,
+                                })
+                            }
                             const order = await orderClient.createOrder({
                                 currency: "MXN",
                                 customer_info: {
                                     customer_id: conekta_id,
                                 },
-                                line_items: products.map(product => ({
-                                    name: product.name,
-                                    unit_price: product.use_discount ? product.discount_price : product.price,
-                                    quantity: product.qty,
-                                })),
+                                line_items,
                                 checkout: {
                                     type: 'Integration',
                                     allowed_payment_methods: ['card', 'cash', 'bank_transfer'],

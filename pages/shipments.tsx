@@ -18,7 +18,6 @@ export const Shipments: FC<{ answers: DescriptionsDBTRPC[] }> = ({ answers }) =>
     const addOrEditDescription = trpc.addOrEditDescription.useMutation({
         onSuccess: () => {
             window.location.reload()
-            setForm({ name: '', description: '' })
         },
         onError: (e) => {
             toast.error(e.message)
