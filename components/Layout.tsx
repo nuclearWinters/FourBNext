@@ -449,8 +449,9 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                 display: 'flex',
                 flexDirection: 'column',
                 background: '#fffbf9',
-                paddingTop: 80,
-                paddingBottom: 60,
+                paddingTop: 40,
+                paddingBottom: 30,
+                marginTop: 40,
             }}
         >
             <div
@@ -469,8 +470,12 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                     <InformationTitle>
                         MÁS INFORMACIÓN
                     </InformationTitle>
-                    <InformationText>Envíos</InformationText>
-                    <InformationText>Cambios y devoluciones</InformationText>
+                    <Link href={"/shipments"}>
+                        <InformationText>Envíos</InformationText>
+                    </Link>
+                    <Link href={"/refunds"}>
+                        <InformationText>Cambios y devoluciones</InformationText>
+                    </Link>
                     <InformationText>Tallas</InformationText>
                     <InformationText>Cuidados y limpieza</InformationText>
                     <InformationText>Mayoreo</InformationText>

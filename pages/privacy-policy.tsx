@@ -1,6 +1,6 @@
 import { FC } from "react"
 
-export const ProvacyPolicy: FC = () => {
+export const PrivacyPolicy: FC = () => {
     return <div style={{ margin: '0px auto', maxWidth: 800, display: 'flex', flexDirection: 'column', gap: '20px', padding: '0px 30px' }}>
         <h1 style={{ margin: 'auto' }}>Política de Privacidad</h1>
         <p><strong>FOURB</strong> es una marca registrada y titular del sitio web ubicado en el nombre de dominio <strong>fourb.mx</strong> (el “Sitio Web”) con domicilio Av Erick Paolo Martinez, Av. 4 de Marzo S/N, Parque Industrial DMS, 77039 Chetumal, Q.R., con dirección electrónica de contacto <a href="mailto:fourboutiquemx@gmail.com">fourboutiquemx@gmail.com</a></p>
@@ -47,4 +47,4 @@ export const ProvacyPolicy: FC = () => {
     </div>
 }
 
-export default ProvacyPolicy
+export default PrivacyPolicy
