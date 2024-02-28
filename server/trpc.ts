@@ -2258,4 +2258,44 @@ export const appRouter = router({
                 });
             }
         }),
+    addOrEditDescription: publicProcedure
+        .input(z.object({
+            name: z.string().min(1),
+            description: z.string().min(1),
+        }))
+        .mutation(async ({ ctx, input }): Promise<void | null> => {
+            try {
+                const { descriptions } = ctx
+                const { name, description } = input
+                console.log(name, description)
+                await descriptions.updateOne(
+                    {
+                        name
+                    },
+                    {
+                        $set: {
+                            description,
+                        },
+                        $setOnInsert: {
+                            name,
+                        }
+                    },
+                    {
+                        upsert: true
+                    },
+                )
+                revalidateHome()
+            } catch (e) {
+                if (e instanceof Error) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: e.message,
+                    });
+                }
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'An unexpected error occurred, please try again later.',
+                });
+            }
+        }),
 });

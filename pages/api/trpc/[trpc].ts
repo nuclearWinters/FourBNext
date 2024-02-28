@@ -2,7 +2,7 @@ import * as trpcNext from '@trpc/server/adapters/next';
 import { appRouter } from '../../../server/trpc';
 import { MongoClient } from 'mongodb';
 import { MONGO_DB, getSessionData, getSessionToken, getTokenData, revalidateProduct } from '../../../server/utils';
-import { CartsByUserMongo, ImagesDBMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from '../../../server/types';
+import { CartsByUserMongo, DescriptionsDBMongo, ImagesDBMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from '../../../server/types';
 import { CronJob } from 'cron';
 
 const client = await MongoClient.connect(MONGO_DB || "mongodb://127.0.0.1:27017", {})
@@ -14,6 +14,7 @@ export const variantInventory = db.collection<InventoryVariantsMongo>("variants_
 export const itemsByCart = db.collection<ItemsByCartMongo>("items_by_cart")
 export const purchases = db.collection<PurchasesMongo>("purchases")
 export const imagesHome = db.collection<ImagesDBMongo>("images")
+export const descriptions = db.collection<DescriptionsDBMongo>("descriptions")
 
 const job = new CronJob(
     '00 00 03 * * *',
@@ -107,6 +108,7 @@ export default trpcNext.createNextApiHandler({
             purchases,
             variantInventory,
             imagesHome,
+            descriptions,
         })
     },
 });

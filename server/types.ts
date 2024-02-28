@@ -120,6 +120,12 @@ export interface ImagesDBMongo {
     name: HomeNames
 }
 
+export interface DescriptionsDBMongo {
+    _id?: ObjectId;
+    name: string;
+    description: string
+}
+
 export interface InventoryVariantsMongo {
     _id?: ObjectId
     inventory_id: ObjectId
@@ -179,17 +185,18 @@ export interface CartsByUserMongo {
 }
 
 export interface ContextLocals {
-    req: NextApiRequest,
+    req: NextApiRequest
     res: NextApiResponse
     sessionData: SessionJWT
-    userData?: DecodeJWT;
-    users: Collection<UserMongo>;
-    inventory: Collection<InventoryMongo>;
-    itemsByCart: Collection<ItemsByCartMongo>;
-    cartsByUser: Collection<CartsByUserMongo>;
+    userData?: DecodeJWT
+    users: Collection<UserMongo>
+    inventory: Collection<InventoryMongo>
+    itemsByCart: Collection<ItemsByCartMongo>
+    cartsByUser: Collection<CartsByUserMongo>
     purchases: Collection<PurchasesMongo>
     variantInventory: Collection<InventoryVariantsMongo>
     imagesHome: Collection<ImagesDBMongo>
+    descriptions: Collection<DescriptionsDBMongo>
 }
 
 export interface UserJWT {
