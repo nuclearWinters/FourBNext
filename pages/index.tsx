@@ -1,6 +1,6 @@
 import { trpc } from '../utils/config';
 import Head from 'next/head';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import portada from '../public/portada.jpeg'
 import homePic from '../public/homePic.jpeg'
@@ -28,11 +28,16 @@ import Image from 'next/image';
 import { TitleLinks } from '../components/TitleLinks';
 import { DescriptionMaterial } from '../components/DescriptionMaterial';
 import { useMediaQuery } from '../hooks/mediaQuery';
-import { imagesHome } from './api/trpc/[trpc]';
+import { descriptions, imagesHome } from './api/trpc/[trpc]';
 import { ImagesDBMongo } from '../server/types';
 import { Modify } from './product/[id]';
 import { HomeMore } from '../components/HomeMore';
 import { InstagramModalEdit } from '../components/InstagramModalEdit';
+import { DescriptionsDBTRPC } from './refunds';
+import { Modal } from '../components/Modal';
+import { ModalClose } from '../components/ModalClose';
+import css from '../components/Layout.module.css'
+import { ModalTextArea } from '../components/ModalTextArea';
 
 export type ImagesDBTRPC = Modify<ImagesDBMongo, {
   _id: string
@@ -40,12 +45,26 @@ export type ImagesDBTRPC = Modify<ImagesDBMongo, {
 
 export const Home: FC<{
   images: ImagesDBTRPC[]
-}> = ({ images }) => {
+  answers: DescriptionsDBTRPC[]
+}> = ({ images, answers }) => {
   const user = trpc.getUser.useQuery();
   const isAdmin = user.data?.is_admin
   const lastProducts = trpc.inventory.useQuery({ limit: 8 });
   const piercingProducts = trpc.inventory.useQuery({ limit: 8, tag: 'piercing' });
   const waterproofProducts = trpc.inventory.useQuery({ limit: 8, tag: 'waterproof' });
+  const [form, setForm] = useState({ name: '', description: '' })
+  const answer1 = answers.find(answer => answer.name === 'descripcion1')
+  const answer2 = answers.find(answer => answer.name === 'descripcion2')
+  const answer3 = answers.find(answer => answer.name === 'descripcion3')
+  const answer4 = answers.find(answer => answer.name === 'descripcion4')
+  const addOrEditDescription = trpc.addOrEditDescription.useMutation({
+    onSuccess: () => {
+      window.location.reload()
+    },
+    onError: (e) => {
+      toast.error(e.message)
+    }
+  })
   const confirmEmail = trpc.verifyEmail.useMutation({
     onSuccess: () => {
       toast.success('Email confirmed succesfully!')
@@ -83,6 +102,41 @@ export const Home: FC<{
   const portadaFavoritos = images.find(image => image.name === 'favoritos')
   return (
     <div>
+      {form.name ? <Modal onClose={() => {
+        setForm({ name: '', description: '' })
+      }}>
+        <ModalClose
+          onClose={() => {
+            setForm({ name: '', description: '' })
+          }}
+          title={"Cambiar Descripción"}
+        >
+          <form className={css["auth-form"]}>
+            <div style={{ marginLeft: 20 }}>
+              <ModalTextArea
+                id="description"
+                label="Descripción"
+                required
+                name="description"
+                value={form.description}
+                onChange={(e) => {
+                  setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+                }}
+              />
+            </div>
+            <button
+              className={css["fourb-button"]}
+              onClick={(e) => {
+                e.preventDefault()
+                addOrEditDescription.mutate(form)
+              }}
+              type="submit"
+            >
+              Actualizar
+            </button>
+          </form>
+        </ModalClose>
+      </Modal> : null}
       <Head>
         <title>Inicio - FOURB</title>
       </Head>
@@ -101,8 +155,13 @@ export const Home: FC<{
         <HomeTitle>
           NUEVA COLECCIÓN
         </HomeTitle>
+        {isAdmin ? (
+          <button className='fourb-button' onClick={() => setForm({ name: 'descripcion1', description: answer1?.description ?? 'Descripción de materiales (titanio, acero quirurjico)' })}>
+            Editar descripción
+          </button>
+        ) : null}
         <HomeSubtitle>
-          Descripción de materiales (titanio, acero quirurjico)
+          {answer1 ? answer1.description : 'Descripción de materiales (titanio, acero quirurjico)'}
         </HomeSubtitle>
         {lastProducts.isLoading ? <div className="loading" /> : lastProducts.data?.items.length ? <Carousel>
           {(lastProducts.data?.items || []).map(product => (
@@ -139,8 +198,13 @@ export const Home: FC<{
         <HomeTitle>
           PIERCING
         </HomeTitle>
+        {isAdmin ? (
+          <button className='fourb-button' onClick={() => setForm({ name: 'descripcion2', description: answer2?.description ?? 'Descripción de materiales (titanio, acero quirurjico)' })}>
+            Editar descripción
+          </button>
+        ) : null}
         <HomeSubtitle>
-          Descripción de materiales (titanio, acero quirurjico)
+          {answer2 ? answer2.description : 'Descripción de materiales (titanio, acero quirurjico)'}
         </HomeSubtitle>
         {piercingProducts.data?.items.length ? <Carousel>
           {(piercingProducts.data?.items || []).map(product => (
@@ -178,8 +242,13 @@ export const Home: FC<{
         <HomeTitle>
           SUS FAVORITOS
         </HomeTitle>
+        {isAdmin ? (
+          <button className='fourb-button' onClick={() => setForm({ name: 'descripcion3', description: answer3?.description ?? 'Descripción de materiales (titanio, acero quirurjico)' })}>
+            Editar descripción
+          </button>
+        ) : null}
         <HomeSubtitle>
-          Descripción de materiales (titanio, acero quirurjico)
+          {answer3 ? answer3.description : 'Descripción de materiales (titanio, acero quirurjico)'}
         </HomeSubtitle>
         {piercingProducts.isLoading ? <div className="loading" /> : piercingProducts.data?.items.length ? <Carousel>
           {(piercingProducts.data?.items || []).map(product => (
@@ -203,8 +272,13 @@ export const Home: FC<{
         <HomeTitle>
           WATERPROOF
         </HomeTitle>
+        {isAdmin ? (
+          <button className='fourb-button' onClick={() => setForm({ name: 'descripcion4', description: answer4?.description ?? 'Descripción de materiales (titanio, acero quirurjico)' })}>
+            Editar descripción
+          </button>
+        ) : null}
         <HomeSubtitle>
-          Descripción de materiales (titanio, acero quirurjico)
+          {answer4 ? answer4.description : 'Descripción de materiales (titanio, acero quirurjico)'}
         </HomeSubtitle>
         {waterproofProducts.isLoading ? <div className="loading" /> : waterproofProducts.data?.items.length ? <Carousel>
           {(waterproofProducts.data?.items || []).map(product => (
@@ -448,11 +522,16 @@ export const Home: FC<{
 
 export const getStaticProps = async () => {
   const images = await imagesHome.find().toArray()
+  const answers = await descriptions.find({ name: { $in: ['descripcion1', 'descripcion2', 'descripcion3', 'descripcion4'] } }).toArray()
   return {
     props: {
       images: images.map(image => ({
         ...image,
         _id: image._id.toHexString()
+      })),
+      answers: answers.map(answer => ({
+        ...answer,
+        _id: answer._id.toHexString()
       }))
     }
   }
