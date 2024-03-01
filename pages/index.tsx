@@ -57,6 +57,11 @@ export const Home: FC<{
   const answer2 = answers.find(answer => answer.name === 'descripcion2')
   const answer3 = answers.find(answer => answer.name === 'descripcion3')
   const answer4 = answers.find(answer => answer.name === 'descripcion4')
+  const link1 = answers.find(answer => answer.name === 'link1')
+  const link2 = answers.find(answer => answer.name === 'link2')
+  const link3 = answers.find(answer => answer.name === 'link3')
+  const link4 = answers.find(answer => answer.name === 'link4')
+  const link5 = answers.find(answer => answer.name === 'link5')
   const addOrEditDescription = trpc.addOrEditDescription.useMutation({
     onSuccess: () => {
       window.location.reload()
@@ -144,7 +149,8 @@ export const Home: FC<{
         name="home"
         isAdmin={isAdmin}
         src={portadaHome?.url || portada.src}
-        moreButtonLink='search/'
+        moreButtonLink={link1?.description}
+        nameLink='link1'
       />
       <div
         style={{
@@ -180,13 +186,16 @@ export const Home: FC<{
           name='nuevo1'
           isAdmin={isAdmin}
           src={portadaNuevo1?.url || homePic.src}
+          moreButtonLink={link2?.description}
+          nameLink='link2'
         />
         <HomeHalf
           name='nuevo2'
           isAdmin={isAdmin}
           src={portadaNuevo2?.url || homeProduct.src}
-          moreButtonLink={'/search"'}
+          moreButtonLink={link3?.description}
           title={<HomeTitleHalf>ACERO INOXIDABLE</HomeTitleHalf>}
+          nameLink='link3'
         />
       </div>
       <div
@@ -223,14 +232,17 @@ export const Home: FC<{
           name='piercing1'
           isAdmin={isAdmin}
           src={portadaPiercing1?.url || homeEnvio.src}
+          moreButtonLink={link4?.description}
           title={<HomeTitleHalf>ENVÍO GRATIS</HomeTitleHalf>}
+          nameLink='link4'
         />
         <HomeHalf
           name='piercing2'
           isAdmin={isAdmin}
           src={portadaPiercing2?.url || homeHuggie.src}
-          moreButtonLink={'/search"'}
+          moreButtonLink={link5?.description}
           title={<HomeTitleHalf>HUGGIES</HomeTitleHalf>}
+          nameLink='link5'
         />
       </div>
       <div
@@ -522,7 +534,7 @@ export const Home: FC<{
 
 export const getStaticProps = async () => {
   const images = await imagesHome.find().toArray()
-  const answers = await descriptions.find({ name: { $in: ['descripcion1', 'descripcion2', 'descripcion3', 'descripcion4'] } }).toArray()
+  const answers = await descriptions.find({ name: { $in: ['descripcion1', 'descripcion2', 'descripcion3', 'descripcion4', 'link1', 'link2', 'link3', 'link4', 'link5'] } }).toArray()
   return {
     props: {
       images: images.map(image => ({

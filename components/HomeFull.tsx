@@ -8,13 +8,15 @@ import { ModalClose } from "./ModalClose"
 import css from './Layout.module.css'
 import Image from "next/image"
 import picture from '../public/picture.svg'
+import { ModalTextArea } from "./ModalTextArea"
 
 export const HomeFull: FC<{
   src: string
   moreButtonLink?: string
   name: HomeNames
   isAdmin?: boolean
-}> = ({ src, moreButtonLink, name, isAdmin }) => {
+  nameLink: string
+}> = ({ src, moreButtonLink, name, isAdmin, nameLink }) => {
   const [showImageModal, setShowImageModal] = useState(false)
   const updateHome = trpc.updateHome.useMutation({
     onSuccess: () => {
@@ -28,6 +30,15 @@ export const HomeFull: FC<{
   })
   const signedUrl = trpc.signedUrl.useMutation()
   const [newURL, setNewURL] = useState('')
+  const [form, setForm] = useState({ name: '', description: '' })
+  const addOrEditDescription = trpc.addOrEditDescription.useMutation({
+    onSuccess: () => {
+      window.location.reload()
+    },
+    onError: (e) => {
+      toast.error(e.message)
+    }
+  })
   return <div
     style={{
       backgroundImage: `url(${src})`,
@@ -41,6 +52,41 @@ export const HomeFull: FC<{
       position: 'relative',
     }}
   >
+    {form.name ? <Modal onClose={() => {
+      setForm({ name: '', description: '' })
+    }}>
+      <ModalClose
+        onClose={() => {
+          setForm({ name: '', description: '' })
+        }}
+        title={"Cambiar Link"}
+      >
+        <form className={css["auth-form"]}>
+          <div style={{ marginLeft: 20 }}>
+            <ModalTextArea
+              id="description"
+              label="Descripción"
+              required
+              name="description"
+              value={form.description}
+              onChange={(e) => {
+                setForm(state => ({ ...state, [e.target.name]: e.target.value }))
+              }}
+            />
+          </div>
+          <button
+            className={css["fourb-button"]}
+            onClick={(e) => {
+              e.preventDefault()
+              addOrEditDescription.mutate(form)
+            }}
+            type="submit"
+          >
+            Actualizar
+          </button>
+        </form>
+      </ModalClose>
+    </Modal> : null}
     {showImageModal ? <Modal onClose={() => {
       setShowImageModal(false)
     }}>
@@ -105,6 +151,24 @@ export const HomeFull: FC<{
       }}
     >
       <Image src={picture} alt="" height={51} width={27} />
+    </button> : null}
+    {isAdmin ? <button
+      className='fourb-button'
+      style={{
+        position: 'absolute',
+        top: 60,
+        right: 0,
+        background: 'white',
+        border: 'none',
+        cursor: 'pointer',
+        margin: '10px',
+        color: 'black',
+      }}
+      onClick={() => {
+        setForm({ name: nameLink, description: moreButtonLink ?? ''})
+      }}
+    >
+        Editar link
     </button> : null}
     {moreButtonLink ? <Link
       href={moreButtonLink}
