@@ -476,11 +476,14 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                     <Link href={"/refunds"}>
                         <InformationText>Cambios y devoluciones</InformationText>
                     </Link>
-                    <InformationText>Tallas</InformationText>
+                    {/*<InformationText>Tallas</InformationText>
                     <InformationText>Cuidados y limpieza</InformationText>
-                    <InformationText>Mayoreo</InformationText>
+                    <InformationText>Mayoreo</InformationText>*/}
                     <Link href={'/privacy-policy'}>
                         <InformationText>Aviso de privacidad</InformationText>
+                    </Link>
+                    <Link href={'/terms-and-conditions'}>
+                        <InformationText>Términos y condiciones</InformationText>
                     </Link>
                 </div>
                 <div

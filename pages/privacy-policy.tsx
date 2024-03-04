@@ -39,11 +39,6 @@ export const PrivacyPolicy: FC = () => {
         <p>Hosting: <a title="Shopify" href="https://vercel.com/legal/privacy-policy">Vercel.</a></p>
         <p>Proveedor envio mails: <a href="https://mailchimp.com/legal/privacy">SendGrid</a></p>
         <p>Pagos: <a href="https://www.conekta.com/legal/privacy">Conekta</a></p>
-        <p><strong>ACEPTACIÓN DE LOS TÉRMINOS.</strong></p>
-        <p>Esta declaración de Confidencialidad / Privacidad está sujeta a los términos y condiciones de <strong>FOURB</strong>&nbsp;lo cual constituye un acuerdo legal entre el usuario y <strong>FOURB</strong>&nbsp;o la o las empresas que se hayan contratado para la operación del sitio fourb.mx</p>
-        <p><strong>FOURB</strong>&nbsp;se reserva el derecho a modificar esta Política de Privacidad de acuerdo con la legislación aplicable en cada momento.</p>
-        <p>Si el usuario utiliza los servicios de <strong>FOURB</strong>&nbsp;en cualquiera de sus sitios, significa que ha leído, entendido y acordado los términos antes expuestos. Si no está de acuerdo con ellos, el usuario no deberá proporcionar ninguna información personal, ni utilizar los servicios de los sitios de&nbsp;<strong>FOURB.</strong></p>
-        <p><strong>Fecha de actualización: 24 Febrero 2024</strong></p>
     </div>
 }
 

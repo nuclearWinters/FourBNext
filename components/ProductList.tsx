@@ -14,7 +14,7 @@ export const ProductList: FC<{
             option => option.values[0].id
         )
         : []
-    const variantIndex = product.use_variants
+    const variantIndex = product.use_variants && product.variants.length > 1
         ? product.variants.findIndex(variant => variant.combination.every(combination => {
             return selectedOption.includes(combination.id)
         }))
