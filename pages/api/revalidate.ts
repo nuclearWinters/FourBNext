@@ -9,8 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else {
             await res.revalidate("/")
             await res.revalidate("/refunds")
-            //await res.revalidate("/shipments")
-            //await res.revalidate("/privacy-policy")
+            await res.revalidate("/shipments")
             return res.json({ revalidated: true }) 
         }
     } catch (err) {

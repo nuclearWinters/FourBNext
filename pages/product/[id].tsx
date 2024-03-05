@@ -192,7 +192,7 @@ export async function getStaticPaths() {
     const paths = products.map((product) => ({
         params: { id: product._id.toHexString() },
     }))
-    return { paths, fallback: false }
+    return { paths, fallback: 'blocking' }
 }
 
 export const getStaticProps = async ({ params }: { params: { id: string } }) => {
