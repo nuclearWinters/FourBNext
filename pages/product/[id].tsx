@@ -88,6 +88,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                 </h1>
                 {product.use_variants && variant.available < 10 ? <div className={css.qtyWarning}>{variant.available === 0 ? "AGOTADOS" : "POCOS DISPONIBLES"}</div> : null}
                 <div className={css.code}>SKU: {variant.sku}</div>
+                <div className={css.code}>Descripción: {product.description}</div>
                 <div className={css.price}>
                     <span className={variant.use_discount ? css.originalPrice : ""}>${(variant.price / 100).toFixed(2)} MXN</span>
                     {variant.use_discount ? <><span className={css.discount}>${(variant.discount_price / 100).toFixed(2)} MXN</span><span className={css.oferta}>OFERTA</span></> : null}
