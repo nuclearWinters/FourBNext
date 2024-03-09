@@ -321,7 +321,7 @@ export const Home: FC<{
           {[
             {
               title: 'COLLARES',
-              href: '/search?tag=collares',
+              href: '/search?tag=collar',
               img: <Image src={portadaCollares?.url || collares} alt='' height={245} width={245} style={{
                 aspectRatio: 'none',
                 height: 245,
@@ -331,7 +331,7 @@ export const Home: FC<{
             },
             {
               title: 'ANILLOS',
-              href: '/search?tag=anillos',
+              href: '/search?tag=anillo',
               img: <Image src={portadaAnillos?.url || anillos} alt='' height={245} width={245} style={{
                 aspectRatio: 'none',
                 height: 245,
@@ -341,7 +341,7 @@ export const Home: FC<{
             },
             {
               title: 'PULSERAS',
-              href: '/search?tag=pulseras',
+              href: '/search?tag=pulsera',
               img: <Image src={portadaPulseras?.url || pulseras} alt='' height={245} width={245} style={{
                 aspectRatio: 'none',
                 height: 245,
@@ -351,7 +351,7 @@ export const Home: FC<{
             },
             {
               title: 'ARETES',
-              href: '/search?tag=aretes',
+              href: '/search?tag=arete',
               img: <Image src={portadaAretes?.url || aretes} alt='' height={245} width={245} style={{
                 aspectRatio: 'none',
                 height: 245,
