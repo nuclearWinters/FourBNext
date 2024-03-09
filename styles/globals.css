@@ -403,8 +403,13 @@ a.fourb-button {
 table.tallas, .tallas th, .tallas td {
   border: 1px solid black !important;
   padding: 5px;
-  font-size: 20px;
+  font-size: 16px;
   text-align: center;
+  vertical-align: middle;
+}
+
+.tallas th {
+  font-size: 10px;
 }
 
 .tallas tr:nth-child(even) {background-color: #f2f2f2;}

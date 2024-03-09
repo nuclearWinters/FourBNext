@@ -99,32 +99,44 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                         </ul>
                         <table className="tallas">
                             <tr>
-                                <th>TALLA</th>
                                 <th>DIÁMETRO</th>
+                                <th>CIRCUNFERENCIA</th>
+                                <th>TALLA FOURB</th>
                             </tr>
                             <tr>
-                                <td>5</td>
                                 <td>1.56 cm</td>
+                                <td></td>
+                                <td>5</td>
                             </tr>
                             <tr>
-                                <td>6</td>
                                 <td>1.65 cm</td>
+                                <td>5.5 cm</td>
+                                <td>6</td>
                             </tr>
                             <tr>
+                                <td>1.79 cm</td>
+                                <td>6 cm</td>
                                 <td>7</td>
-                                <td>1.73 cm</td>
                             </tr>
                             <tr>
-                                <td>8</td>
                                 <td>1.82 cm</td>
+                                <td>6.2 cm</td>
+                                <td>8</td>
                             </tr>
                             <tr>
-                                <td>9</td>
                                 <td>1.89 cm</td>
+                                <td></td>
+                                <td>9</td>
                             </tr>
                             <tr>
+                                <td>1.92 cm</td>
+                                <td></td>
                                 <td>10</td>
-                                <td>1.98 cm</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td>11</td>
                             </tr>
                         </table>
                     </div>
