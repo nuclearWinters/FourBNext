@@ -2265,7 +2265,8 @@ export const appRouter = router({
                 'nuevo3',
                 'descuentos',
                 'insta1',
-                'insta2'
+                'insta2',
+                'piercing3'
             ]),
             url: z.string().min(1),
         }))

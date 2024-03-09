@@ -112,7 +112,8 @@ export type HomeNames =
     'nuevo3' |
     'descuentos' |
     'insta1' |
-    'insta2'
+    'insta2' |
+    'piercing3'
 
 export interface ImagesDBMongo {
     _id?: ObjectId;
