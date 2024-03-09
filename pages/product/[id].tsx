@@ -9,6 +9,8 @@ import { InputNumberCart } from "../../components/InputNumberCart";
 import Head from "next/head";
 import Script from "next/script";
 import { toast } from "react-toastify";
+import { Modal } from "../../components/Modal";
+import { ModalClose } from "../../components/ModalClose";
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -52,6 +54,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
     const variant = product.variants[variantIndex]
     const disabled = variant.available === 0
     const variantName = variant.combination.map(combination => combination.name).join(" / ")
+    const [showTallaModal, setShowTallaModal] = useState(false)
     return <div className={css.productContainer} style={{ flex: 1, flexDirection: 'column' }}>
         <Head>
             <title>{title}</title>
@@ -78,6 +81,56 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
             }}
         >
         </Script>
+        {showTallaModal ? <Modal onClose={() => {
+            setShowTallaModal(false)
+        }}>
+            <ModalClose
+                onClose={() => {
+                    setShowTallaModal(false)
+                }}
+                title={"¿Cuál es mi talla?"}
+            >
+                <form className={css["auth-form"]}>
+                    <div style={{ marginLeft: 20, display: 'flex', flexDirection: 'column' }}>
+                        <ul style={{ marginTop: 20, marginBottom: 20, fontSize: 22, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <li style={{ listStyleType: 'decimal' }}>Selecciona el anillo que te quede bien en el dedo que deseas.</li>
+                            <li style={{ listStyleType: 'decimal' }}>Mide el diametro interno del anillo (solamente la parte de adentro del anillo)</li>
+                            <li style={{ listStyleType: 'decimal' }}>Usa la tabla de abajo para comparar las medidas</li>
+                        </ul>
+                        <table className="tallas">
+                            <tr>
+                                <th>TALLA</th>
+                                <th>DIÁMETRO</th>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>1.56 cm</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>1.65 cm</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>1.73 cm</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>1.82 cm</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>1.89 cm</td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>1.98 cm</td>
+                            </tr>
+                        </table>
+                    </div>
+                </form>
+            </ModalClose>
+        </Modal> : null}
         <div className={css.productBox} style={{ flex: 1, display: 'flex' }}>
             <div style={{ flex: 4 }}>
                 <img className={css.mainImage} src={variant.imgs[0]} />
@@ -93,6 +146,15 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                     <span className={variant.use_discount ? css.originalPrice : ""}>${(variant.price / 100).toFixed(2)} MXN</span>
                     {variant.use_discount ? <><span className={css.discount}>${(variant.discount_price / 100).toFixed(2)} MXN</span><span className={css.oferta}>OFERTA</span></> : null}
                 </div>
+                <button
+                    className="link-button"
+                    style={{ background: 'transparent', border: '1px solid black', cursor: 'pointer', marginBottom: 10 }}
+                    onClick={() => {
+                        setShowTallaModal(true)
+                    }}
+                >
+                    ¿Cuál es mi talla de anillo?
+                </button>
                 <div className={css.paymentInfo}>
                     Paga personalmente en efectivo, por transferencia, en tiendas OXXO o con tarjeta de debito/credito en linea
                 </div>

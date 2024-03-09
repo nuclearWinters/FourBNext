@@ -395,3 +395,20 @@ a.fourb-button {
   padding: 4px;
   color: darkred;
 }
+
+.tallas {
+  margin: auto;
+}
+
+table.tallas, .tallas th, .tallas td {
+  border: 1px solid black !important;
+  padding: 5px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.tallas tr:nth-child(even) {background-color: #f2f2f2;}
+
+.link-button:hover {
+  opacity: 0.5;
+}
