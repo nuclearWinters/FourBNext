@@ -367,7 +367,7 @@ export const Home: FC<{
                 height: 245,
                 width: 245,
               }} />,
-              name: 'piercing1' as const
+              name: 'piercing3' as const
             },
             {
               title: 'FAVORITOS',
