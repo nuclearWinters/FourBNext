@@ -3,7 +3,7 @@ import { FC } from "react"
 export const PrivacyPolicy: FC = () => {
     return <div style={{ margin: '0px auto', maxWidth: 800, display: 'flex', flexDirection: 'column', gap: '20px', padding: '0px 30px' }}>
         <h1 style={{ margin: 'auto' }}>Política de Privacidad</h1>
-        <p><strong>FOURB</strong> es una marca registrada y titular del sitio web ubicado en el nombre de dominio <strong>fourb.mx</strong> (el “Sitio Web”) con domicilio Av Erick Paolo Martinez, Av. 4 de Marzo S/N, Parque Industrial DMS, 77039 Chetumal, Q.R., con dirección electrónica de contacto <a href="mailto:fourboutiquemx@gmail.com">fourboutiquemx@gmail.com</a></p>
+        <p><strong>FOURB</strong> es una marca registrada y titular del sitio web ubicado en el nombre de dominio <strong>fourb.mx</strong> (el “Sitio Web”) con domicilio Av insurgentes S/N , col emancipación Infonavit, 77084, Chetumal, Quintana Roo, con dirección electrónica de contacto <a href="mailto:fourboutiquemx@gmail.com">fourboutiquemx@gmail.com</a></p>
         <p>La presente Política de Privacidad es aplicable al Sitio Web, entendiendo como tal todas las páginas y subpáginas incluidas en el mismo.</p>
         <p>Toda la información proporcionada en tus visitas a fourb.mx es estrictamente confidencial.</p>
         <p>Esta información podrá ser utilizada por nuestro servicio de logística para el tratamiento de su orden o bien para mantener la comunicación contigo.</p>
