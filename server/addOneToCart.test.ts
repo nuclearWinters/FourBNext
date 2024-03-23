@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from "./types";
+import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, SessionJWT, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import FakeTimers, { InstalledClock } from "@sinonjs/fake-timers";
@@ -88,20 +88,20 @@ describe("AddOneToCart tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const caller = appRouter.createCaller({
             req: req as any,
@@ -252,20 +252,20 @@ describe("AddOneToCart tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const caller = appRouter.createCaller({
             req: req as any,
@@ -417,20 +417,20 @@ describe("AddOneToCart tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const userData = {
             user: {
@@ -602,20 +602,20 @@ describe("AddOneToCart tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const userData = {
             user: {

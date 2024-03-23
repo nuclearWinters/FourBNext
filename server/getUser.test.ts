@@ -33,20 +33,20 @@ describe("SignInMutation tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const caller = appRouter.createCaller({ req: req as any, res: res as any, users, sessionData } as ContextLocals)
         const response = await caller.getUser()
@@ -120,7 +120,7 @@ describe("SignInMutation tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
+        const sessionData : SessionJWT = {
             email: null,
             cart_id: session_cart_id.toHexString(),
             name: null,

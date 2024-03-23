@@ -14,9 +14,6 @@ export default function Payment() {
     const checkoutId = cart.data?.checkout_id
     const isFetching = cart.isFetching
     const confirmationPhase = trpc.confirmationPhase.useMutation({
-        onSuccess: () => {
-            toast.success('Carritos pagado correctamente.')
-        },
         onError: (e) => {
             toast.error(e.message)
         }
@@ -30,9 +27,15 @@ export default function Payment() {
             };
             const callbacks = {
                 onFinalizePayment: async (info: any) => {
-                    confirmationPhase.mutate({
-                        type: info?.charge?.payment_method?.type
+                    const type = info?.charge?.payment_method?.type
+                    await confirmationPhase.mutateAsync({
+                        type,
                     })
+                    if (type === "card") {
+                        toast.success('Carrito pagado correctamente.')
+                    } else {
+                        toast.success('Esperando pago.')
+                    }
                 },
                 onErrorPayment: () => {
                     toast.error('Error')

@@ -173,7 +173,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                 {product.use_variants ? product.options.map((option, idxOption) => {
                     return <div key={option.id}>
                         <div>{option.name}</div>
-                        <div style={{ marginBottom: 10, display: 'flex' }}>
+                        <div style={{ marginBottom: 10, display: 'flex', flexWrap: 'wrap' }}>
                             {option.values.map(value => {
                                 return option.type === "color" ? (
                                     <>

@@ -46,20 +46,20 @@ describe("RegisterMutation tests", () => {
         const is_admin = false
         const phone_prefix = '+52'
         const verified_email = false
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const caller = appRouter.createCaller({ req: req as any, res: res as any, users, sessionData, itemsByCart } as ContextLocals)
         await caller.register({
@@ -111,20 +111,20 @@ describe("RegisterMutation tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         await users.insertOne({
             _id: user_id,

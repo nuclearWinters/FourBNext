@@ -108,19 +108,19 @@ export const getSessionData = (sessionToken: string): SessionJWT => {
   } catch (e) {
     const cart_id = new ObjectId()
     return {
-      name: null,
-      apellidos: null,
-      email: null,
-      cart_id: cart_id.toHexString(),
-      phone: null,
-      conekta_id: null,
-      country: null,
-      street: null,
-      neighborhood: null,
-      zip: null,
-      city: null,
-      state: null,
-      phone_prefix: null,
+      nm: null,
+      ap: null,
+      em: null,
+      ci: cart_id.toHexString(),
+      ph: null,
+      ck: null,
+      co: null,
+      st: null,
+      nh: null,
+      zp: null,
+      cy: null,
+      se: null,
+      pp: null,
     }
   }
 }
@@ -138,19 +138,19 @@ export const getSessionToken = (sessionToken: string | null): string => {
   } catch (e) {
     const cart_id = new ObjectId()
     const session: SessionJWT = {
-      name: null,
-      apellidos: null,
-      email: null,
-      cart_id: cart_id.toHexString(),
-      phone: null,
-      conekta_id: null,
-      country: null,
-      street: null,
-      neighborhood: null,
-      zip: null,
-      city: null,
-      state: null,
-      phone_prefix: null,
+      nm: null,
+      ap: null,
+      em: null,
+      ci: cart_id.toHexString(),
+      ph: null,
+      ck: null,
+      co: null,
+      st: null,
+      nh: null,
+      zp: null,
+      cy: null,
+      se: null,
+      pp: null,
     }
     return sessionToBase64(session)
   }

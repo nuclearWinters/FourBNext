@@ -113,29 +113,29 @@ export const appRouter = router({
                 const session = ctx.sessionData
                 return {
                     _id: "",
-                    email: session.email || "",
+                    email: session.em || "",
                     password: undefined,
-                    cart_id: session.cart_id,
-                    name: session.name || "",
-                    apellidos: session.apellidos || "",
-                    phone: session.phone || "",
-                    conekta_id: session.conekta_id || "",
+                    cart_id: session.ci,
+                    name: session.nm || "",
+                    apellidos: session.ap || "",
+                    phone: session.ph || "",
+                    conekta_id: session.ck || "",
                     default_address: "",
                     addresses: [{
                         _id: "",
                         full_address: "",
-                        country: session.country || "",
-                        street: session.street || "",
-                        neighborhood: session.neighborhood || "",
-                        zip: session.zip || "",
-                        city: session.city || "",
-                        state: session.state || "",
-                        phone: session.phone || "",
-                        phone_prefix: session.phone_prefix || "",
-                        name: session.name || "",
-                        apellidos: session.apellidos || "",
+                        country: session.co || "",
+                        street: session.st || "",
+                        neighborhood: session.nh || "",
+                        zip: session.zp || "",
+                        city: session.cy || "",
+                        state: session.se || "",
+                        phone: session.ph || "",
+                        phone_prefix: session.pp || "",
+                        name: session.nm || "",
+                        apellidos: session.ap || "",
                     }],
-                    phone_prefix: session.phone_prefix || "",
+                    phone_prefix: session.pp || "",
                     is_admin: false,
                     verified_email: false,
                 };
@@ -157,7 +157,7 @@ export const appRouter = router({
                 //mover items en el carrito anonimo al carrito del usuario
                 await itemsByCart.updateMany(
                     {
-                        cart_id: new ObjectId(sessionData.cart_id)
+                        cart_id: new ObjectId(sessionData.ci)
                     },
                     {
                         $set: {
@@ -284,7 +284,7 @@ export const appRouter = router({
                 const phonePrefix = input.phonePrefix
                 const phone = input.phone
                 const { users, res, sessionData } = ctx
-                const cart_id = new ObjectId(sessionData.cart_id);
+                const cart_id = new ObjectId(sessionData.ci);
                 const user_id = new ObjectId();
                 const user = await users.findOne({ email });
                 if (user) throw new Error("El email ya esta siendo usado.");
@@ -508,7 +508,7 @@ export const appRouter = router({
                 const { inventory, variantInventory, itemsByCart, cartsByUser, sessionData, userData } = ctx
                 const product_variant_id = input.product_variant_id
                 const qty = input.qty
-                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 /* ---- Restar del inventario ---- */
                 const product_variant_oid = new ObjectId(product_variant_id)
                 if (qty === 0) {
@@ -611,7 +611,7 @@ export const appRouter = router({
                             pay_in_cash: false,
                             user_id: userData?.user._id ? new ObjectId(userData?.user._id) : null,
                             status: 'waiting',
-                            email: userData?.user.email ?? sessionData.email,
+                            email: userData?.user.email ?? sessionData.em,
                             order_id: null,
                             sent: false,
                             delivered: false,
@@ -645,7 +645,7 @@ export const appRouter = router({
         .query(async ({ ctx }): Promise<ItemsByCartTRPC[]> => {
             try {
                 const { itemsByCart, userData, sessionData } = ctx
-                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 const itemsInCart = await itemsByCart.find({ cart_id: cart_oid }).toArray()
                 return itemsInCart.map(item => ({
                     ...item,
@@ -679,7 +679,7 @@ export const appRouter = router({
                 const item_by_cart_id = input.item_by_cart_id
                 const product_variant_id = input.product_variant_id
                 const qty = input.qty || 0
-                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 const product_variant_oid = new ObjectId(product_variant_id)
                 const item_by_cart_oid = new ObjectId(item_by_cart_id)
                 if (qty <= 0) {
@@ -767,7 +767,7 @@ export const appRouter = router({
                             pay_in_cash: false,
                             user_id: userData?.user._id ? new ObjectId(userData?.user._id) : null,
                             status: 'waiting',
-                            email: userData?.user.email ?? sessionData.email,
+                            email: userData?.user.email ?? sessionData.em,
                             order_id: null,
                             sent: false,
                             delivered: false,
@@ -914,7 +914,7 @@ export const appRouter = router({
         }> => {
             try {
                 const { itemsByCart, users, userData, sessionData, res, cartsByUser } = ctx
-                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 if (input.delivery === "store") {
                     const { name, apellidos, phone, phone_prefix, payment_method, email } = input
                     if (payment_method === "cash") {
@@ -988,12 +988,12 @@ export const appRouter = router({
                         }
                         const session = sessionToBase64({
                             ...sessionData,
-                            email,
-                            phone,
-                            phone_prefix,
-                            apellidos,
-                            name,
-                            ...(userData ? {} : { cart_id: new_cart_id.toHexString() }),
+                            em: email,
+                            ph: phone,
+                            pp: phone_prefix,
+                            ap: apellidos,
+                            nm: name,
+                            ...(userData ? {} : { ci: new_cart_id.toHexString() }),
                         })
                         res.setHeader("Session-Token", session)
                         await sgMail.send({
@@ -1053,15 +1053,15 @@ export const appRouter = router({
                             if (!email) {
                                 throw new Error("Email is required and must be a string")
                             }
-                            const conekta_id = sessionData.conekta_id ?? (await customerClient.createCustomer({ phone, name: `${name} ${apellidos}`, email })).data.id
+                            const conekta_id = sessionData.ci ?? (await customerClient.createCustomer({ phone, name: `${name} ${apellidos}`, email })).data.id
                             const session = sessionToBase64({
                                 ...sessionData,
-                                conekta_id,
-                                phone,
-                                name,
-                                apellidos,
-                                email,
-                                phone_prefix
+                                ci: conekta_id,
+                                ph: phone,
+                                nm: name,
+                                ap: apellidos,
+                                em: email,
+                                pp: phone_prefix
                             })
                             res.setHeader("Session-Token", session)
                             const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
@@ -1177,18 +1177,18 @@ export const appRouter = router({
                         }
                         const session = sessionToBase64({
                             ...sessionData,
-                            email,
-                            country,
-                            street,
-                            neighborhood,
-                            zip,
-                            city,
-                            state,
-                            phone,
-                            name,
-                            apellidos,
-                            phone_prefix,
-                            ...(userData ? {} : { cart_id: new_cart_id.toHexString() }),
+                            em: email,
+                            co: country,
+                            st: street,
+                            nh: neighborhood,
+                            zp: zip,
+                            cy: city,
+                            se: state,
+                            ph: phone,
+                            nm: name,
+                            ap: apellidos,
+                            pp: phone_prefix,
+                            ...(userData ? {} : { ct: new_cart_id.toHexString() }),
                         })
                         res.setHeader("Session-Token", session)
                         return {
@@ -1362,21 +1362,21 @@ export const appRouter = router({
                             if (!email) {
                                 throw new Error("Email is required and must be a string")
                             }
-                            const conekta_id = sessionData.conekta_id ?? (await customerClient.createCustomer({ phone, name: `${name} ${apellidos}`, email })).data.id
+                            const conekta_id = sessionData.ck ?? (await customerClient.createCustomer({ phone, name: `${name} ${apellidos}`, email })).data.id
                             const session = sessionToBase64({
                                 ...sessionData,
-                                email,
-                                country,
-                                street,
-                                neighborhood,
-                                zip,
-                                city,
-                                state,
-                                phone,
-                                name,
-                                apellidos,
-                                phone_prefix,
-                                conekta_id,
+                                em: email,
+                                co: country,
+                                st: street,
+                                nh: neighborhood,
+                                zp: zip,
+                                cy: city,
+                                se: state,
+                                ph: phone,
+                                nm: name,
+                                ap: apellidos,
+                                pp: phone_prefix,
+                                ck: conekta_id,
                             })
                             res.setHeader("Session-Token", session)
                             const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
@@ -1459,7 +1459,7 @@ export const appRouter = router({
                 const { type } = input
                 const { users, cartsByUser, purchases, itemsByCart, sessionData, userData, res } = ctx
                 const new_cart_id = new ObjectId()
-                const previous_cart_id = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                const previous_cart_id = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 if (userData) {
                     const user_oid = new ObjectId(userData.user._id)
                     await users.updateOne(
@@ -1539,7 +1539,7 @@ export const appRouter = router({
                 } else {
                     const session = sessionToBase64({
                         ...sessionData,
-                        cart_id: new_cart_id.toHexString(),
+                        ci: new_cart_id.toHexString(),
                     })
                     res.setHeader("Session-Token", session)
                     if (type === "card") {
@@ -2226,7 +2226,7 @@ export const appRouter = router({
         .query(async ({ ctx }): Promise<CartsByUserTRPC | null> => {
             try {
                 const { userData, sessionData, cartsByUser } = ctx
-                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.cart_id)
+                const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 const cart = await cartsByUser.findOne({ _id: cart_oid })
                 return cart ? ({
                     ...cart,

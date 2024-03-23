@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from "./types";
+import { CartsByUserMongo, ContextLocals, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, SessionJWT, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import { ACCESS_TOKEN_EXP_NUMBER } from "./utils";
@@ -101,20 +101,20 @@ describe("CheckoutPhase tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const time = new Date()
         time.setMilliseconds(0)
@@ -251,20 +251,20 @@ describe("CheckoutPhase tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const time = new Date()
         time.setMilliseconds(0)
@@ -434,20 +434,20 @@ describe("CheckoutPhase tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const time = new Date()
         time.setMilliseconds(0)
@@ -476,7 +476,7 @@ describe("CheckoutPhase tests", () => {
             itemsByCart,
         } as ContextLocals)
         const response = await caller.confirmationPhase({
-            type: 'bank_transfer',
+            type: 'bankTransfer',
         })
         const cart = await cartsByUser.findOne({ _id: cart_oid })
         const allPurchases = await purchases.find({ user_id }).toArray()
@@ -572,20 +572,20 @@ describe("CheckoutPhase tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const caller = appRouter.createCaller({
             req: req as any,
@@ -671,20 +671,20 @@ describe("CheckoutPhase tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const caller = appRouter.createCaller({
             req: req as any,
@@ -804,20 +804,20 @@ describe("CheckoutPhase tests", () => {
         const { req, res } = createMocks({
             method: 'GET',
         })
-        const sessionData = {
-            email: null,
-            cart_id,
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+        const sessionData : SessionJWT = {
+            em: null,
+            ci: cart_id,
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const caller = appRouter.createCaller({
             req: req as any,
@@ -829,7 +829,7 @@ describe("CheckoutPhase tests", () => {
             itemsByCart,
         } as ContextLocals)
         const response = await caller.confirmationPhase({
-            type: 'bank_transfer',
+            type: 'bankTransfer',
         })
         const cart = await cartsByUser.findOne({ _id: cart_oid })
         const allPurchases = await purchases.find({ user_id }).toArray()

@@ -47,19 +47,32 @@ export interface AddressUserJWT {
 }
 
 export interface SessionJWT {
-    email: string | null;
-    cart_id: string;
-    name: string | null;
-    apellidos: string | null;
-    phone: string | null;
-    conekta_id: string | null;
-    country: string | null;
-    street: string | null;
-    neighborhood: string | null;
-    zip: string | null;
-    city: string | null;
-    state: string | null;
-    phone_prefix: string | null;
+    //email
+    em: string | null;
+    //cart_id
+    ci: string;
+    //name
+    nm: string | null;
+    //apellidos
+    ap: string | null;
+    //phone
+    ph: string | null;
+    //conekta_id
+    ck: string | null;
+    //country
+    co: string | null;
+    //street
+    st: string | null;
+    //neighborhood
+    nh: string | null;
+    //zip
+    zp: string | null;
+    //city
+    cy: string | null;
+    //state
+    se: string | null;
+    //phone_prefix
+    pp: string | null;
 }
 
 export interface Combination {
