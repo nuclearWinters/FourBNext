@@ -1452,7 +1452,7 @@ export const appRouter = router({
         }),
     confirmationPhase: publicProcedure
         .input(z.object({
-            type: z.enum(['card', 'cash', 'bank_transfer']),
+            type: z.enum(['card', 'cash', 'bankTransfer']),
         }))
         .mutation(async ({ ctx, input }): Promise<string> => {
             try {
