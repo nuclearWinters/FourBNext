@@ -55,6 +55,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
     const disabled = variant.available === 0
     const variantName = variant.combination.map(combination => combination.name).join(" / ")
     const [showTallaModal, setShowTallaModal] = useState(false)
+    const defaultProduct = product.variants.find(variant => variant.combination.every(combination => combination.name.includes('default')))
     return <div className={css.productContainer} style={{ flex: 1, flexDirection: 'column' }}>
         <Head>
             <title>{title}</title>
@@ -145,7 +146,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
         </Modal> : null}
         <div className={css.productBox} style={{ flex: 1, display: 'flex' }}>
             <div style={{ flex: 4 }}>
-                <img className={css.mainImage} src={variant.imgs[0]} />
+                <img className={css.mainImage} src={variant.imgs?.[0] ?? defaultProduct?.imgs?.[0]} />
             </div>
             <div className={css.infoBox}>
                 <h1 className={css.name}>
