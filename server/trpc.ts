@@ -2193,8 +2193,9 @@ export const appRouter = router({
                     }
                 )
                 if (create_new_variants) {
-                    const nextVariants = new_variants.map(variant => ({
+                    const nextVariants = newVariants.map(({ inventory_variant_oid, ...variant }) => ({
                         ...variant,
+                        _id: inventory_variant_oid,
                         inventory_id: product_oid,
                     }))
                     await variantInventory.insertMany(nextVariants)
