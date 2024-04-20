@@ -460,7 +460,7 @@ export const appRouter = router({
                     }
                 )
                 const expireDate = new Date()
-                expireDate.setDate(expireDate.getDate() + 7)
+                expireDate.setDate(expireDate.getDate() + 1)
                 //crear carrito si no existe
                 await cartsByUser.updateOne(
                     {
@@ -855,7 +855,7 @@ export const appRouter = router({
                 }
                 revalidateProduct(product._id.toHexString())
                 const expireDate = new Date()
-                expireDate.setDate(expireDate.getDate() + 7)
+                expireDate.setDate(expireDate.getDate() + 1)
                 const variant = Object.values(product.variants).find(variant => variant.inventory_variant_oid.toHexString() === product_variant_id)
                 if (!variant) {
                     throw new Error('Variant not found.')
@@ -1046,7 +1046,7 @@ export const appRouter = router({
                 )
                 /* ---- Crear item en el carrito ---- */
                 const expireDate = new Date()
-                expireDate.setDate(expireDate.getDate() + 7)
+                expireDate.setDate(expireDate.getDate() + 1)
                 /* ---- Actualizar carrito ---- */
                 await cartsByUser.updateOne(
                     {

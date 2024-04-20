@@ -17,7 +17,7 @@ export const imagesHome = db.collection<ImagesDBMongo>("images")
 export const descriptions = db.collection<DescriptionsDBMongo>("descriptions")
 
 const job = new CronJob(
-    '00 00 00 * * *',
+    '00 00 03 * * *',
     async () => {
         const carts = await cartsByUser.find({ expire_date: { $ne: null } }).toArray()
         const now = (new Date).getTime()

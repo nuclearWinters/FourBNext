@@ -138,7 +138,7 @@ describe("UpdateOneCart tests", () => {
             delivered: false,
             delivery: null,
             email: null,
-            expire_date: new Date('2019-01-08T00:00:00.000Z'),
+            expire_date: new Date('2019-01-02T00:00:00.000Z'),
             name: null,
             order_id: null,
             pay_in_cash: false,

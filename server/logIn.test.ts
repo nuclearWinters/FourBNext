@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { CartsByUserMongo, ContextLocals, ItemsByCartMongo, PurchasesMongo, UserMongo } from "./types";
+import { CartsByUserMongo, ContextLocals, ItemsByCartMongo, PurchasesMongo, SessionJWT, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import bcrypt from "bcryptjs"
@@ -281,7 +281,7 @@ describe("SignInMutation tests", () => {
             delivered: false,
             delivery: null,
             email: null,
-            expire_date: addDays(new Date(), 7),
+            expire_date: addDays(new Date(), 1),
             name: null,
             order_id: null,
             pay_in_cash: false,
@@ -446,7 +446,7 @@ describe("SignInMutation tests", () => {
             delivered: false,
             delivery: null,
             email,
-            expire_date: addDays(new Date(), 7),
+            expire_date: addDays(new Date(), 1),
             name: null,
             order_id: null,
             pay_in_cash: false,
