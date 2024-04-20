@@ -464,7 +464,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
             >
                 <div
                     style={{
-                        marginLeft: isMobile ? '40px' : ''
+                        marginLeft: isMobile ? '40px' : 'unset'
                     }}
                 >
                     <InformationTitle>
@@ -488,7 +488,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                 </div>
                 <div
                     style={{
-                        marginLeft: isMobile ? '40px' : ''
+                        marginLeft: isMobile ? '40px' : 'unset'
                     }}
                 >
                     <InformationTitle>
@@ -501,7 +501,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                 </div>
                 <div
                     style={{
-                        marginLeft: isMobile ? '40px' : ''
+                        marginLeft: isMobile ? '40px' : 'unset'
                     }}
                 >
                     <InformationTitle>

@@ -4,7 +4,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "jest --bail"
+    "test": "jest --bail",
+    "script": "node ./server/script.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.400.0",

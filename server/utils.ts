@@ -1,6 +1,6 @@
 
 import jsonwebtoken, { SignOptions } from 'jsonwebtoken'
-import { DecodeJWT, SessionJWT, UserJWT } from '../server/types';
+import { DecodeJWT, OldSessionJWT, SessionJWT, UserJWT } from '../server/types';
 import { ObjectId } from 'mongodb';
 
 export const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || ""
@@ -95,6 +95,25 @@ export const sessionToBase64 = (value: SessionJWT) => {
   return Buffer.from(JSON.stringify(value)).toString('base64')
 }
 
+export const oldSessionToBase64 = (value: OldSessionJWT) => {
+  const newSession: SessionJWT = {
+    nm: value.name,
+    ap: value.apellidos,
+    em: value.email,
+    ci: value.cart_id,
+    ph: value.phone,
+    ck: value.conekta_id,
+    co: value.country,
+    st: value.street,
+    nh: value.neighborhood,
+    zp: value.zip,
+    cy: value.city,
+    se: value.state,
+    pp: value.phone_prefix,
+  }
+  return Buffer.from(JSON.stringify(newSession)).toString('base64')
+}
+
 export const getSessionData = (sessionToken: string): SessionJWT => {
   try {
     if (!sessionToken) {
@@ -131,6 +150,9 @@ export const getSessionToken = (sessionToken: string | null): string => {
       throw new Error("No session token")
     }
     const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString('utf-8'))
+    if (!session.ci) {
+      return oldSessionToBase64(session)
+    }
     if (session) {
       return sessionToken
     }

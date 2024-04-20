@@ -1,7 +1,5 @@
 import Link from 'next/link';
-import { trpc } from '../utils/config';
 import { FC } from 'react';
-import { toast } from 'react-toastify';
 import { InventoryTRPC } from '../pages/product/[id]';
 
 export const ProductList: FC<{
@@ -21,14 +19,6 @@ export const ProductList: FC<{
         : product.variants.findIndex(variant => variant.combination.every(combination => combination.name.includes('default')))
     const variant = product.variants[variantIndex]
     const variantName = variant.combination.map(combination => combination.name).join(" / ")
-    const addOneToCart = trpc.addOneToCart.useMutation({
-        onSuccess: () => {
-            toast.success("Añadido al carrito")
-        },
-        onError: (err) => {
-            toast.error(err.message)
-        }
-    })
     return <div className="product-card">
         <Link href={`/product/${product._id}`}>
             <img style={{ display: "flex" }} className="img-product" src={variant.imgs[0]} />

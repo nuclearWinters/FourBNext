@@ -5,7 +5,7 @@ import { MONGO_DB, getSessionData, getSessionToken, getTokenData, revalidateProd
 import { CartsByUserMongo, DescriptionsDBMongo, ImagesDBMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from '../../../server/types';
 import { CronJob } from 'cron';
 
-const client = await MongoClient.connect(MONGO_DB || "mongodb://127.0.0.1:27017", {})
+const client = await MongoClient.connect(MONGO_DB || "mongodb://mongo-fourb:27017", {})
 const db = client.db("fourb");
 export const users = db.collection<UserMongo>("users")
 export const cartsByUser = db.collection<CartsByUserMongo>("carts_by_user")
@@ -17,7 +17,7 @@ export const imagesHome = db.collection<ImagesDBMongo>("images")
 export const descriptions = db.collection<DescriptionsDBMongo>("descriptions")
 
 const job = new CronJob(
-    '00 00 03 * * *',
+    '00 00 00 * * *',
     async () => {
         const carts = await cartsByUser.find({ expire_date: { $ne: null } }).toArray()
         const now = (new Date).getTime()

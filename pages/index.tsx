@@ -407,6 +407,7 @@ export const Home: FC<{
             },
           ].map(collection => {
             return <HomeMore
+              key={collection.name}
               {...collection}
               isAdmin={isAdmin}
             />

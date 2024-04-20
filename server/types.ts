@@ -75,6 +75,22 @@ export interface SessionJWT {
     pp: string | null;
 }
 
+export interface OldSessionJWT {
+    email: string | null;
+    cart_id: string;
+    name: string | null;
+    apellidos: string | null;
+    phone: string | null;
+    conekta_id: string | null;
+    country: string | null;
+    street: string | null;
+    neighborhood: string | null;
+    zip: string | null;
+    city: string | null;
+    state: string | null;
+    phone_prefix: string | null;
+}
+
 export interface Combination {
     id: string
     name: string
