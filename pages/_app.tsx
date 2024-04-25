@@ -13,7 +13,7 @@ const MyApp: FC<{ Component: FC<any>, pageProps: any }> = ({ Component, pageProp
         <meta property="description" content="Boutique de joyería fina en oro laminado y acero inoxidable" />
         <meta property="og:description" content="Boutique de joyería fina en oro laminado y acero inoxidable" />
         <meta property="og:title" content="FOURB" />
-        <meta property="og:image" content={fourblogo.src} />
+        <meta property="og:image" content={`https://${VIRTUAL_HOST}${fourblogo.src}`} />
         <meta property="og:image:type" content="image/jpg" />
         <meta property="og:image:width" content="300" />
         <meta property="og:image:height" content="300" />
