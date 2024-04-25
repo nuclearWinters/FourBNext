@@ -10,12 +10,14 @@ const MyApp: FC<{ Component: FC<any>, pageProps: any }> = ({ Component, pageProp
   return (
     <>
       <Head>
-        <meta name="description" content="Boutique de joyería fina en oro laminado y acero inoxidable" />
-        <meta name="og:description" content="Boutique de joyería fina en oro laminado y acero inoxidable" />
-        <meta name="og:title" content="FOURB" />
-        <meta name="og:image" content={fourblogo.src} />
-        <meta name="og:image:width" content="400" />
-        <meta name="og:url" content={`https://${VIRTUAL_HOST}`} />
+        <meta property="description" content="Boutique de joyería fina en oro laminado y acero inoxidable" />
+        <meta property="og:description" content="Boutique de joyería fina en oro laminado y acero inoxidable" />
+        <meta property="og:title" content="FOURB" />
+        <meta property="og:image" content={fourblogo.src} />
+        <meta property="og:image:type" content="image/jpg" />
+        <meta property="og:image:width" content="300" />
+        <meta property="og:image:height" content="300" />
+        <meta property="og:url" content={`https://${VIRTUAL_HOST}`} />
       </Head>
       <Script type="module" crossOrigin="anonymous" src="https://assets.conekta.com/component/2.0.2/assets/component.min.js"></Script>
       <link rel="stylesheet" href="https://assets.conekta.com/component/2.0.2/assets/style.css"></link>
