@@ -18,6 +18,7 @@ const MyApp: FC<{ Component: FC<any>, pageProps: any }> = ({ Component, pageProp
         <meta property="og:image:width" content="300" />
         <meta property="og:image:height" content="300" />
         <meta property="og:url" content={`https://${VIRTUAL_HOST}`} />
+        <meta property="og:type" content="website" />
       </Head>
       <Script type="module" crossOrigin="anonymous" src="https://assets.conekta.com/component/2.0.2/assets/component.min.js"></Script>
       <link rel="stylesheet" href="https://assets.conekta.com/component/2.0.2/assets/style.css"></link>

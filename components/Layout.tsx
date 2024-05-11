@@ -343,6 +343,51 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                             {logged && !isAdmin ? <Link href={'/history'} className={css["header-button-top"]} onClick={() => {
                                 setShowMobileMenu(false)
                             }}>Historial</Link> : null}
+                            {[
+                                {
+                                    tag: '',
+                                    text: 'NUEVA COLECCIÓN',
+                                },
+                                {
+                                    tag: 'collar',
+                                    text: 'COLLARES',
+                                },
+                                {
+                                    tag: 'anillo',
+                                    text: 'ANILLOS',
+                                },
+                                {
+                                    tag: 'pulsera',
+                                    text: 'PULSERAS',
+                                },
+                                {
+                                    tag: 'piercing',
+                                    text: 'PIERCING',
+                                },
+                                {
+                                    tag: 'arete',
+                                    text: 'ARETES',
+                                },
+                                {
+                                    tag: 'waterproof',
+                                    text: 'WATERPROOF',
+                                },
+                                {
+                                    tag: 'discounts',
+                                    text: 'DESCUENTOS',
+                                },
+                            ].map(link =>
+                                <Link
+                                    key={link.tag}
+                                    href={`/search${link.tag ? link.tag === "discounts" ? `?discounts=true` : `?tag=${link.tag}` : ''}`}
+                                    className={css["header-button-top"]}
+                                    onClick={() => {
+                                        setShowMobileMenu(false)
+                                    }}
+                                >
+                                    {link.text}
+                                </Link>
+                            )}
                             {logged ? <button className={css["header-button-top"]} onClick={() => {
                                 logOut.mutate()
                                 setShowMobileMenu(false)
