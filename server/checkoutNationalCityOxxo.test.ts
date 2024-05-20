@@ -175,12 +175,13 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             oxxo_info: {
-                amount: "",
+                amount: "$10 MXN",
                 expire_at: 1546560000000,
-                reference: "",
+                reference: "12345678980",
+                barcode_url: "https://barcode.com",
             }
         })
-        expect(response.cart_id).not.toBe(session_cart_id)
+        expect(response.cart_id).toBe(session_cart_id)
         const { ci, ...new_session_data } = getSessionData(res.getHeader("session-token") as string || "")
         expect(ci).not.toBe(session_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
@@ -276,9 +277,10 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             oxxo_info: {
-                amount: "",
+                amount: "$10 MXN",
                 expire_at: 1546560000000,
-                reference: "",
+                reference: "12345678980",
+                barcode_url: "https://barcode.com",
             },
         })
         const item_cart_oid_1 = new ObjectId()
@@ -377,12 +379,13 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             oxxo_info: {
-                amount: "",
+                amount: "$10 MXN",
                 expire_at: 1546560000000,
-                reference: "",
+                reference: "12345678980",
+                barcode_url: "https://barcode.com",
             }
         })
-        expect(response.cart_id).not.toBe(session_cart_id)
+        expect(response.cart_id).toBe(session_cart_id)
         const { ci, ...new_session_data } = getSessionData(res.getHeader("session-token") as string || "")
         expect(ci).not.toBe(session_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
@@ -433,7 +436,7 @@ describe("CheckoutPhase tests", () => {
         })
     });
 
-    it("checkoutPhase: user cart (without address id) / city or national / card", async () => {
+    it("checkoutPhase: user cart (without address id) / city or national / oxxo", async () => {
         const user_cart_oid = new ObjectId()
         const user_cart_id = user_cart_oid.toHexString()
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
@@ -625,9 +628,10 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: user_oid,
             oxxo_info: {
-                amount: "",
+                amount: "$10 MXN",
                 expire_at: 1546560000000,
-                reference: "",
+                reference: "12345678980",
+                barcode_url: "https://barcode.com",
             }
         })
         const user = await users.findOne({ _id: user_oid })
@@ -680,7 +684,7 @@ describe("CheckoutPhase tests", () => {
             street,
             zip,
         })
-        expect(response.cart_id).not.toBe(user_cart_id)
+        expect(response.cart_id).toBe(user_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
         expect(spyCreateCustomer).toHaveBeenCalledTimes(1)
         const spyCreateOrder = jest.spyOn(conektaConfig.orderClient, 'createOrder')
@@ -716,7 +720,7 @@ describe("CheckoutPhase tests", () => {
         expect(res.getHeader("session-token")).toBe(undefined)
     });
 
-    it("checkoutPhase: user cart (with address id) / city or national / card", async () => {
+    it("checkoutPhase: user cart (with address id) / city or national / oxxo", async () => {
         const user_cart_oid = new ObjectId()
         const user_cart_id = user_cart_oid.toHexString()
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user")
@@ -908,9 +912,10 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: user_oid,
             oxxo_info: {
-                amount: "",
+                amount: "$10 MXN",
                 expire_at: 1546560000000,
-                reference: "",
+                reference: "12345678980",
+                barcode_url: "https://barcode.com",
             }
         })
         const user = await users.findOne({ _id: user_oid })
@@ -948,7 +953,7 @@ describe("CheckoutPhase tests", () => {
             street,
             zip,
         })
-        expect(response.cart_id).not.toBe(user_cart_id)
+        expect(response.cart_id).toBe(user_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
         expect(spyCreateCustomer).toHaveBeenCalledTimes(1)
         const spyCreateOrder = jest.spyOn(conektaConfig.orderClient, 'createOrder')

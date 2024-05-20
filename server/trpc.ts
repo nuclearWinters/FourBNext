@@ -1717,37 +1717,35 @@ export const appRouter = router({
                             }
                         }
                     )
-                    if (type === "card") {
-                        await cartsByUser.updateOne(
-                            {
-                                _id: previous_cart_id
-                            },
-                            {
-                                $set: {
-                                    status: 'paid',
-                                    expire_date: null,
-                                }
+                    await cartsByUser.updateOne(
+                        {
+                            _id: previous_cart_id
+                        },
+                        {
+                            $set: {
+                                status: 'paid',
+                                expire_date: null,
                             }
-                        )
-                        const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
-                        const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
-                            name: product.name,
-                            product_variant_id: product.product_variant_id,
-                            qty: product.qty,
-                            price: product.price,
-                            discount_price: product.discount_price,
-                            use_discount: product.use_discount,
-                            user_id: user_oid,
-                            date: new Date(),
-                            imgs: product.imgs,
-                            sku: product.sku,
-                            product_id: product.product_id,
-                            combination: product.combination,
-                            cart_id: product.cart_id,
-                            cart_item: product,
-                        }))
-                        await purchases.insertMany(purchasedProducts)
-                    }
+                        }
+                    )
+                    const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
+                    const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
+                        name: product.name,
+                        product_variant_id: product.product_variant_id,
+                        qty: product.qty,
+                        price: product.price,
+                        discount_price: product.discount_price,
+                        use_discount: product.use_discount,
+                        user_id: user_oid,
+                        date: new Date(),
+                        imgs: product.imgs,
+                        sku: product.sku,
+                        product_id: product.product_id,
+                        combination: product.combination,
+                        cart_id: product.cart_id,
+                        cart_item: product,
+                    }))
+                    await purchases.insertMany(purchasedProducts)
                     const newAccessToken = jwt.sign(
                         {
                             user: {
@@ -1788,36 +1786,34 @@ export const appRouter = router({
                         ci: new_cart_id.toHexString(),
                     })
                     res.setHeader("Session-Token", session)
-                    if (type === "card") {
-                        await cartsByUser.updateOne(
-                            {
-                                _id: previous_cart_id
-                            },
-                            {
-                                $set: {
-                                    status: 'paid',
-                                }
+                    await cartsByUser.updateOne(
+                        {
+                            _id: previous_cart_id
+                        },
+                        {
+                            $set: {
+                                status: 'paid',
                             }
-                        )
-                        const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
-                        const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
-                            name: product.name,
-                            product_variant_id: product.product_variant_id,
-                            qty: product.qty,
-                            price: product.price,
-                            discount_price: product.discount_price,
-                            use_discount: product.use_discount,
-                            user_id: null,
-                            date: new Date(),
-                            imgs: product.imgs,
-                            sku: product.sku,
-                            combination: product.combination,
-                            product_id: product.product_id,
-                            cart_id: product.cart_id,
-                            cart_item: product,
-                        }))
-                        await purchases.insertMany(purchasedProducts)
-                    }
+                        }
+                    )
+                    const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
+                    const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
+                        name: product.name,
+                        product_variant_id: product.product_variant_id,
+                        qty: product.qty,
+                        price: product.price,
+                        discount_price: product.discount_price,
+                        use_discount: product.use_discount,
+                        user_id: null,
+                        date: new Date(),
+                        imgs: product.imgs,
+                        sku: product.sku,
+                        combination: product.combination,
+                        product_id: product.product_id,
+                        cart_id: product.cart_id,
+                        cart_item: product,
+                    }))
+                    await purchases.insertMany(purchasedProducts)
                     return new_cart_id.toHexString()
                 }
             } catch (e) {

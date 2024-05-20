@@ -164,9 +164,10 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             oxxo_info: {
-                amount: "",
                 expire_at: 1546560000000,
-                reference: "",
+                reference: "12345678980",
+                amount: "$10 MXN",
+                barcode_url: "https://barcode.com",
             },
         })
         expect(response.cart_id).toBeTruthy()
@@ -344,9 +345,10 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             oxxo_info: {
-                amount: "",
                 expire_at: 1546560000000,
-                reference: "",
+                reference: "12345678980",
+                amount: "$10 MXN",
+                barcode_url: "https://barcode.com",
             },
         })
         expect(response.cart_id).toBeTruthy()
@@ -580,9 +582,10 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: user_oid,
             oxxo_info: {
-                amount: "",
                 expire_at: 1546560000000,
-                reference: "",
+                reference: "12345678980",
+                amount: "$10 MXN",
+                barcode_url: "https://barcode.com",
             },
         })
         expect(response.cart_id).toBeTruthy()

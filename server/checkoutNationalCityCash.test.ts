@@ -173,7 +173,7 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null
         })
-        expect(response.cart_id).not.toBe(session_cart_id)
+        expect(response.cart_id).toBe(session_cart_id)
         const { ci, ...new_session_data } = getSessionData(res.getHeader("session-token") as string || "")
         expect(ci).not.toBe(session_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
@@ -436,37 +436,9 @@ describe("CheckoutPhase tests", () => {
             street,
             zip,
         })
-        expect(response.cart_id).not.toBe(user_cart_id)
+        expect(response.cart_id).toBe(user_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
         expect(spyCreateCustomer).toHaveBeenCalledTimes(0)
-        /*const spyCreateOrder = jest.spyOn(conektaConfig.orderClient, 'createOrder')
-        const productsInCart = (await itemsByCart.find(
-            {
-                cart_id: user_cart_oid
-            }
-        ).toArray()).map(({ name, qty, price }) => ({ name, quantity: qty, unit_price: price }))
-        expect(productsInCart.length).toBe(2)
-        expect(spyCreateOrder).toHaveBeenCalledWith(
-            {
-                checkout: {
-                    allowed_payment_methods: [
-                        "card",
-                    ],
-                    type: "Integration",
-                },
-                currency: "MXN",
-                customer_info: {
-                    customer_id: conekta_id,
-                },
-                shipping_lines: [
-                    {
-                        amount: 3500,
-                        carrier: "Envio",
-                    },
-                ],
-                line_items: productsInCart,
-            }
-        )*/
         expect(res.getHeader("session-token")).toBe(undefined)
     });
 })

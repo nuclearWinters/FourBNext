@@ -164,9 +164,9 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             bank_info: {
-                amount: "",
-                bank: "",
-                clabe: "",
+                amount: "$10 MXN",
+                bank: "STP",
+                clabe: "123456789012345678",
                 expire_at: 1546560000000,
             },
         })
@@ -352,9 +352,9 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             bank_info: {
-                amount: "",
-                bank: "",
-                clabe: "",
+                amount: "$10 MXN",
+                bank: "STP",
+                clabe: "123456789012345678",
                 expire_at: 1546560000000,
             },
         })
@@ -589,9 +589,9 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: user_oid,
             bank_info: {
-                amount: "",
-                bank: "",
-                clabe: "",
+                amount: "$10 MXN",
+                bank: "STP",
+                clabe: "123456789012345678",
                 expire_at: 1546560000000,
             },
         })

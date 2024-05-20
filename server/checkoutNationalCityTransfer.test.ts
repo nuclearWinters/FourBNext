@@ -175,13 +175,13 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             bank_info: {
-                amount: "",
-                bank: "",
-                clabe: "",
+                amount: "$10 MXN",
+                bank: "STP",
+                clabe: "123456789012345678",
                 expire_at: 1546560000000,
             },
         })
-        expect(response.cart_id).not.toBe(session_cart_id)
+        expect(response.cart_id).toBe(session_cart_id)
         const { ci, ...new_session_data } = getSessionData(res.getHeader("session-token") as string || "")
         expect(ci).not.toBe(session_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
@@ -277,9 +277,9 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             bank_info: {
-                amount: "",
-                bank: "",
-                clabe: "",
+                amount: "$10 MXN",
+                bank: "STP",
+                clabe: "123456789012345678",
                 expire_at: 1546560000000,
             },
         })
@@ -379,13 +379,13 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: null,
             bank_info: {
-                amount: "",
-                bank: "",
-                clabe: "",
+                amount: "$10 MXN",
+                bank: "STP",
+                clabe: "123456789012345678",
                 expire_at: 1546560000000,
             },
         })
-        expect(response.cart_id).not.toBe(session_cart_id)
+        expect(response.cart_id).toBe(session_cart_id)
         const { ci, ...new_session_data } = getSessionData(res.getHeader("session-token") as string || "")
         expect(ci).not.toBe(session_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
@@ -628,9 +628,9 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: user_oid,
             bank_info: {
-                amount: "",
-                bank: "",
-                clabe: "",
+                amount: "$10 MXN",
+                bank: "STP",
+                clabe: "123456789012345678",
                 expire_at: 1546560000000,
             },
         })
@@ -684,7 +684,7 @@ describe("CheckoutPhase tests", () => {
             street,
             zip,
         })
-        expect(response.cart_id).not.toBe(user_cart_id)
+        expect(response.cart_id).toBe(user_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
         expect(spyCreateCustomer).toHaveBeenCalledTimes(1)
         const spyCreateOrder = jest.spyOn(conektaConfig.orderClient, 'createOrder')
@@ -912,9 +912,9 @@ describe("CheckoutPhase tests", () => {
             status,
             user_id: user_oid,
             bank_info: {
-                amount: "",
-                bank: "",
-                clabe: "",
+                amount: "$10 MXN",
+                bank: "STP",
+                clabe: "123456789012345678",
                 expire_at: 1546560000000,
             },
         })
@@ -953,7 +953,7 @@ describe("CheckoutPhase tests", () => {
             street,
             zip,
         })
-        expect(response.cart_id).not.toBe(user_cart_id)
+        expect(response.cart_id).toBe(user_cart_id)
         const spyCreateCustomer = jest.spyOn(conektaConfig.customerClient, 'createCustomer')
         expect(spyCreateCustomer).toHaveBeenCalledTimes(1)
         const spyCreateOrder = jest.spyOn(conektaConfig.orderClient, 'createOrder')
