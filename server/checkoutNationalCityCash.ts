@@ -193,5 +193,5 @@ export const checkoutNationalCityCash = async ({
         })
         res.setHeader("Session-Token", session)
     }
-    return new_cart_id
+    return cart_oid.toHexString()
 }

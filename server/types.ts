@@ -226,6 +226,7 @@ export interface CartsByUserMongo {
         amount: string
         expire_at: number
         reference: string
+        barcode_url: string
     }
 }
 

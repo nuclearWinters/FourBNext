@@ -1617,6 +1617,7 @@ export const appRouter = router({
                             users,
                             res,
                             sessionData,
+                            address_id,
                         })
                         return {
                             cart_id,
@@ -2544,6 +2545,34 @@ export const appRouter = router({
             try {
                 const { userData, sessionData, cartsByUser } = ctx
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
+                const cart = await cartsByUser.findOne({ _id: cart_oid })
+                return cart ? ({
+                    ...cart,
+                    _id: cart._id.toHexString(),
+                    user_id: cart.user_id?.toHexString() ?? null,
+                    expire_date: cart.expire_date?.getTime() ?? null,
+                }) : null
+            } catch (e) {
+                if (e instanceof Error) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: e.message,
+                    });
+                }
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'An unexpected error occurred, please try again later.',
+                });
+            }
+        }),
+    getUserCartDataById: publicProcedure
+        .input(z.object({
+            cart_id: z.string().min(1),
+        }))
+        .query(async ({ ctx, input }): Promise<CartsByUserTRPC | null> => {
+            try {
+                const { cartsByUser } = ctx
+                const cart_oid = new ObjectId(input.cart_id)
                 const cart = await cartsByUser.findOne({ _id: cart_oid })
                 return cart ? ({
                     ...cart,

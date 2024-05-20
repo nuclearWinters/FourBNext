@@ -4,6 +4,10 @@ import { CustomersApi, OrdersApi } from "conekta"
 import { CartsByUserMongo, DecodeJWT, ItemsByCartMongo, SessionJWT, UserMongo } from "./types"
 import { NextApiResponse } from "next"
 import cookie from "cookie"
+import { oxxo_email } from "./oxxo_email"
+import sgMail from '@sendgrid/mail'
+import Handlebars from "handlebars"
+import { format } from "date-fns"
 
 interface CheckoutStoreOxxoTransfer {
     userData?: DecodeJWT
@@ -129,6 +133,12 @@ export const checkoutStoreOxxoTransfer = async ({
             }
         }]
     })
+    const payment_method_obj = order?.data?.charges?.data?.[0].payment_method
+    const bank = payment_method_obj?.object === "bank_transfer_payment" ? (payment_method_obj.bank || "") : ""
+    const clabe = payment_method_obj?.object === "bank_transfer_payment" ? (payment_method_obj.clabe || "") : ""
+    const amount = "$" + ((order?.data?.amount || 0) / 100) + " " + order.data.currency
+    const reference = payment_method_obj?.object === "cash_payment" ? (payment_method_obj.reference || "") : ""
+    const barcode_url = payment_method_obj?.object === "cash_payment" ? (payment_method_obj.barcode_url || "") : ""
     await cartsByUser.updateOne(
         {
             _id: cart_oid
@@ -147,16 +157,17 @@ export const checkoutStoreOxxoTransfer = async ({
                 ...(payment_method === "oxxo"
                     ? {
                         oxxo_info: {
-                            reference: "",
-                            amount: "",
+                            barcode_url,
+                            reference,
+                            amount,
                             expire_at: expirationTimeMiliseconds,
                         }
                     }
                     : {
                         bank_info: {
-                            bank: "",
-                            clabe: "",
-                            amount: "",
+                            bank,
+                            clabe,
+                            amount,
                             expire_at: expirationTimeMiliseconds,
                         }
                     }
@@ -164,5 +175,37 @@ export const checkoutStoreOxxoTransfer = async ({
             }
         }
     )
-    return new_cart_id
+    if (payment_method_obj?.object === "cash_payment") {
+        const template = Handlebars.compile(oxxo_email)
+        const result = template({
+            amount,
+            oxxo_fee: "$15 MXN",
+            reference,
+            url: barcode_url,
+            date: format(new Date(expire_date), 'dd/MM/yyyy hh:mm a')
+        })
+        await sgMail.send({
+            to: email,
+            from: 'asistencia@fourb.mx',
+            subject: 'Pago en OXXO pendiente',
+            text: 'Por favor, realiza el pago pendiente en OXXO',
+            html: result,
+        });
+    }
+    if (payment_method_obj?.object === "cash_payment") {
+        const template = Handlebars.compile(spei_email)
+        const result = template({
+            amount,
+            clabe,
+            date: format(new Date(expire_date), 'dd/MM/yyyy hh:mm a')
+        })
+        await sgMail.send({
+            to: email,
+            from: 'asistencia@fourb.mx',
+            subject: 'Pago en OXXO pendiente',
+            text: 'Por favor, realiza el pago pendiente en OXXO',
+            html: result,
+        }); 
+    }
+    return cart_oid.toHexString()
 }

@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 
 export default function Checkout() {
     const router = useRouter()
-    const [paymentMethod, setPaymentMethod] = useState<'conekta' | 'cash'>('conekta')
+    const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash' | 'oxxo' | 'bank_transfer'>('card')
     const [delivery, setDelivery] = useState<"store" | "city" | "national">('city')
     const [form, setForm] = useState({
         name: '',
@@ -30,9 +30,10 @@ export default function Checkout() {
         onSuccess(value) {
             toast.success('Carrito revisado correctamente.')
             if (value.cart_id) {
-                localStorage?.setItem("cart_id", value.cart_id)
+                router.push('/confirmation?cart_id=' + value.cart_id)
+            } else {
+                router.push('/payment')
             }
-            router.push('/payment')
         },
         onError: (e) => {
             toast.error(e.message)
@@ -139,12 +140,12 @@ export default function Checkout() {
                     <div style={{ flexDirection: 'row', display: 'flex' }}>
                         <ModalCheckbox
                             containerStyle={{ width: 'unset' }}
-                            id="conekta"
-                            label="Pagar en linea (deposito en oxxo, transferencia, tarjeta)"
+                            id="card"
+                            label="Pagar en linea con tarjeta"
                             type="checkbox"
-                            checked={paymentMethod === "conekta"}
+                            checked={paymentMethod === "card"}
                             onChange={() => {
-                                setPaymentMethod("conekta")
+                                setPaymentMethod("card")
                             }}
                         />
                         <ModalCheckbox
@@ -155,6 +156,28 @@ export default function Checkout() {
                             checked={paymentMethod === "cash"}
                             onChange={() => {
                                 setPaymentMethod("cash")
+                            }}
+                        />
+                    </div>
+                    <div style={{ flexDirection: 'row', display: 'flex' }}>
+                        <ModalCheckbox
+                            containerStyle={{ width: 'unset' }}
+                            id="oxxo"
+                            label="Pagar en OXXO"
+                            type="checkbox"
+                            checked={paymentMethod === "oxxo"}
+                            onChange={() => {
+                                setPaymentMethod("oxxo")
+                            }}
+                        />
+                        <ModalCheckbox
+                            containerStyle={{ width: 'unset' }}
+                            id="bank_transfer"
+                            label="Pago por transferencia"
+                            type="checkbox"
+                            checked={paymentMethod === "bank_transfer"}
+                            onChange={() => {
+                                setPaymentMethod("bank_transfer")
                             }}
                         />
                     </div>
