@@ -163,7 +163,8 @@ describe("SignInMutation tests", () => {
             sku,
             use_discount,
             combination,
-            product_id: inventory_oid
+            product_id: inventory_oid,
+            disabled: false,
         })
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user");
         const now = new Date()
@@ -260,6 +261,7 @@ describe("SignInMutation tests", () => {
         })
         const itemInCart = await itemsByCart.findOne({ _id: item_by_cart_oid })
         expect(itemInCart).toEqual({
+            disabled: false,
             _id: item_by_cart_oid,
             cart_id: user_cart_id,
             discount_price,
@@ -344,7 +346,8 @@ describe("SignInMutation tests", () => {
             sku,
             use_discount,
             combination,
-            product_id: inventory_oid
+            product_id: inventory_oid,
+            disabled: false,
         })
         const cartsByUser = dbInstance.collection<CartsByUserMongo>("carts_by_user");
         const now = new Date()
@@ -425,6 +428,7 @@ describe("SignInMutation tests", () => {
         })
         const itemInCart = await itemsByCart.findOne({ _id: item_by_cart_oid })
         expect(itemInCart).toEqual({
+            disabled: false,
             _id: item_by_cart_oid,
             cart_id: user_cart_id,
             discount_price,

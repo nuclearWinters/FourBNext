@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { ContextLocals } from "./types";
+import { ContextLocals, SessionJWT } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import { NextApiResponse } from "next";

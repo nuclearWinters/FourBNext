@@ -106,6 +106,7 @@ export interface VariantMongo {
     use_discount: boolean,
     discount_price: number,
     combination: Combination[]
+    disabled: boolean
 }
 
 export interface Options {
@@ -123,6 +124,7 @@ export interface InventoryMongo {
     options: Options[]
     use_variants: boolean
     variants: VariantMongo[]
+    disabled: boolean
 }
 
 export type HomeNames =
@@ -162,6 +164,7 @@ export interface InventoryVariantsMongo {
     available: number
     total: number
     combination: Combination[]
+    disabled: boolean
 }
 
 export interface ItemsByCartMongo {
@@ -177,6 +180,7 @@ export interface ItemsByCartMongo {
     sku: string;
     combination: Combination[]
     product_id: ObjectId
+    disabled: boolean
 }
 
 export interface PurchasesMongo {
@@ -212,6 +216,17 @@ export interface CartsByUserMongo {
     phone: string | null
     name: string | null
     checkout_id: string | null
+    bank_info?: {
+        bank: string
+        clabe: string
+        amount: string
+        expire_at: number
+    }
+    oxxo_info?: {
+        amount: string
+        expire_at: number
+        reference: string
+    }
 }
 
 export interface ContextLocals {

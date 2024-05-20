@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { ContextLocals, ItemsByCartMongo, UserMongo } from "./types";
+import { ContextLocals, ItemsByCartMongo, SessionJWT, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import bcrypt from "bcryptjs"
@@ -42,7 +42,7 @@ describe("RegisterMutation tests", () => {
         const apellidos = 'Rueda'
         const phone = '9831228788'
         const phonePrefix = '+52'
-        const conekta_id = 'conekta_id'
+        const conekta_id = 'new_conekta_id'
         const is_admin = false
         const phone_prefix = '+52'
         const verified_email = false
@@ -105,7 +105,7 @@ describe("RegisterMutation tests", () => {
         const apellidos = 'Rueda'
         const phone = '9831228788'
         const phonePrefix = '+52'
-        const conekta_id = 'conekta_id'
+        const conekta_id = 'new_conekta_id'
         const is_admin = false
         const verified_email = false
         const { req, res } = createMocks({

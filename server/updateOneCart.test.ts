@@ -72,8 +72,10 @@ describe("UpdateOneCart tests", () => {
             use_discount,
             combination,
             product_id: inventory_oid,
+            disabled: false,
         })
         await inventory.insertOne({
+            disabled: false,
             _id: inventory_oid,
             name,
             description,
@@ -82,6 +84,7 @@ describe("UpdateOneCart tests", () => {
             options: [],
             variants: [
                 {
+                    disabled: false,
                     inventory_variant_oid,
                     imgs: [],
                     available,
@@ -100,6 +103,7 @@ describe("UpdateOneCart tests", () => {
             available,
             total,
             combination,
+            disabled: false,
         })
         const { req, res } = createMocks({
             method: 'GET',
@@ -150,6 +154,7 @@ describe("UpdateOneCart tests", () => {
         const product = await inventory.findOne({ _id: inventory_oid })
         const newAvailable = 7
         expect(product).toEqual({
+            disabled: false,
             _id: inventory_oid,
             description,
             name,
@@ -160,6 +165,7 @@ describe("UpdateOneCart tests", () => {
                 {
                     available: newAvailable,
                     combination,
+                    disabled: false,
                     discount_price,
                     imgs: [],
                     inventory_variant_oid,
@@ -172,6 +178,7 @@ describe("UpdateOneCart tests", () => {
         })
         const variant = await variantInventory.findOne({ _id: inventory_variant_oid })
         expect(variant).toEqual({
+            disabled: false,
             _id: inventory_variant_oid,
             inventory_id: inventory_oid,
             available: newAvailable,
@@ -180,6 +187,7 @@ describe("UpdateOneCart tests", () => {
         })
         const itemsInCart = await itemsByCart.find({ cart_id: cart_oid }).toArray()
         expect(itemsInCart.map(item => ({ ...item, _id: ObjectId.isValid(item._id) }))).toEqual([{
+            disabled: false,
             _id: true,
             cart_id: cart_oid,
             discount_price,

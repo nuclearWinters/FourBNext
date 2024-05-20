@@ -53,6 +53,7 @@ describe("RemoveOneCart tests", () => {
         const qty = 1
         const item_by_cart_oid = new ObjectId()
         await itemsByCart.insertOne({
+            disabled: false,
             _id: item_by_cart_oid,
             cart_id: cart_oid,
             discount_price,
@@ -67,6 +68,7 @@ describe("RemoveOneCart tests", () => {
             product_id: inventory_oid,
         })
         await inventory.insertOne({
+            disabled: false,
             _id: inventory_oid,
             name,
             description,
@@ -84,6 +86,7 @@ describe("RemoveOneCart tests", () => {
                     use_discount,
                     discount_price,
                     combination,
+                    disabled: false,
                 }
             ]
         })
@@ -93,6 +96,7 @@ describe("RemoveOneCart tests", () => {
             available,
             total,
             combination,
+            disabled: false,
         })
         await cartsByUser.insertOne({
             _id: cart_oid,
@@ -159,6 +163,7 @@ describe("RemoveOneCart tests", () => {
         const product = await inventory.findOne({ _id: inventory_oid })
         const newAvailable = 10
         expect(product).toEqual({
+            disabled: false,
             _id: inventory_oid,
             description,
             name,
@@ -167,6 +172,7 @@ describe("RemoveOneCart tests", () => {
             use_variants: false,
             variants: [
                 {
+                    disabled: false,
                     available: newAvailable,
                     combination,
                     discount_price,
@@ -181,6 +187,7 @@ describe("RemoveOneCart tests", () => {
         })
         const variant = await variantInventory.findOne({ _id: inventory_variant_oid })
         expect(variant).toEqual({
+            disabled: false,
             _id: inventory_variant_oid,
             inventory_id: inventory_oid,
             available: newAvailable,

@@ -210,7 +210,8 @@ export const EditProduct: FC<{
                                     price: Number(variant.price) * 100,
                                     discount_price: Number(variant.discount_price) * 100,
                                     total: Number(variant.total),
-                                    available: Number(variant.available)
+                                    available: Number(variant.available),
+                                    disabled: product.disabled,
                                 })),
                                 create_new_variants: createNewOptions,
                                 new_variants: newOptions.variants.map(variant => ({
@@ -219,6 +220,7 @@ export const EditProduct: FC<{
                                     available: Number(variant.available),
                                     price: Number(variant.price) * 100,
                                     discount_price: Number(variant.discount_price) * 100,
+                                    disabled: product.disabled,
                                 })),
                                 new_options: createNewOptions ? newOptions.options : [],
                             }, {
@@ -1005,7 +1007,6 @@ export const EditProduct: FC<{
                                 />
                             </div>
                             <button type="submit" className="fourb-button">Actualizar</button>
-                            <Link href={`/product/${product._id}`} type="button" className="fourb-button">VER</Link>
                         </form>
                     </div>
                 </ModalClose>

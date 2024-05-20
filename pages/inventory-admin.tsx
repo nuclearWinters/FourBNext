@@ -130,6 +130,10 @@ export default function InventoryAdmin() {
                                                 searchProducts.refetch()
                                             }} /></td>
                                             <td><Link href={`/product/${product._id}`} className="fourb-button">VER</Link></td>
+                                            <td><button className="fourb-button" onClick={() => {
+                                            }}>
+                                                Deshabilitar
+                                            </button></td>
                                         </tr>
                                         {product.use_variants ? <tr>
                                             <td colSpan={12}>

@@ -50,6 +50,7 @@ describe("getCart tests", () => {
                 sku: "122435",
                 combination: [],
                 product_id: productIdOne,
+                disabled: false,
             },
             {
                 _id: itemInCartIdTwo,
@@ -64,6 +65,7 @@ describe("getCart tests", () => {
                 sku: "422435",
                 combination: [],
                 product_id: productIdOne,
+                disabled: false,
             }
         ])
         const users = dbInstance.collection<UserMongo>("users");
@@ -89,6 +91,7 @@ describe("getCart tests", () => {
         const response = await caller.getCart()
         expect(response).toEqual([
             {
+                disabled: false,
                 _id: itemInCartIdOne.toHexString(),
                 cart_id: cart_oid.toHexString(),
                 combination: [],
@@ -103,6 +106,7 @@ describe("getCart tests", () => {
                 use_discount: false
             },
             {
+                disabled: false,
                 _id: itemInCartIdTwo.toHexString(),
                 cart_id: cart_oid.toHexString(),
                 combination: [],
@@ -162,6 +166,7 @@ describe("getCart tests", () => {
                 sku: "122435",
                 combination: [],
                 product_id: productIdOne,
+                disabled: false,
             },
             {
                 _id: itemInCartIdTwo,
@@ -176,25 +181,26 @@ describe("getCart tests", () => {
                 sku: "422435",
                 combination: [],
                 product_id: productIdOne,
+                disabled: false,
             }
         ])
         const { req, res } = createMocks({
             method: 'GET',
         })
         const sessionData : SessionJWT = {
-            email: null,
-            cart_id: session_cart_id.toHexString(),
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+            em: null,
+            ci: session_cart_id.toHexString(),
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const time = new Date()
         time.setMilliseconds(0)
@@ -216,6 +222,7 @@ describe("getCart tests", () => {
         const response = await caller.getCart()
         expect(response).toEqual([
             {
+                disabled: false,
                 _id: itemInCartIdOne.toHexString(),
                 cart_id: user_cart_id,
                 combination: [],
@@ -230,6 +237,7 @@ describe("getCart tests", () => {
                 use_discount: false
             },
             {
+                disabled: false,
                 _id: itemInCartIdTwo.toHexString(),
                 cart_id: user_cart_id,
                 combination: [],

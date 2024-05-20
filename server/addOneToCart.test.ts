@@ -58,6 +58,7 @@ describe("AddOneToCart tests", () => {
             name: 'default',
         }]
         await inventory.insertOne({
+            disabled: false,
             _id: inventory_oid,
             name,
             description,
@@ -75,6 +76,7 @@ describe("AddOneToCart tests", () => {
                     use_discount,
                     discount_price,
                     combination,
+                    disabled: false,
                 }
             ]
         })
@@ -84,6 +86,7 @@ describe("AddOneToCart tests", () => {
             available,
             total,
             combination,
+            disabled: false,
         })
         const { req, res } = createMocks({
             method: 'GET',
@@ -135,6 +138,7 @@ describe("AddOneToCart tests", () => {
         const product = await inventory.findOne({ _id: inventory_oid })
         const newAvailable = 9
         expect(product).toEqual({
+            disabled: false,
             _id: inventory_oid,
             description,
             name,
@@ -143,6 +147,7 @@ describe("AddOneToCart tests", () => {
             use_variants: false,
             variants: [
                 {
+                    disabled: false,
                     available: newAvailable,
                     combination,
                     discount_price,
@@ -157,6 +162,7 @@ describe("AddOneToCart tests", () => {
         })
         const variant = await variantInventory.findOne({ _id: inventory_variant_oid })
         expect(variant).toEqual({
+            disabled: false,
             _id: inventory_variant_oid,
             inventory_id: inventory_oid,
             available: newAvailable,
@@ -208,6 +214,7 @@ describe("AddOneToCart tests", () => {
         const qty = 1
         const item_by_cart_oid = new ObjectId()
         await itemsByCart.insertOne({
+            disabled: false,
             _id: item_by_cart_oid,
             cart_id: cart_oid,
             discount_price,
@@ -222,6 +229,7 @@ describe("AddOneToCart tests", () => {
             product_id: inventory_oid
         })
         await inventory.insertOne({
+            disabled: false,
             _id: inventory_oid,
             name,
             description,
@@ -239,6 +247,7 @@ describe("AddOneToCart tests", () => {
                     use_discount,
                     discount_price,
                     combination,
+                    disabled: false,
                 }
             ]
         })
@@ -248,6 +257,7 @@ describe("AddOneToCart tests", () => {
             available,
             total,
             combination,
+            disabled: false,
         })
         const { req, res } = createMocks({
             method: 'GET',
@@ -308,6 +318,7 @@ describe("AddOneToCart tests", () => {
         }
         expect(product).toEqual(
             {
+                disabled: false,
                 _id: inventory_oid,
                 description,
                 name,
@@ -316,6 +327,7 @@ describe("AddOneToCart tests", () => {
                 use_variants: false,
                 variants: [
                     {
+                        disabled: false,
                         available: newAvailable,
                         combination,
                         discount_price,
@@ -334,6 +346,7 @@ describe("AddOneToCart tests", () => {
             throw new Error('Inventory does not exist')
         }
         expect(variant).toEqual({
+            disabled: false,
             _id: inventory_variant_oid,
             inventory_id: inventory_oid,
             available: newAvailable,
@@ -342,6 +355,7 @@ describe("AddOneToCart tests", () => {
         })
         const itemsInCart = await itemsByCart.find({ cart_id: cart_oid }).toArray()
         expect(itemsInCart.map(item => ({ ...item, _id: ObjectId.isValid(item._id) }))).toEqual([{
+            disabled: false,
             _id: true,
             cart_id: cart_oid,
             discount_price,
@@ -387,6 +401,7 @@ describe("AddOneToCart tests", () => {
         const is_admin = false
         const email = 'anrp1@gmail.com'
         await inventory.insertOne({
+            disabled: false,
             _id: inventory_oid,
             name,
             description,
@@ -404,10 +419,12 @@ describe("AddOneToCart tests", () => {
                     use_discount,
                     discount_price,
                     combination,
+                    disabled: false,
                 }
             ]
         })
         await variantInventory.insertOne({
+            disabled: false,
             _id: inventory_variant_oid,
             inventory_id: inventory_oid,
             available,
@@ -477,6 +494,7 @@ describe("AddOneToCart tests", () => {
         const newAvailable = 9
         expect(product).toEqual(
             {
+                disabled: false,
                 _id: inventory_oid,
                 description,
                 name,
@@ -485,6 +503,7 @@ describe("AddOneToCart tests", () => {
                 use_variants: false,
                 variants: [
                     {
+                        disabled: false,
                         available: newAvailable,
                         combination,
                         discount_price,
@@ -503,6 +522,7 @@ describe("AddOneToCart tests", () => {
             throw new Error('Variant does not exist')
         }
         expect(variant).toEqual({
+            disabled: false,
             _id: inventory_variant_oid,
             inventory_id: inventory_oid,
             available: newAvailable,
@@ -558,6 +578,7 @@ describe("AddOneToCart tests", () => {
         const qty = 1
         const item_by_cart_oid = new ObjectId()
         await itemsByCart.insertOne({
+            disabled: false,
             _id: item_by_cart_oid,
             cart_id: user_cart_oid,
             discount_price,
@@ -572,6 +593,7 @@ describe("AddOneToCart tests", () => {
             product_id: inventory_oid
         })
         await inventory.insertOne({
+            disabled: false,
             _id: inventory_oid,
             name,
             description,
@@ -580,6 +602,7 @@ describe("AddOneToCart tests", () => {
             options: [],
             variants: [
                 {
+                    disabled: false,
                     inventory_variant_oid,
                     imgs: [],
                     available,
@@ -598,6 +621,7 @@ describe("AddOneToCart tests", () => {
             available,
             total,
             combination,
+            disabled: false,
         })
         const { req, res } = createMocks({
             method: 'GET',
@@ -662,6 +686,7 @@ describe("AddOneToCart tests", () => {
         const newAvailable = 9
         expect(product).toEqual(
             {
+                disabled: false,
                 _id: inventory_oid,
                 description,
                 name,
@@ -670,6 +695,7 @@ describe("AddOneToCart tests", () => {
                 use_variants: false,
                 variants: [
                     {
+                        disabled: false,
                         available: newAvailable,
                         combination,
                         discount_price,
@@ -688,6 +714,7 @@ describe("AddOneToCart tests", () => {
             throw new Error('Variant does not exist')
         }
         expect(variant).toEqual({
+            disabled: false,
             _id: inventory_variant_oid,
             inventory_id: inventory_oid,
             available: newAvailable,
@@ -696,6 +723,7 @@ describe("AddOneToCart tests", () => {
         })
         const itemsInCart = await itemsByCart.find({ cart_id: user_cart_oid }).toArray()
         expect(itemsInCart.map(item => ({ ...item, _id: ObjectId.isValid(item._id) }))).toEqual([{
+            disabled: false,
             _id: true,
             cart_id: user_cart_oid,
             discount_price,

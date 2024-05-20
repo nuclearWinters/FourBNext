@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
-import { ContextLocals, UserMongo } from "./types";
+import { ContextLocals, SessionJWT, UserMongo } from "./types";
 import { createMocks } from 'node-mocks-http';
 import { appRouter } from "./trpc";
 import { ACCESS_TOKEN_EXP_NUMBER } from "./utils";
@@ -121,19 +121,19 @@ describe("SignInMutation tests", () => {
             method: 'GET',
         })
         const sessionData : SessionJWT = {
-            email: null,
-            cart_id: session_cart_id.toHexString(),
-            name: null,
-            apellidos: null,
-            phone: null,
-            conekta_id: null,
-            country: null,
-            street: null,
-            neighborhood: null,
-            zip: null,
-            city: null,
-            state: null,
-            phone_prefix: null,
+            em: null,
+            ci: session_cart_id.toHexString(),
+            nm: null,
+            ap: null,
+            ph: null,
+            ck: null,
+            co: null,
+            st: null,
+            nh: null,
+            zp: null,
+            cy: null,
+            se: null,
+            pp: null,
         }
         const time = new Date()
         time.setMilliseconds(0)

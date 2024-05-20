@@ -195,7 +195,7 @@ export default function Checkout() {
                     </div>
                 </div>
                 {delivery === "city" || delivery === "national" ? <div className="input-container-checkout">
-                    El costo de entrega seran: {delivery === "city" ? '$35' : '$119' }
+                    El costo de entrega seran: {delivery === "city" ? '$35' : '$119'}
                 </div> : null}
                 {!user.data?._id
                     ? <div className="input-container-checkout">
