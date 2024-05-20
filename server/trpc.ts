@@ -2319,13 +2319,15 @@ export const appRouter = router({
                                 text: 'Tu pago ha sido procesado exitosamente',
                                 html: result,
                             });
-                            await sgMail.send({
-                                to: "fourboutiquemx@gmail.com",
-                                from: 'asistencia@fourb.mx',
-                                subject: 'Compra confirmada',
-                                text: 'El pago del carrito se realizo correctamente',
-                                html: resultNotification,
-                            });
+                            if (process.env.NODE_ENV === "production") {
+                                await sgMail.send({
+                                    to: "fourboutiquemx@gmail.com",
+                                    from: 'asistencia@fourb.mx',
+                                    subject: 'Compra confirmada',
+                                    text: 'El pago del carrito se realizo correctamente',
+                                    html: resultNotification,
+                                });
+                            }
                         }
                     }
                 }
