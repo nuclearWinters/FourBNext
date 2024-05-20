@@ -2004,7 +2004,11 @@ export const appRouter = router({
                 const options = input.options
                 const use_variants = input.use_variants
                 const tags = input.tags
-                const { inventory, variantInventory } = ctx
+                const { inventory, variantInventory, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
                 const newVariants = variants.map(variant => ({
                     ...variant,
                     inventory_variant_oid: new ObjectId(),
@@ -2120,7 +2124,11 @@ export const appRouter = router({
                 const new_variants = input.new_variants
                 const new_options = input.new_options
                 const create_new_variants = input.create_new_variants && new_variants.length > 1 && new_options.length > 0
-                const { inventory, variantInventory } = ctx
+                const { inventory, variantInventory, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
                 const product_oid = new ObjectId(id)
                 const filter: Filter<InventoryMongo> = {
                     _id: product_oid,
@@ -2384,7 +2392,11 @@ export const appRouter = router({
         }))
         .query(async ({ ctx, input }): Promise<{ items: CartsByUserTRPC[], nextCursor: string | undefined }> => {
             try {
-                const { cartsByUser } = ctx
+                const { cartsByUser, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
                 const limit = input.limit || 20
                 const after = input.cursor || ""
                 const limitParsed = limit + 1
@@ -2453,7 +2465,11 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { cartsByUser, purchases, itemsByCart, users } = ctx
+                const { cartsByUser, purchases, itemsByCart, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
                 const { cart_id, status, delivered, sent } = input
                 const cart_oid = new ObjectId(cart_id)
                 await cartsByUser.updateOne(
@@ -2512,7 +2528,11 @@ export const appRouter = router({
         }))
         .query(async ({ ctx, input }): Promise<ItemsByCartTRPC[]> => {
             try {
-                const { itemsByCart } = ctx
+                const { itemsByCart, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
                 const { cart_id } = input
                 const cart_oid = new ObjectId(cart_id)
                 const itemsInCart = await itemsByCart.find({ cart_id: cart_oid }).toArray()
@@ -2614,7 +2634,11 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void | null> => {
             try {
-                const { imagesHome } = ctx
+                const { imagesHome, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
                 const { name, url } = input
                 await imagesHome.updateOne(
                     {
@@ -2653,7 +2677,11 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void | null> => {
             try {
-                const { descriptions } = ctx
+                const { descriptions, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
                 const { name, description } = input
                 await descriptions.updateOne(
                     {
@@ -2692,7 +2720,11 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void | null> => {
             try {
-                const { inventory, variantInventory } = ctx
+                const { inventory, variantInventory, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
                 const { product_id, disabled } = input
                 const product_oid = new ObjectId(product_id)
                 await inventory.updateOne(
