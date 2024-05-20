@@ -690,10 +690,6 @@ const clientS3 = new S3Client({
     },
 });
 
-//const config = new Configuration({ accessToken: CONEKTA_API_KEY });
-//const customerClient = new CustomersApi(config);
-//const orderClient = new OrdersApi(config);
-
 const t = initTRPC.context<ContextLocals>().create();
 export const router = t.router;
 export const publicProcedure = t.procedure;

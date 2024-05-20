@@ -4,10 +4,10 @@ import { CustomersApi, OrdersApi } from "conekta"
 import { CartsByUserMongo, DecodeJWT, ItemsByCartMongo, SessionJWT, UserMongo } from "./types"
 import { NextApiResponse } from "next"
 import cookie from "cookie"
-import { oxxo_email } from "./oxxo_email"
 import sgMail from '@sendgrid/mail'
 import Handlebars from "handlebars"
 import { format } from "date-fns"
+import { spei_email } from "./bank_email"
 
 interface CheckoutStoreOxxoTransfer {
     userData?: DecodeJWT
@@ -175,24 +175,7 @@ export const checkoutStoreOxxoTransfer = async ({
             }
         }
     )
-    if (payment_method_obj?.object === "cash_payment") {
-        const template = Handlebars.compile(oxxo_email)
-        const result = template({
-            amount,
-            oxxo_fee: "$15 MXN",
-            reference,
-            url: barcode_url,
-            date: format(new Date(expire_date), 'dd/MM/yyyy hh:mm a')
-        })
-        await sgMail.send({
-            to: email,
-            from: 'asistencia@fourb.mx',
-            subject: 'Pago en OXXO pendiente',
-            text: 'Por favor, realiza el pago pendiente en OXXO',
-            html: result,
-        });
-    }
-    if (payment_method_obj?.object === "cash_payment") {
+    if (payment_method_obj?.object === "bank_transfer_payment") {
         const template = Handlebars.compile(spei_email)
         const result = template({
             amount,
