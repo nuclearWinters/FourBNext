@@ -1155,6 +1155,7 @@ export const appRouter = router({
                         $ne: true
                     },
                 }
+                //Posible source
                 const variantProduct = await variantInventory.findOneAndUpdate(
                     filter,
                     {
@@ -1344,6 +1345,7 @@ export const appRouter = router({
                         $gte: qty - deletedCart.qty,
                     }
                 }
+                //Posible source
                 const variantProduct = await variantInventory.findOneAndUpdate(
                     filter,
                     {
@@ -1465,6 +1467,7 @@ export const appRouter = router({
                     throw new Error("Item in cart was not deleted.")
                 }
                 /* ---- Actualizar inventario ---- */
+                //Posible source
                 const variantProduct = await variantInventory.findOneAndUpdate(
                     {
                         _id: result.product_variant_id,
@@ -2468,13 +2471,15 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void> => {
             try {
-                const { cartsByUser, purchases, itemsByCart, userData } = ctx
+                const { cartsByUser, purchases, userData } = ctx
                 const is_admin = userData?.user.is_admin
                 if (!is_admin) {
                     throw new Error("Only admins allowed")
                 }
                 const { cart_id, status, delivered, sent } = input
                 const cart_oid = new ObjectId(cart_id)
+                const new_expire_date = new Date()
+                new_expire_date.setDate(new_expire_date.getDate() + 7)
                 await cartsByUser.updateOne(
                     {
                         _id: cart_oid
@@ -2484,6 +2489,11 @@ export const appRouter = router({
                             ...(typeof status === "string" ? { status } : {}),
                             ...(typeof delivered === "boolean" ? { delivered } : {}),
                             ...(typeof sent === "boolean" ? { sent } : {}),
+                            ...(typeof status === "string" && status === "paid" ? {
+                                expire_date: null,
+                            } : typeof status === "string" && status === "waiting" ? {
+                                expire_date: new_expire_date,
+                            } : {})
                         }
                     }
                 )
