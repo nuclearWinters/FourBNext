@@ -136,6 +136,7 @@ export default function InventoryAdmin() {
                                                     disabled: !product.disabled,
                                                     product_id: product._id,
                                                 })
+                                                searchProducts.refetch()
                                             }}>
                                                 {product.disabled ? "Habilitar" : "Deshabilitar"}
                                             </button></td>
