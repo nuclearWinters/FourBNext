@@ -54,6 +54,7 @@ export default function InventoryAdmin() {
         { limit: 20, search },
         { getNextPageParam: (lastPage) => lastPage.nextCursor, }
     );
+    const disable = trpc.disableProduct.useMutation()
     return <div>
         <Head>
             <title>Inventario - FOURB</title>
@@ -101,6 +102,7 @@ export default function InventoryAdmin() {
                     {searchProducts.data?.pages.map((page, index) => (
                         <Fragment key={index}>
                             {page.items.map(product => {
+                                console.log("disabled:", product.disabled)
                                 const defaultVariantIndex = product.variants.findIndex(variant => variant.combination.map(combination => combination.name).every(name => name === 'default'))
                                 const defaultVariant = product.variants[defaultVariantIndex]
                                 return (
@@ -131,8 +133,12 @@ export default function InventoryAdmin() {
                                             }} /></td>
                                             <td><Link href={`/product/${product._id}`} className="fourb-button">VER</Link></td>
                                             <td><button className="fourb-button" onClick={() => {
+                                                disable.mutate({
+                                                    disabled: !product.disabled,
+                                                    product_id: product._id,
+                                                })
                                             }}>
-                                                Deshabilitar
+                                                {product.disabled ? "Habilitar" : "Deshabilitar"}
                                             </button></td>
                                         </tr>
                                         {product.use_variants ? <tr>

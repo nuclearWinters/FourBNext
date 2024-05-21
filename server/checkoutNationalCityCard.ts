@@ -1,5 +1,5 @@
-import { Collection, ObjectId } from "mongodb"
-import { CartsByUserMongo, DecodeJWT, ItemsByCartMongo, SessionJWT, UserMongo } from "./types"
+import { Collection, Filter, ObjectId } from "mongodb"
+import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, SessionJWT, UserMongo } from "./types"
 import { NextApiResponse } from "next"
 import { CustomersApi, OrdersApi } from "conekta"
 import { sessionToBase64 } from "./utils"
@@ -27,6 +27,8 @@ interface CheckoutNationalCityCard {
     street: string
     neighborhood: string
     address_id: string
+    variantInventory: Collection<InventoryVariantsMongo>
+    inventory: Collection<InventoryMongo>
 }
 
 export const checkoutNationalCityCard = async ({
@@ -52,6 +54,8 @@ export const checkoutNationalCityCard = async ({
     street,
     neighborhood,
     address_id,
+    variantInventory,
+    inventory,
 }: CheckoutNationalCityCard): Promise<string | undefined> => {
     let conekta_id = ""
     if (userData) {
@@ -145,11 +149,70 @@ export const checkoutNationalCityCard = async ({
         res.setHeader("Session-Token", session)
     }
     const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
-    const line_items = products.map(product => ({
-        name: product.name,
-        unit_price: product.use_discount ? product.discount_price : product.price,
-        quantity: product.qty,
-    }))
+    const line_items = products
+        .filter(product => !product.disabled)
+        .map(product => ({
+            name: product.name,
+            unit_price: product.use_discount ? product.discount_price : product.price,
+            quantity: product.qty,
+        }))
+    const disabled_items = products
+        .filter(product => product.disabled)
+    if (disabled_items.length) {
+        for (const item of disabled_items) {
+            /* ---- Eliminar item en el carrito ---- */
+            const deletedCart = await itemsByCart.findOneAndDelete(
+                {
+                    _id: item._id,
+                },
+            )
+            /* ---- Eliminar item en el carrito ---- */
+            if (!deletedCart) {
+                throw new Error("Item in cart not modified.")
+            }
+            /* ---- Actualizar inventario ---- */
+            const filter: Filter<InventoryVariantsMongo> = {
+                _id: item.product_variant_id,
+            }
+            const variantProduct = await variantInventory.findOneAndUpdate(
+                filter,
+                {
+                    $inc: {
+                        available: deletedCart.qty,
+                    },
+                },
+                {
+                    returnDocument: "after"
+                }
+            )
+            /* ---- Actualizar inventario ---- */
+            if (!variantProduct) {
+                await itemsByCart.insertOne(deletedCart)
+                throw new Error("Not enough inventory or product not found.")
+            }
+            /* ---- Actualizar inventario duplicado ---- */
+            await inventory.findOneAndUpdate(
+                {
+                    _id: variantProduct.inventory_id
+                },
+                {
+                    $set: {
+                        [`variants.$[variant].available`]: variantProduct.available,
+                        [`variants.$[variant].total`]: variantProduct.total,
+                    },
+                },
+                {
+                    returnDocument: 'after',
+                    arrayFilters: [
+                        {
+                            "variant.inventory_variant_oid": item.product_variant_id,
+                        }
+                    ]
+                }
+            )
+            /* ---- Actualizar inventario duplicado ---- */
+        }
+    }
     const shipping_lines = [
         {
             carrier: "Envio",

@@ -1,5 +1,5 @@
-import { Collection, ObjectId } from "mongodb"
-import { CartsByUserMongo, DecodeJWT, SessionJWT, UserMongo } from "./types"
+import { Collection, Filter, ObjectId } from "mongodb"
+import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, SessionJWT, UserMongo } from "./types"
 import sgMail from '@sendgrid/mail'
 import { ACCESSSECRET, REFRESHSECRET, jwt, sessionToBase64 } from "./utils"
 import { NextApiResponse } from "next"
@@ -25,6 +25,9 @@ interface CheckoutNationalCityCash {
     sessionData: SessionJWT
     res: NextApiResponse
     address_id: string
+    itemsByCart: Collection<ItemsByCartMongo>
+    variantInventory: Collection<InventoryVariantsMongo>
+    inventory: Collection<InventoryMongo>
 }
 
 export const checkoutNationalCityCash = async ({
@@ -47,9 +50,75 @@ export const checkoutNationalCityCash = async ({
     res,
     sessionData,
     address_id,
+    itemsByCart,
+    inventory,
+    variantInventory,
 }: CheckoutNationalCityCash): Promise<string> => {
     const expire_date = new Date()
     expire_date.setDate(expire_date.getDate() + 7)
+    const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+    const line_items = products
+        .filter(product => !product.disabled)
+    const disabled_items = products
+        .filter(product => product.disabled)
+    if (disabled_items.length) {
+        for (const item of disabled_items) {
+            /* ---- Eliminar item en el carrito ---- */
+            const deletedCart = await itemsByCart.findOneAndDelete(
+                {
+                    _id: item._id,
+                },
+            )
+            /* ---- Eliminar item en el carrito ---- */
+            if (!deletedCart) {
+                throw new Error("Item in cart not modified.")
+            }
+            /* ---- Actualizar inventario ---- */
+            const filter: Filter<InventoryVariantsMongo> = {
+                _id: item.product_variant_id,
+            }
+            const variantProduct = await variantInventory.findOneAndUpdate(
+                filter,
+                {
+                    $inc: {
+                        available: deletedCart.qty,
+                    },
+                },
+                {
+                    returnDocument: "after"
+                }
+            )
+            /* ---- Actualizar inventario ---- */
+            if (!variantProduct) {
+                await itemsByCart.insertOne(deletedCart)
+                throw new Error("Not enough inventory or product not found.")
+            }
+            /* ---- Actualizar inventario duplicado ---- */
+            await inventory.findOneAndUpdate(
+                {
+                    _id: variantProduct.inventory_id
+                },
+                {
+                    $set: {
+                        [`variants.$[variant].available`]: variantProduct.available,
+                        [`variants.$[variant].total`]: variantProduct.total,
+                    },
+                },
+                {
+                    returnDocument: 'after',
+                    arrayFilters: [
+                        {
+                            "variant.inventory_variant_oid": item.product_variant_id,
+                        }
+                    ]
+                }
+            )
+            /* ---- Actualizar inventario duplicado ---- */
+        }
+    }
+    if (!line_items.length) {
+        throw new Error('No items selected')
+    }
     await cartsByUser.updateOne(
         {
             _id: cart_oid

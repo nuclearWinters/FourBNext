@@ -30,7 +30,11 @@ function SiteMap() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-    const products = await inventory.find().toArray()
+    const products = await inventory.find({
+        disabled: {
+            $ne: true
+        }
+    }).toArray()
     const newProducts = products.map(product => {
         const newVariants: VariantTRPC[] = product.variants.map(variant => ({
             ...variant,

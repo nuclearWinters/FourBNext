@@ -996,7 +996,8 @@ export const appRouter = router({
             search: z.string().nullish(),
         }))
         .query(async ({ ctx, input }): Promise<{ items: InventoryTRPC[], nextCursor: string | undefined }> => {
-            const { inventory } = ctx
+            const { inventory, userData } = ctx
+            const is_admin = userData?.user.is_admin
             const search = input.search
             const tag = input.tag
             const limit = input.limit || 20
@@ -1006,7 +1007,13 @@ export const appRouter = router({
             let nextCursor: string | undefined = undefined;
             if (search) {
                 const filter: Filter<InventoryMongo> = {
-                    name: { $regex: search, $options: "i" }
+                    name: { $regex: search, $options: "i" },
+                    
+                }
+                if (!is_admin) {
+                    filter.disabled = {
+                        $ne: true
+                    }
                 }
                 if (after) {
                     filter._id = { $lte: new ObjectId(after) };
@@ -1032,7 +1039,12 @@ export const appRouter = router({
                 };
             } else if (tag) {
                 const filter: Filter<InventoryMongo> = {
-                    tags: { $in: [tag] }
+                    tags: { $in: [tag] },
+                }
+                if (!is_admin) {
+                    filter.disabled = {
+                        $ne: true
+                    }
                 }
                 if (after) {
                     filter._id = { $lte: new ObjectId(after) };
@@ -1058,7 +1070,12 @@ export const appRouter = router({
                 };
             } else if (discounts) {
                 const filter: Filter<InventoryMongo> = {
-                    use_discount: true
+                    use_discount: true,
+                }
+                if (!is_admin) {
+                    filter.disabled = {
+                        $ne: true
+                    }
                 }
                 if (after) {
                     filter._id = { $lte: new ObjectId(after) };
@@ -1084,6 +1101,11 @@ export const appRouter = router({
                 };
             } else {
                 const filter: Filter<InventoryMongo> = {}
+                if (!is_admin) {
+                    filter.disabled = {
+                        $ne: true
+                    }
+                }
                 if (after) {
                     filter._id = { $lte: new ObjectId(after) };
                 }
@@ -1130,9 +1152,7 @@ export const appRouter = router({
                         $gte: qty,
                     },
                     disabled: {
-                        $not: {
-                            $eq: true,
-                        },
+                        $ne: true
                     },
                 }
                 const variantProduct = await variantInventory.findOneAndUpdate(
@@ -1261,7 +1281,14 @@ export const appRouter = router({
             try {
                 const { itemsByCart, userData, sessionData } = ctx
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
-                const itemsInCart = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                const itemsInCart = await itemsByCart.find(
+                    {
+                        cart_id: cart_oid,
+                        disabled: {
+                            $ne: true
+                        },
+                    }
+                ).toArray()
                 return itemsInCart.map(item => ({
                     ...item,
                     _id: item._id.toHexString(),
@@ -1528,7 +1555,7 @@ export const appRouter = router({
             checkout_id?: string
         }> => {
             try {
-                const { itemsByCart, users, userData, sessionData, res, cartsByUser } = ctx
+                const { itemsByCart, users, userData, sessionData, res, cartsByUser, inventory, variantInventory } = ctx
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 if (input.delivery === "store") {
                     const { name, apellidos, phone, phone_prefix, payment_method, email } = input
@@ -1545,6 +1572,9 @@ export const appRouter = router({
                             users,
                             sessionData,
                             res,
+                            inventory,
+                            variantInventory,
+                            itemsByCart,
                         })
                         return {
                             cart_id: new_cart_id,
@@ -1565,6 +1595,8 @@ export const appRouter = router({
                             name,
                             customerClient,
                             orderClient,
+                            inventory,
+                            variantInventory,
                         })
                         return {
                             checkout_id,
@@ -1586,6 +1618,8 @@ export const appRouter = router({
                             sessionData,
                             res,
                             customerClient,
+                            inventory,
+                            variantInventory,
                         })
                         return {
                             cart_id: new_cart_id,
@@ -1614,6 +1648,9 @@ export const appRouter = router({
                             res,
                             sessionData,
                             address_id,
+                            inventory,
+                            variantInventory,
+                            itemsByCart,
                         })
                         return {
                             cart_id,
@@ -1642,6 +1679,8 @@ export const appRouter = router({
                             street,
                             neighborhood,
                             address_id,
+                            inventory,
+                            variantInventory,
                         })
                         return {
                             checkout_id,
@@ -1671,6 +1710,8 @@ export const appRouter = router({
                             neighborhood,
                             address_id,
                             payment_method,
+                            inventory,
+                            variantInventory,
                         })
                         return {
                             cart_id,
@@ -1728,7 +1769,14 @@ export const appRouter = router({
                             }
                         }
                     )
-                    const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
+                    const productsInCart = await itemsByCart.find(
+                        {
+                            cart_id: previous_cart_id,
+                            disabled: {
+                                $ne: true
+                            },
+                        }
+                    ).toArray()
                     const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
                         name: product.name,
                         product_variant_id: product.product_variant_id,
@@ -1796,7 +1844,14 @@ export const appRouter = router({
                             }
                         }
                     )
-                    const productsInCart = await itemsByCart.find({ cart_id: previous_cart_id }).toArray()
+                    const productsInCart = await itemsByCart.find(
+                        {
+                            cart_id: previous_cart_id,
+                            disabled: {
+                                $ne: true,
+                            },
+                        }
+                    ).toArray()
                     const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
                         name: product.name,
                         product_variant_id: product.product_variant_id,
@@ -2251,7 +2306,14 @@ export const appRouter = router({
                         }
                     )
                     if (cart) {
-                        const productsInCart = await itemsByCart.find({ cart_id: cart._id }).toArray()
+                        const productsInCart = await itemsByCart.find(
+                            {
+                                cart_id: cart._id,
+                                disabled: {
+                                    $ne: true
+                                },
+                            }
+                        ).toArray()
                         if (cart.user_id) {
                             const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
                                 name: product.name,
@@ -2483,7 +2545,11 @@ export const appRouter = router({
                     }
                 )
                 if (status === "paid") {
-                    const productsInCart = await itemsByCart.find({ cart_id: cart_oid }).toArray()
+                    const productsInCart = await itemsByCart.find(
+                        {
+                            cart_id: cart_oid,
+                        }
+                    ).toArray()
                     const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
                         name: product.name,
                         product_variant_id: product.product_variant_id,
@@ -2718,7 +2784,7 @@ export const appRouter = router({
         }))
         .mutation(async ({ ctx, input }): Promise<void | null> => {
             try {
-                const { inventory, variantInventory, userData } = ctx
+                const { inventory, variantInventory, userData, itemsByCart } = ctx
                 const is_admin = userData?.user.is_admin
                 if (!is_admin) {
                     throw new Error("Only admins allowed")
@@ -2727,7 +2793,7 @@ export const appRouter = router({
                 const product_oid = new ObjectId(product_id)
                 await inventory.updateOne(
                     {
-                        _id: product_oid
+                        _id: product_oid,
                     },
                     {
                         $set: {
@@ -2737,7 +2803,7 @@ export const appRouter = router({
                 )
                 await variantInventory.updateMany(
                     {
-                        inventory_id: product_oid
+                        inventory_id: product_oid,
                     },
                     {
                         $set: {
@@ -2745,7 +2811,17 @@ export const appRouter = router({
                         },
                     },
                 )
-                revalidateHome()
+                await itemsByCart.updateMany(
+                    {
+                        product_id: product_oid,
+                    },
+                    {
+                        $set: {
+                            disabled,
+                        },
+                    },
+                )
+                revalidateProduct(product_oid.toHexString())
             } catch (e) {
                 if (e instanceof Error) {
                     throw new TRPCError({

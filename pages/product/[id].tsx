@@ -264,7 +264,11 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
 export default Product
 
 export async function getStaticPaths() {
-    const products = await inventory.find().toArray()
+    const products = await inventory.find({
+        disabled: {
+            $ne: true
+        }
+    }).toArray()
     const paths = products.map((product) => ({
         params: { id: product._id.toHexString() },
     }))
