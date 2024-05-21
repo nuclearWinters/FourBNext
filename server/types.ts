@@ -199,6 +199,7 @@ export interface PurchasesMongo {
     product_id: ObjectId,
     cart_id: ObjectId,
     cart_item: ItemsByCartMongo,
+    status: "waiting_payment" | "paid" | "cancelled"
 }
 
 export interface CartsByUserMongo {

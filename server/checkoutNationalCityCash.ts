@@ -1,5 +1,5 @@
 import { Collection, Filter, ObjectId } from "mongodb"
-import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, SessionJWT, UserMongo } from "./types"
+import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, SessionJWT, UserMongo } from "./types"
 import sgMail from '@sendgrid/mail'
 import { ACCESSSECRET, REFRESHSECRET, jwt, sessionToBase64 } from "./utils"
 import { NextApiResponse } from "next"
@@ -28,6 +28,7 @@ interface CheckoutNationalCityCash {
     itemsByCart: Collection<ItemsByCartMongo>
     variantInventory: Collection<InventoryVariantsMongo>
     inventory: Collection<InventoryMongo>
+    purchases: Collection<PurchasesMongo>
 }
 
 export const checkoutNationalCityCash = async ({
@@ -53,6 +54,7 @@ export const checkoutNationalCityCash = async ({
     itemsByCart,
     inventory,
     variantInventory,
+    purchases,
 }: CheckoutNationalCityCash): Promise<string> => {
     const expire_date = new Date()
     expire_date.setDate(expire_date.getDate() + 7)
@@ -262,5 +264,23 @@ export const checkoutNationalCityCash = async ({
         })
         res.setHeader("Session-Token", session)
     }
+    const purchasedProducts: PurchasesMongo[] = products.map(product => ({
+        name: product.name,
+        product_variant_id: product.product_variant_id,
+        qty: product.qty,
+        price: product.price,
+        discount_price: product.discount_price,
+        use_discount: product.use_discount,
+        user_id: userData?.user._id ? new ObjectId(userData.user._id) : null,
+        date: new Date(),
+        imgs: product.imgs,
+        sku: product.sku,
+        combination: product.combination,
+        product_id: product.product_id,
+        cart_id: product.cart_id,
+        cart_item: product,
+        status: "waiting_payment",
+    }))
+    await purchases.insertMany(purchasedProducts)
     return cart_oid.toHexString()
 }

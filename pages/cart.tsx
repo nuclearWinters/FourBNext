@@ -2,14 +2,39 @@ import Link from "next/link";
 import { trpc } from "../utils/config";
 import { CartList } from "../components/CartList";
 import Head from "next/head";
-
+import { useEffect, useState } from "react";
+import { intervalToDuration } from "date-fns";
 
 export default function Cart() {
+    const [expireDate, setExpireDate] = useState<null | Date>(null)
+    const [now, setNow] = useState(new Date())
     const products = trpc.getCart.useQuery();
+    trpc.getUserCartData.useQuery(
+        undefined,
+        {
+            onSuccess: (data) => {
+                if (data?.expire_date) {
+                    setExpireDate(new Date(data.expire_date))
+                }
+            }
+        }
+    );
+    useEffect(() => {
+        let interval = setInterval(() => {
+            setNow(new Date())
+        }, 1000)
+        return () => {
+            clearInterval(interval)
+        }
+    }, [])
     const total = products.data?.reduce((curr, product) => {
         const total = ((product.use_discount ? product.discount_price : product.price) * product.qty) / 100
         return curr + total
     }, 0)
+    const expireTime = expireDate ? intervalToDuration({
+        start: now,
+        end: expireDate,
+    }) : null
     return <div>
         <Head>
             <title>Carrito - FOURB</title>
@@ -17,6 +42,23 @@ export default function Cart() {
         <h2 className="title">
             Mi carrito
         </h2>
+        <div style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: 10,
+        }}>
+            {expireTime && products.data?.length
+                ? (
+                    <div>
+                        Expira en: {" "}
+                        <strong>
+                            {expireTime.hours} Horas, {expireTime.minutes} Minutos, {expireTime.seconds} Segundos
+                        </strong>
+                    </div>
+                )
+                : null
+            }
+        </div>
         {products.isFetching
             ? <div className="loading" />
             : products.data?.length

@@ -1008,7 +1008,7 @@ export const appRouter = router({
             if (search) {
                 const filter: Filter<InventoryMongo> = {
                     name: { $regex: search, $options: "i" },
-                    
+
                 }
                 if (!is_admin) {
                     filter.disabled = {
@@ -1555,7 +1555,17 @@ export const appRouter = router({
             checkout_id?: string
         }> => {
             try {
-                const { itemsByCart, users, userData, sessionData, res, cartsByUser, inventory, variantInventory } = ctx
+                const {
+                    itemsByCart,
+                    users,
+                    userData,
+                    sessionData,
+                    res,
+                    cartsByUser,
+                    inventory,
+                    variantInventory,
+                    purchases,
+                } = ctx
                 const cart_oid = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 if (input.delivery === "store") {
                     const { name, apellidos, phone, phone_prefix, payment_method, email } = input
@@ -1575,6 +1585,7 @@ export const appRouter = router({
                             inventory,
                             variantInventory,
                             itemsByCart,
+                            purchases
                         })
                         return {
                             cart_id: new_cart_id,
@@ -1620,6 +1631,7 @@ export const appRouter = router({
                             customerClient,
                             inventory,
                             variantInventory,
+                            purchases,
                         })
                         return {
                             cart_id: new_cart_id,
@@ -1651,6 +1663,7 @@ export const appRouter = router({
                             inventory,
                             variantInventory,
                             itemsByCart,
+                            purchases,
                         })
                         return {
                             cart_id,
@@ -1712,6 +1725,7 @@ export const appRouter = router({
                             payment_method,
                             inventory,
                             variantInventory,
+                            purchases,
                         })
                         return {
                             cart_id,
@@ -1740,12 +1754,10 @@ export const appRouter = router({
         .input(z.object({
             type: z.enum(['card']),
         }))
-        .mutation(async ({ ctx, input }): Promise<string> => {
+        .mutation(async ({ ctx }): Promise<string> => {
             try {
-                const { type } = input
-                const { users, cartsByUser, purchases, itemsByCart, sessionData, userData, res } = ctx
+                const { users, sessionData, userData, res } = ctx
                 const new_cart_id = new ObjectId()
-                const previous_cart_id = new ObjectId(userData?.user.cart_id || sessionData.ci)
                 if (userData) {
                     const user_oid = new ObjectId(userData.user._id)
                     await users.updateOne(
@@ -1758,42 +1770,6 @@ export const appRouter = router({
                             }
                         }
                     )
-                    await cartsByUser.updateOne(
-                        {
-                            _id: previous_cart_id
-                        },
-                        {
-                            $set: {
-                                status: 'paid',
-                                expire_date: null,
-                            }
-                        }
-                    )
-                    const productsInCart = await itemsByCart.find(
-                        {
-                            cart_id: previous_cart_id,
-                            disabled: {
-                                $ne: true
-                            },
-                        }
-                    ).toArray()
-                    const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
-                        name: product.name,
-                        product_variant_id: product.product_variant_id,
-                        qty: product.qty,
-                        price: product.price,
-                        discount_price: product.discount_price,
-                        use_discount: product.use_discount,
-                        user_id: user_oid,
-                        date: new Date(),
-                        imgs: product.imgs,
-                        sku: product.sku,
-                        product_id: product.product_id,
-                        combination: product.combination,
-                        cart_id: product.cart_id,
-                        cart_item: product,
-                    }))
-                    await purchases.insertMany(purchasedProducts)
                     const newAccessToken = jwt.sign(
                         {
                             user: {
@@ -1834,41 +1810,6 @@ export const appRouter = router({
                         ci: new_cart_id.toHexString(),
                     })
                     res.setHeader("Session-Token", session)
-                    await cartsByUser.updateOne(
-                        {
-                            _id: previous_cart_id
-                        },
-                        {
-                            $set: {
-                                status: 'paid',
-                            }
-                        }
-                    )
-                    const productsInCart = await itemsByCart.find(
-                        {
-                            cart_id: previous_cart_id,
-                            disabled: {
-                                $ne: true,
-                            },
-                        }
-                    ).toArray()
-                    const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
-                        name: product.name,
-                        product_variant_id: product.product_variant_id,
-                        qty: product.qty,
-                        price: product.price,
-                        discount_price: product.discount_price,
-                        use_discount: product.use_discount,
-                        user_id: null,
-                        date: new Date(),
-                        imgs: product.imgs,
-                        sku: product.sku,
-                        combination: product.combination,
-                        product_id: product.product_id,
-                        cart_id: product.cart_id,
-                        cart_item: product,
-                    }))
-                    await purchases.insertMany(purchasedProducts)
                     return new_cart_id.toHexString()
                 }
             } catch (e) {
@@ -2330,6 +2271,7 @@ export const appRouter = router({
                                 product_id: product.product_id,
                                 cart_id: product.cart_id,
                                 cart_item: product,
+                                status: "paid"
                             }))
                             await purchases.insertMany(purchasedProducts)
                         }
@@ -2346,7 +2288,8 @@ export const appRouter = router({
                                         img: product?.imgs?.[0] || '',
                                         totalCents: total
                                     }
-                                })
+                                }
+                            )
                             const subtotal = productsList.reduce((curr, next) => {
                                 const total = curr + next.totalCents
                                 return total
@@ -2545,32 +2488,27 @@ export const appRouter = router({
                     }
                 )
                 if (status === "paid") {
-                    const productsInCart = await itemsByCart.find(
+                    await purchases.updateMany(
                         {
                             cart_id: cart_oid,
-                        }
-                    ).toArray()
-                    const purchasedProducts: PurchasesMongo[] = productsInCart.map(product => ({
-                        name: product.name,
-                        product_variant_id: product.product_variant_id,
-                        qty: product.qty,
-                        price: product.price,
-                        discount_price: product.discount_price,
-                        use_discount: product.use_discount,
-                        user_id: null,
-                        date: new Date(),
-                        imgs: product.imgs,
-                        sku: product.sku,
-                        product_id: product.product_id,
-                        combination: product.combination,
-                        cart_id: product.cart_id,
-                        cart_item: product,
-                    }))
-                    await purchases.insertMany(purchasedProducts)
-                    await itemsByCart.deleteMany({ cart_id: cart_oid })
+                        },
+                        {
+                            $set: {
+                                status: "paid",
+                            }
+                        },
+                    )
                 } else if (status === "waiting") {
-                    const items = await purchases.find({ cart_id: cart_oid }).toArray()
-                    await itemsByCart.insertMany(items.map(item => item.cart_item))
+                    await purchases.updateMany(
+                        {
+                            cart_id: cart_oid,
+                        },
+                        {
+                            $set: {
+                                status: "waiting_payment",
+                            }
+                        },
+                    )
                 }
                 return
             } catch (e) {
@@ -2822,6 +2760,83 @@ export const appRouter = router({
                     },
                 )
                 revalidateProduct(product_oid.toHexString())
+            } catch (e) {
+                if (e instanceof Error) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: e.message,
+                    });
+                }
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'An unexpected error occurred, please try again later.',
+                });
+            }
+        }),
+    deleteItemFromCart: publicProcedure
+        .input(z.object({
+            items_by_cart_id: z.string().min(1),
+        }))
+        .mutation(async ({ ctx, input }): Promise<void> => {
+            try {
+                const { itemsByCart, inventory, variantInventory, userData } = ctx
+                const is_admin = userData?.user.is_admin
+                if (!is_admin) {
+                    throw new Error("Only admins allowed")
+                }
+                const items_by_cart_oid = new ObjectId(input.items_by_cart_id)
+                /* ---- Eliminar item en el carrito ---- */
+                const deletedItemInCart = await itemsByCart.findOneAndDelete(
+                    {
+                        _id: items_by_cart_oid,
+                    },
+                )
+                /* ---- Eliminar item en el carrito ---- */
+                if (!deletedItemInCart) {
+                    throw new Error("Item in cart not modified.")
+                }
+                /* ---- Actualizar inventario ---- */
+                const filter: Filter<InventoryVariantsMongo> = {
+                    _id: deletedItemInCart.product_variant_id,
+                }
+                const variantProduct = await variantInventory.findOneAndUpdate(
+                    filter,
+                    {
+                        $inc: {
+                            available: deletedItemInCart.qty,
+                        },
+                    },
+                    {
+                        returnDocument: "after"
+                    }
+                )
+                /* ---- Actualizar inventario ---- */
+                if (!variantProduct) {
+                    await itemsByCart.insertOne(deletedItemInCart)
+                    throw new Error("Not enough inventory or product not found.")
+                }
+                /* ---- Actualizar inventario duplicado ---- */
+                await inventory.findOneAndUpdate(
+                    {
+                        _id: variantProduct.inventory_id
+                    },
+                    {
+                        $set: {
+                            [`variants.$[variant].available`]: variantProduct.available,
+                            [`variants.$[variant].total`]: variantProduct.total,
+                        },
+                    },
+                    {
+                        returnDocument: 'after',
+                        arrayFilters: [
+                            {
+                                "variant.inventory_variant_oid": deletedItemInCart.product_variant_id,
+                            }
+                        ]
+                    }
+                )
+                /* ---- Actualizar inventario duplicado ---- */
+                return
             } catch (e) {
                 if (e instanceof Error) {
                     throw new TRPCError({

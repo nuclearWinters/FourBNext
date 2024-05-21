@@ -1,6 +1,7 @@
 import { FC, useState } from "react"
 import { CartsByUserTRPC } from "../server/trpc"
 import { trpc } from "../utils/config"
+import { DeleteItemCartButton } from "./DeleteItemCartButton"
 
 export const CartDetails: FC<{ cart: CartsByUserTRPC }> = ({ cart }) => {
     const [show, setShow] = useState(false)
@@ -49,6 +50,15 @@ export const CartDetails: FC<{ cart: CartsByUserTRPC }> = ({ cart }) => {
                                 <td className="table-item">{item.sku}</td>
                                 <td className="table-item">{item.qty}</td>
                                 <td className="table-item">${(((item.use_discount ? item.discount_price : item.price) * item.qty) / 100).toFixed(2)}</td>
+                                <td className="table-item">
+                                    <DeleteItemCartButton
+                                        items_by_cart_id={item._id}
+                                        onSuccess={() => {
+                                            getItemsByCart.refetch()
+                                        }}
+                                        text={"Eliminar del carrito"}
+                                    />
+                                </td>
                             </tr>
                         )
                     })}

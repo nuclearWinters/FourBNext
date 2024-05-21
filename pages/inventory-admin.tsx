@@ -102,7 +102,6 @@ export default function InventoryAdmin() {
                     {searchProducts.data?.pages.map((page, index) => (
                         <Fragment key={index}>
                             {page.items.map(product => {
-                                console.log("disabled:", product.disabled)
                                 const defaultVariantIndex = product.variants.findIndex(variant => variant.combination.map(combination => combination.name).every(name => name === 'default'))
                                 const defaultVariant = product.variants[defaultVariantIndex]
                                 return (

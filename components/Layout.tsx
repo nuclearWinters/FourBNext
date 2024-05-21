@@ -276,7 +276,8 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
                     FOURB
                 </Link>
                 {isAdmin ? <Link href={'/inventory-admin'} className={css["header-button-top"]}>Inventario</Link> : null}
-                {isAdmin ? <Link href={'/carts'} className={css["header-button-top"]}>Pagos en efectivo</Link> : null}
+                {isAdmin ? <Link href={'/carts-cash'} className={css["header-button-top"]}>Pagos en efectivo</Link> : null}
+                {isAdmin ? <Link href={'/carts'} className={css["header-button-top"]}>Carritos</Link> : null}
                 {isAdmin ? <Link href={'/shippings'} className={css["header-button-top"]}>Envios</Link> : null}
                 {isAdmin ? <Link href={'/deliveries'} className={css["header-button-top"]}>Entregas en mano</Link> : null}
                 {logged && !isAdmin ? <Link href={'/account'} className={css["header-button-top"]}>Cuenta</Link> : null}

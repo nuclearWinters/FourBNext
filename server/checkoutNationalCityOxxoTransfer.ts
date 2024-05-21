@@ -1,5 +1,5 @@
 import { Collection, Filter, ObjectId } from "mongodb"
-import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, SessionJWT, UserMongo } from "./types"
+import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, SessionJWT, UserMongo } from "./types"
 import { NextApiResponse } from "next"
 import { CustomersApi, OrdersApi } from "conekta"
 import { ACCESSSECRET, REFRESHSECRET, jwt, sessionToBase64 } from "./utils"
@@ -35,6 +35,7 @@ interface CheckoutNationalCityOxxoTransfer {
     payment_method: "bank_transfer" | "oxxo"
     variantInventory: Collection<InventoryVariantsMongo>
     inventory: Collection<InventoryMongo>
+    purchases: Collection<PurchasesMongo>
 }
 
 export const checkoutNationalCityOxxoTransfer = async ({
@@ -63,6 +64,7 @@ export const checkoutNationalCityOxxoTransfer = async ({
     payment_method,
     variantInventory,
     inventory,
+    purchases,
 }: CheckoutNationalCityOxxoTransfer): Promise<string | undefined> => {
     const new_cart_oid = new ObjectId()
     const new_cart_id = new_cart_oid.toHexString()
@@ -340,5 +342,23 @@ export const checkoutNationalCityOxxoTransfer = async ({
             html: result,
         });
     }
+    const purchasedProducts: PurchasesMongo[] = products.map(product => ({
+        name: product.name,
+        product_variant_id: product.product_variant_id,
+        qty: product.qty,
+        price: product.price,
+        discount_price: product.discount_price,
+        use_discount: product.use_discount,
+        user_id: userData?.user._id ? new ObjectId(userData.user._id) : null,
+        date: new Date(),
+        imgs: product.imgs,
+        sku: product.sku,
+        combination: product.combination,
+        product_id: product.product_id,
+        cart_id: product.cart_id,
+        cart_item: product,
+        status: "waiting_payment",
+    }))
+    await purchases.insertMany(purchasedProducts)
     return cart_oid.toHexString()
 }

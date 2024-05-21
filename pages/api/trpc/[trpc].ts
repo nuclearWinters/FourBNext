@@ -64,6 +64,16 @@ const job = new CronJob(
                         revalidateProduct(variantProduct.inventory_id.toHexString())
                     }
                     await itemsByCart.deleteMany({ cart_id: cart._id })
+                    await purchases.updateMany(
+                        {
+                            cart_id: cart._id
+                        },
+                        {
+                            $set: {
+                                status: "cancelled",
+                            }
+                        }
+                    )
                     await cartsByUser.updateOne({ _id: cart._id }, { $set: { expire_date: null } })
                 }
             }
