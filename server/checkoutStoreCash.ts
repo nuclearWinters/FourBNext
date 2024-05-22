@@ -4,6 +4,8 @@ import { ACCESSSECRET, REFRESHSECRET, jwt, sessionToBase64 } from "./utils"
 import sgMail from '@sendgrid/mail'
 import cookie from "cookie"
 import { NextApiResponse } from "next"
+import { payInStore } from "./pay_in_store"
+import Handlebars from "handlebars"
 
 interface CheckoutStoreCash {
     cartsByUser: Collection<CartsByUserMongo>
@@ -105,7 +107,7 @@ export const checkoutStoreCash = async ({
     if (!line_items.length) {
         throw new Error('No items selected')
     }
-    await cartsByUser.updateOne(
+    const cart = await cartsByUser.findOneAndUpdate(
         {
             _id: cart_oid
         },
@@ -122,6 +124,9 @@ export const checkoutStoreCash = async ({
                 status: "waiting",
                 expire_date,
             }
+        },
+        {
+            returnDocument: "after",
         }
     )
     const new_cart_oid = new ObjectId()
@@ -183,12 +188,46 @@ export const checkoutStoreCash = async ({
         })
         res.setHeader("Session-Token", session)
     }
+    const template = Handlebars.compile(payInStore);
+    const productsList = products.map(
+        product => {
+            const total = product.price * product.qty
+            return {
+                qty: product.qty,
+                total: '$ ' + (total / 100).toFixed(2),
+                img: product?.imgs?.[0] || '',
+                totalCents: total,
+                name: product.name,
+                code: cart_oid.toHexString(),
+            }
+        }
+    )
+    const subtotal = productsList.reduce((curr, next) => {
+        const total = curr + next.totalCents
+        return total
+    }, 0)
+    const shipment = cart?.delivery === "city" ? 3500 : 11900
+    const data = {
+        productsList,
+        total: '$ ' + ((subtotal + shipment) /100).toFixed(2),
+        subtotal: '$ ' + (subtotal / 100).toFixed(2),
+        shipment: '$ ' + (shipment / 100).toFixed(2),
+        name: cart?.name || '',
+        shipmentMethod: cart?.delivery === "city"
+            ? "Servicio en la ciudad"
+            : cart?.delivery === "national"
+                ? "Nacional"
+                : "Recoger en tienda",
+        paymentMethod: 'Pago en tienda',
+        address: cart?.address || '',
+    };
+    const result = template(data)
     await sgMail.send({
         to: email,
         from: 'asistencia@fourb.mx',
-        subject: 'Por favor contáctanos y envíanos el código adjunto',
-        text: `Envíanos un mensaje a nuestro Instagram o Facebook con este código en mano: ${cart_oid.toHexString()}`,
-        html: `<strong>Envíanos un mensaje a nuestro <a href='https://www.instagram.com/fourb_mx/' target='_blank'>Instagram</a> o <a href='https://www.facebook.com/fourbmx/' target='_blank'>Facebook</a> con este código en mano: ${cart_oid.toHexString()}</strong>`,
+        subject: 'Pago pendiente de cobro',
+        text: 'Por favor, realiza el pago pendiente en la tienda',
+        html: result,
     });
     const purchasedProducts: PurchasesMongo[] = products.map(product => ({
         name: product.name,
