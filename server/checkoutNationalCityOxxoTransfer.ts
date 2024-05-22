@@ -337,8 +337,8 @@ export const checkoutNationalCityOxxoTransfer = async ({
         await sgMail.send({
             to: email,
             from: 'asistencia@fourb.mx',
-            subject: 'Pago en OXXO pendiente',
-            text: 'Por favor, realiza el pago pendiente en OXXO',
+            subject: 'Pago por transferencia pendiente',
+            text: 'Por favor, realiza el pago por transferencia',
             html: result,
         });
     }
