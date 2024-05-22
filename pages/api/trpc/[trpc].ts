@@ -3,7 +3,6 @@ import { appRouter } from '../../../server/trpc';
 import { MongoClient } from 'mongodb';
 import { MONGO_DB, getSessionData, getSessionToken, getTokenData, revalidateProduct } from '../../../server/utils';
 import { CartsByUserMongo, DescriptionsDBMongo, ImagesDBMongo, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from '../../../server/types';
-import { CronJob } from 'cron';
 
 const client = await MongoClient.connect(MONGO_DB || "mongodb://mongo-fourb:27017", {})
 const db = client.db("fourb");
@@ -15,76 +14,6 @@ export const itemsByCart = db.collection<ItemsByCartMongo>("items_by_cart")
 export const purchases = db.collection<PurchasesMongo>("purchases")
 export const imagesHome = db.collection<ImagesDBMongo>("images")
 export const descriptions = db.collection<DescriptionsDBMongo>("descriptions")
-
-const job = new CronJob(
-    '00 00 03 * * *',
-    async () => {
-        const carts = await cartsByUser.find({ expire_date: { $ne: null } }).toArray()
-        const now = (new Date).getTime()
-        for (const cart of carts) {
-            if (cart?.expire_date) {
-                const cartExpireTime = cart.expire_date.getTime()
-                if (cartExpireTime < now) {
-                    const items = await itemsByCart.find({ cart_id: cart._id }).toArray()
-                    for (const item of items) {
-                        const variantProduct = await variantInventory.findOneAndUpdate(
-                            {
-                                _id: item.product_variant_id
-                            },
-                            {
-                                $inc: {
-                                    available: item.qty,
-                                }
-                            },
-                            {
-                                returnDocument: 'after'   
-                            }
-                        )
-                        if (!variantProduct) {
-                            continue
-                        }
-                        await inventory.updateOne(
-                            {
-                                _id: variantProduct.inventory_id
-                            },
-                            {
-                                $set: {
-                                    [`variants.$[variant].available`]: variantProduct.available,
-                                    [`variants.$[variant].total`]: variantProduct.total,
-                                },
-                            },
-                            {
-                                arrayFilters: [
-                                    {
-                                        "variant.inventory_variant_oid": variantProduct._id,
-                                    }
-                                ]
-                            }
-                        )
-                        revalidateProduct(variantProduct.inventory_id.toHexString())
-                    }
-                    await itemsByCart.deleteMany({ cart_id: cart._id })
-                    await purchases.updateMany(
-                        {
-                            cart_id: cart._id
-                        },
-                        {
-                            $set: {
-                                status: "cancelled",
-                            }
-                        }
-                    )
-                    await cartsByUser.updateOne({ _id: cart._id }, { $set: { expire_date: null } })
-                }
-            }
-        }
-    },
-    null,
-    true,
-    'America/Cancun'
-);
-
-job.start()
 
 export type AppRouter = typeof appRouter;
 
