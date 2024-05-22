@@ -6,6 +6,7 @@ import cookie from "cookie"
 import { NextApiResponse } from "next"
 import { payInStore } from "./pay_in_store"
 import Handlebars from "handlebars"
+import { confirmationEmailNotification } from "./card_confirmation_notification"
 
 interface CheckoutStoreCash {
     cartsByUser: Collection<CartsByUserMongo>
@@ -189,6 +190,7 @@ export const checkoutStoreCash = async ({
         res.setHeader("Session-Token", session)
     }
     const template = Handlebars.compile(payInStore);
+    const templateNotification = Handlebars.compile(confirmationEmailNotification);
     const productsList = products.map(
         product => {
             const total = product.price * product.qty
@@ -222,6 +224,7 @@ export const checkoutStoreCash = async ({
         address: cart?.address || '',
     };
     const result = template(data)
+    const resultNotification = templateNotification(data)
     await sgMail.send({
         to: email,
         from: 'asistencia@fourb.mx',
@@ -229,6 +232,15 @@ export const checkoutStoreCash = async ({
         text: 'Por favor, realiza el pago pendiente en la tienda',
         html: result,
     });
+    if (process.env.NODE_ENV === "production") {
+        await sgMail.send({
+            to: "fourboutiquemx@gmail.com",
+            from: 'asistencia@fourb.mx',
+            subject: 'Reserva confirmada',
+            text: 'El pago del carrito se realizara en tienda',
+            html: resultNotification,
+        });
+    }
     const purchasedProducts: PurchasesMongo[] = products.map(product => ({
         name: product.name,
         product_variant_id: product.product_variant_id,

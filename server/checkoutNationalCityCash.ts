@@ -6,6 +6,7 @@ import { NextApiResponse } from "next"
 import cookie from "cookie"
 import { payInStore } from "./pay_in_store"
 import Handlebars from "handlebars"
+import { confirmationEmailNotification } from "./card_confirmation_notification"
 
 interface CheckoutNationalCityCash {
     cartsByUser: Collection<CartsByUserMongo>
@@ -146,6 +147,7 @@ export const checkoutNationalCityCash = async ({
         }
     )
     const template = Handlebars.compile(payInStore);
+    const templateNotification = Handlebars.compile(confirmationEmailNotification);
     const productsList = products.map(
         product => {
             const total = product.price * product.qty
@@ -179,6 +181,7 @@ export const checkoutNationalCityCash = async ({
         address: cart?.address || '',
     };
     const result = template(data)
+    const resultNotification = templateNotification(data)
     await sgMail.send({
         to: email,
         from: 'asistencia@fourb.mx',
@@ -186,6 +189,15 @@ export const checkoutNationalCityCash = async ({
         text: 'Por favor, realiza el pago pendiente en la tienda',
         html: result,
     });
+    if (process.env.NODE_ENV === "production") {
+        await sgMail.send({
+            to: "fourboutiquemx@gmail.com",
+            from: 'asistencia@fourb.mx',
+            subject: 'Reserva confirmada',
+            text: 'El pago del carrito se realizara en tienda',
+            html: resultNotification,
+        });
+    }
     const new_cart_oid = new ObjectId()
     const new_cart_id = new_cart_oid.toHexString()
     if (userData) {
