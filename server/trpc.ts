@@ -48,8 +48,6 @@ const confirmationEmail = `
                                                             href="https://www.instagram.com/fourb_mx"
                                                             target="_blank"
                                                         >
-                                                            fourboutiquemx@gmail.com
-                                                        >
                                                             @fourb_mx
                                                         </a>
                                                          o por correo:
@@ -2289,7 +2287,8 @@ export const appRouter = router({
                                         qty: product.qty,
                                         total: '$ ' + (total / 100).toFixed(2),
                                         img: product?.imgs?.[0] || '',
-                                        totalCents: total
+                                        totalCents: total,
+                                        name: product.name,
                                     }
                                 }
                             )
