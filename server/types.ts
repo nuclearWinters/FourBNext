@@ -125,6 +125,7 @@ export interface InventoryMongo {
     use_variants: boolean
     variants: VariantMongo[]
     disabled: boolean
+    skus: string
 }
 
 export type HomeNames =

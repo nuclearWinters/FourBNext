@@ -403,8 +403,14 @@ export const appRouter = router({
             let nextCursor: string | undefined = undefined;
             if (search) {
                 const filter: Filter<InventoryMongo> = {
-                    name: { $regex: search, $options: "i" },
-
+                    $or: [
+                        {
+                            name: { $regex: search, $options: "i" },
+                        },
+                        {
+                            skus: { $regex: search, $options: "i" },
+                        }
+                    ],
                 }
                 if (!is_admin) {
                     filter.disabled = {
@@ -1407,6 +1413,9 @@ export const appRouter = router({
                     total: variant.qty,
                     disabled: false,
                 }))
+                const skus = newVariants.reduce((curr, next) => {
+                    return curr + next.sku + " "
+                }, '')
                 const product = await inventory.insertOne({
                     name,
                     tags,
@@ -1415,6 +1424,7 @@ export const appRouter = router({
                     options,
                     use_variants,
                     disabled: false,
+                    skus,
                 })
                 await variantInventory.insertMany(newVariants.map(variant => ({
                     _id: variant.inventory_variant_oid,
