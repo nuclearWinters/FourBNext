@@ -60,10 +60,10 @@ export default function History(props: {
                                                     {product.status === "cancelled"
                                                         ? "Cancelado"
                                                         : product.status === "paid"
-                                                        ? "Pagado con exito"
-                                                        : product.status == "waiting_payment"
-                                                        ? "Pago pendiente de cobro"
-                                                        : ""
+                                                            ? "Pagado con exito"
+                                                            : product.status == "waiting_payment"
+                                                                ? "Pago pendiente de cobro"
+                                                                : ""
                                                     }
                                                 </div>
                                                 <button
@@ -88,6 +88,28 @@ export default function History(props: {
                 })}
             </InfiniteScroll>
         </div>
-        {purchases.isLoading ? <div className="loading" /> : null}
+        {purchases.hasNextPage ? (
+            <strong
+                style={{
+                    margin: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                ¡Baja para ver más!
+            </strong>
+        ) : (
+            <strong
+                style={{
+                    margin: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                ¡Se han mostrado todos los productos de la busqueda!
+            </strong>
+        )}        {purchases.isLoading ? <div className="loading" /> : null}
     </div >
 }

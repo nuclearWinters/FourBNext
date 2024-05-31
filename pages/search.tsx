@@ -36,6 +36,29 @@ export default function Search(props: {
                     })}
                 </InfiniteScroll>
             </div>
+            {searchProducts.hasNextPage ? (
+                <strong
+                    style={{
+                        margin: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    ¡Baja para ver más!
+                </strong>
+            ) : (
+                <strong
+                style={{
+                    margin: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                ¡Se han mostrado todos los productos de la busqueda!
+            </strong>  
+            )}
             {searchProducts.isLoading ? <div className="loading" /> : null}
         </div>
     )

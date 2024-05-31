@@ -42,6 +42,5 @@ export const InfiniteScroll: FC<{
     }, [])
     return <>
         {children}
-        {loading ? <div className="loading" /> : null}
     </>
 }
