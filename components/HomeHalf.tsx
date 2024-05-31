@@ -61,9 +61,9 @@ export const HomeHalf: FC<{
                 bottom: 0,
                 top: 0,
                 width: '100%',
-                maxHeight: '658px',
                 objectPosition: 'center',
-                zIndex: -1
+                zIndex: -1,
+                height: '100%',
             }}
         />
         {form.name ? <Modal onClose={() => {
