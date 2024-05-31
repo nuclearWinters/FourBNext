@@ -14,7 +14,19 @@ export default function Cart() {
         {
             onSuccess: (data) => {
                 if (data?.expire_date) {
-                    setExpireDate(new Date(data.expire_date))
+                    const expirationTime = new Date(data.expire_date)
+                    expirationTime.setDate(expirationTime.getDate()+1)
+                    const expirationTimeUTC = new Date(
+                        Date.UTC(
+                            expirationTime.getUTCFullYear(),
+                            expirationTime.getUTCMonth(),
+                            expirationTime.getUTCDate(),
+                            8,
+                            0,
+                            0,
+                        )
+                    )
+                    setExpireDate(expirationTimeUTC)
                 }
             }
         }
@@ -52,7 +64,7 @@ export default function Cart() {
                     <div>
                         Expira en: {" "}
                         <strong>
-                            {expireTime.hours} Horas, {expireTime.minutes} Minutos, {expireTime.seconds} Segundos
+                            {expireTime.days ? `${expireTime.days} Día,` : ''} {expireTime.hours} Horas, {expireTime.minutes} Minutos, {expireTime.seconds} Segundos
                         </strong>
                     </div>
                 )
