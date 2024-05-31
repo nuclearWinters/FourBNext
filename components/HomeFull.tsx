@@ -41,17 +41,32 @@ export const HomeFull: FC<{
   })
   return <div
     style={{
-      backgroundImage: `url(${src})`,
       height: 518,
-      backgroundSize: 'cover',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'flex-end',
       flexDirection: 'column',
-      backgroundPosition: 'center',
       position: 'relative',
     }}
   >
+    <Image
+      src={src}
+      alt=""
+      height={518}
+      width={600}
+      style={{
+        position: 'absolute',
+        objectFit: 'cover',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        top: 0,
+        width: '100%',
+        maxHeight: '518px',
+        objectPosition: 'center',
+        zIndex: -1
+      }}
+    />
     {form.name ? <Modal onClose={() => {
       setForm({ name: '', description: '' })
     }}>
@@ -165,10 +180,10 @@ export const HomeFull: FC<{
         color: 'black',
       }}
       onClick={() => {
-        setForm({ name: nameLink, description: moreButtonLink ?? ''})
+        setForm({ name: nameLink, description: moreButtonLink ?? '' })
       }}
     >
-        Editar link
+      Editar link
     </button> : null}
     {moreButtonLink ? <Link
       href={moreButtonLink}

@@ -26,17 +26,32 @@ export const HomeFullBig: FC<{ src: string; children: string, name: HomeNames, i
     const [newURL, setNewURL] = useState('')
     return <div
         style={{
-            backgroundImage: `url(${src})`,
             height: 685,
-            backgroundSize: 'cover',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
-            backgroundPosition: '50% 56%',
             position: 'relative',
         }}
     >
+        <Image
+            src={src}
+            alt=""
+            height={685}
+            width={700}
+            style={{
+                position: 'absolute',
+                objectFit: 'cover',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                top: 0,
+                width: '100%',
+                maxHeight: '685px',
+                objectPosition: '50% 56%',
+                zIndex: -1
+            }}
+        />
         {showImageModal ? <Modal onClose={() => {
             setShowImageModal(false)
         }}>

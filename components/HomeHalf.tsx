@@ -42,15 +42,30 @@ export const HomeHalf: FC<{
     })
     return <div style={{
         flex: 1,
-        backgroundImage: `url(${src})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexDirection: 'column',
         position: 'relative',
     }}>
+        <Image
+            src={src}
+            alt=""
+            height={658}
+            width={600}
+            style={{
+                position: 'absolute',
+                objectFit: 'cover',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                top: 0,
+                width: '100%',
+                maxHeight: '658px',
+                objectPosition: 'center',
+                zIndex: -1
+            }}
+        />
         {form.name ? <Modal onClose={() => {
             setForm({ name: '', description: '' })
         }}>
