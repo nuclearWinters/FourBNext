@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState } from "react"
+import { FC, MutableRefObject, ReactNode, useState } from "react"
 import { trpc } from "../utils/config"
 import { Modal } from "./Modal"
 import css from './Layout.module.css'
@@ -21,7 +21,10 @@ import facebook from '../public/facebook.svg'
 import instagram from '../public/instagram.svg'
 import map from '../public/map.png'
 
-export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
+export const Layout: FC<{
+    children: ReactNode,
+    footerRef: MutableRefObject<HTMLDivElement | null>
+}> = ({ children, footerRef }) => {
     const user = trpc.getUser.useQuery();
     const isAdmin = user.data?.is_admin
     const logged = user.data?._id
@@ -491,6 +494,7 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
         </div>
         {children}
         <div
+            ref={footerRef}
             style={{
                 display: 'flex',
                 flexDirection: 'column',

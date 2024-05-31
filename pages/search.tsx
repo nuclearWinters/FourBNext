@@ -1,11 +1,13 @@
 import { trpc } from '../utils/config';
-import { Fragment } from 'react';
+import { Fragment, MutableRefObject, useRef } from 'react';
 import { ProductList } from '../components/ProductList';
 import { useSearchParams } from 'next/navigation'
 import { InfiniteScroll } from '../components/InfiniteScroll';
 import Head from 'next/head';
 
-export default function Search() {
+export default function Search(props: {
+    footerRef: MutableRefObject<HTMLDivElement | null>
+}) {
     const urlParams = useSearchParams()
     const tag = urlParams.get('tag') || ""
     const search = urlParams.get('search') || ""
@@ -24,6 +26,7 @@ export default function Search() {
                     loading={searchProducts.isFetchingNextPage}
                     next={searchProducts.fetchNextPage}
                     hasMore={!!searchProducts.hasNextPage}
+                    refContainer={props.footerRef}
                 >
                     {searchProducts.data?.pages.map((pages, index) => {
                         return <Fragment key={index}>{pages.items.map(product => (

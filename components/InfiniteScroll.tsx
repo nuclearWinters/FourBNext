@@ -1,11 +1,12 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from "react";
+import React, { FC, MutableRefObject, ReactNode, useEffect, useRef, useState } from "react";
 
 export const InfiniteScroll: FC<{
     next: () => void,
     children: ReactNode
     loading: boolean
     hasMore: boolean
-}> = ({ next, children, loading, hasMore }) => {
+    refContainer: MutableRefObject<HTMLDivElement | null>
+}> = ({ next, children, loading, hasMore, refContainer }) => {
     const moreProductsLeft = useRef(true)
     useEffect(() => {
         moreProductsLeft.current = hasMore
@@ -25,7 +26,7 @@ export const InfiniteScroll: FC<{
         };
         const handleInfiniteScroll = () => {
             throttle(async () => {
-                const endOfPage = Math.ceil(window.innerHeight + window.scrollY) >= document.body.offsetHeight;
+                const endOfPage = Math.ceil(window.innerHeight + window.scrollY) >= (document.body.offsetHeight - (refContainer.current?.offsetHeight || 0));
                 if (endOfPage) {
                     next();
                 }

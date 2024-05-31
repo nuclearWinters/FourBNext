@@ -1,12 +1,14 @@
 import Link from "next/link"
 import { trpc } from "../utils/config"
 import { useRouter } from "next/router"
-import { Fragment } from "react"
+import { Fragment, MutableRefObject } from "react"
 import { InfiniteScroll } from "../components/InfiniteScroll"
 import Head from "next/head"
 import { toast } from "react-toastify"
 
-export default function History() {
+export default function History(props: {
+    footerRef: MutableRefObject<HTMLDivElement | null>
+}) {
     const router = useRouter()
     const purchases = trpc.purchases.useInfiniteQuery(
         { limit: 8 },
@@ -32,6 +34,7 @@ export default function History() {
                 loading={purchases.isFetchingNextPage}
                 next={purchases.fetchNextPage}
                 hasMore={!!purchases.hasNextPage}
+                refContainer={props.footerRef}
             >
                 {purchases.data?.pages.map((page, index) => {
                     return (
