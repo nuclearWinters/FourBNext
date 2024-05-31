@@ -1487,7 +1487,7 @@ export const appRouter = router({
                         name: z.string()
                     })
                 ),
-                disabled: z.boolean(),
+                disabled: z.boolean().optional(),
             })),
             use_variants: z.boolean(),
             options: z.array(z.object({
@@ -1542,6 +1542,7 @@ export const appRouter = router({
                 const newVariants = new_variants.map(variant => ({
                     ...variant,
                     inventory_variant_oid: new ObjectId(),
+                    disabled: variant.disabled ?? false,
                 }))
                 const skus = create_new_variants
                     ? newVariants.reduce((curr, next) => {
