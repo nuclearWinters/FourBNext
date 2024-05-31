@@ -1470,7 +1470,7 @@ export const appRouter = router({
                         name: z.string()
                     })
                 ),
-                disabled: z.boolean().nullable(),
+                disabled: z.boolean().optional(),
             })),
             create_new_variants: z.boolean(),
             new_variants: z.array(z.object({
