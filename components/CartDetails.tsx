@@ -2,6 +2,7 @@ import { FC, useState } from "react"
 import { CartsByUserTRPC } from "../server/trpc"
 import { trpc } from "../utils/config"
 import { DeleteItemCartButton } from "./DeleteItemCartButton"
+import Image from "next/image"
 
 export const CartDetails: FC<{ cart: CartsByUserTRPC }> = ({ cart }) => {
     const [show, setShow] = useState(false)
@@ -44,7 +45,7 @@ export const CartDetails: FC<{ cart: CartsByUserTRPC }> = ({ cart }) => {
                             <tr key={item._id}>
                                 <td className="table-item">{item._id}</td>
                                 <td className="table-item">
-                                    <img className="img-table" alt="" width="100%" src={item.imgs[0]} />
+                                    <Image className="img-table" alt="" width={100} height={100} src={item.imgs[0]} />
                                 </td>
                                 <td className="table-item">{item.name}{variantName === "default" ? "" : ` (${variantName})`}</td>
                                 <td className="table-item">{item.sku}</td>

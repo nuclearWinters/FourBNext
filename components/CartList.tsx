@@ -55,7 +55,7 @@ export const CartList: FC<{
     return <tr className={css.productCard}>
         <td className={css.imageColumn} style={{ verticalAlign: 'top' }}>
             <Link href={`/product/${product.product_variant_id}`}>
-                <img className={css.imgProduct} src={product.imgs[0]} />
+                <Image alt="" className={css.imgProduct} width={100} height={100} src={product.imgs[0]} />
             </Link>
         </td>
         <td className={css.columnResponsive}>

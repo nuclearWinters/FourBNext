@@ -55,7 +55,7 @@ export const SearchModal: FC<{
                     setShowSearchModal(false)
                 }}
             >
-                <Image src={cross} alt="" height={20} />
+                <Image src={cross} alt="" height={20} width={20} />
             </button>
         </form>
     </div>

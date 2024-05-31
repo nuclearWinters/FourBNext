@@ -117,7 +117,7 @@ export const HomeHalf: FC<{
                         {newURL ? (
                             <div className="input-container images-container">
                                 <div style={{ position: 'relative' }}>
-                                    <img className="img-uploaded" alt="" width={"100%"} src={newURL} />
+                                    <Image className="img-uploaded" alt="" style={{ width: "100%" }} width={200} height={200} src={newURL} />
                                 </div>
                             </div>
                         ) : null}

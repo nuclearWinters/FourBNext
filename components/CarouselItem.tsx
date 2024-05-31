@@ -1,6 +1,7 @@
 import { FC } from "react"
 import { InventoryTRPC } from "../server/trpc"
 import Link from "next/link";
+import Image from "next/image";
 
 export const CarouselItem: FC<{
     product: InventoryTRPC
@@ -29,7 +30,9 @@ export const CarouselItem: FC<{
             flexDirection: 'column'
         }}
     >
-        <img
+        <Image
+            height={263}
+            width={280}
             style={{
                 height: '263px',
                 width: '280px',

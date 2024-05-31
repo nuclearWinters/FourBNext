@@ -6,6 +6,7 @@ import { DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd';
 import Head from "next/head";
 import { Combination } from "../server/types";
 import { useRouter } from "next/router";
+import Image from "next/image";
 
 export interface CombinationEdit {
     id: string
@@ -110,7 +111,7 @@ export default function InventoryAdmin() {
                                             <td>
                                                 {product.use_variants
                                                     ? null
-                                                    : <img className="img-table" alt="" width="100%" src={defaultVariant.imgs[0]} />
+                                                    : <Image className="img-table" alt="" style={{ width: "100%" }} width={100} height={100} src={defaultVariant.imgs[0]} />
                                                 }
                                             </td>
                                             <td>{product.name}</td>
@@ -161,7 +162,7 @@ export default function InventoryAdmin() {
                                                             return <tr key={value.inventory_variant_oid}>
                                                                 <td>{variantName}</td>
                                                                 <td>
-                                                                    <img className="img-table" alt="" width="100%" src={value.imgs[0]} />
+                                                                    <Image className="img-table" alt="" style={{ width: "100%" }} width={100} height={100} src={value.imgs[0]} />
                                                                 </td>
                                                                 <td>{value.available}</td>
                                                                 <td>{value.total}</td>

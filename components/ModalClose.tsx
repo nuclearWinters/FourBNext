@@ -11,7 +11,7 @@ export const ModalClose: FC<{
     return <div className={css.container}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
             <button onClick={onClose} className={css.closeButton}>
-                <Image src={cross} alt="" />
+                <Image src={cross} alt="" height={40} width={40} />
             </button>
         </div>
         <div className={css.title}>{title}</div>

@@ -248,7 +248,7 @@ const NewProduct = () => {
                                                                 >
                                                                     <Image src={'/cross.svg'} alt="" height={16} width={16} />
                                                                 </button>
-                                                                <img className="img-uploaded" alt="" width="100%" src={item} />
+                                                                <Image className="img-uploaded" alt="" style={{ width: '100%' }} width={100} height={100} src={item} />
                                                             </div>
                                                         </div>
                                                     )}
@@ -670,7 +670,7 @@ const NewProduct = () => {
                                                                             >
                                                                                 <Image src={'/cross.svg'} alt="" height={16} width={16} />
                                                                             </button>
-                                                                            <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                                                            <Image className="img-uploaded" alt="" width={100} height={100} src={item} />
                                                                         </div>
                                                                     </div>
                                                                 )}

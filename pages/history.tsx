@@ -5,6 +5,7 @@ import { Fragment, MutableRefObject } from "react"
 import { InfiniteScroll } from "../components/InfiniteScroll"
 import Head from "next/head"
 import { toast } from "react-toastify"
+import Image from "next/image"
 
 export default function History(props: {
     footerRef: MutableRefObject<HTMLDivElement | null>
@@ -44,7 +45,7 @@ export default function History(props: {
                                 return (
                                     <div key={product._id} style={{ borderTop: '1px solid rgba(0,0,0,0.2)' }}>
                                         <div className="product-card" style={{ flexDirection: 'row', display: 'flex' }}>
-                                            <Link href={`/product/${product.product_id}`}><img className="img-product" src={product.imgs[0]} /></Link>
+                                            <Link href={`/product/${product.product_id}`}><Image alt="" className="img-product" src={product.imgs[0]} width={100} height={100} /></Link>
                                             <div>
                                                 <div style={{ fontWeight: 'bold' }} className="name">{product.name}{variantName === "default" ? "" : ` (${variantName})`}</div>
                                                 <div className="price">

@@ -11,6 +11,7 @@ import Script from "next/script";
 import { toast } from "react-toastify";
 import { Modal } from "../../components/Modal";
 import { ModalClose } from "../../components/ModalClose";
+import Image from "next/image";
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -146,7 +147,7 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
         </Modal> : null}
         <div className={css.productBox} style={{ flex: 1, display: 'flex' }}>
             <div style={{ flex: 4 }}>
-                <img className={css.mainImage} src={variant.imgs?.[0] ?? defaultProduct?.imgs?.[0]} />
+                <Image alt="" style={{ width: '100%' }} className={css.mainImage} width={400} height={400} src={variant.imgs?.[0] ?? defaultProduct?.imgs?.[0]} />
             </div>
             <div className={css.infoBox}>
                 <h1 className={css.name}>
@@ -247,14 +248,14 @@ export const Product: FC<{ product: InventoryTRPC }> = ({ product }) => {
                 variant => variant.combination.every(value => value.name === "default")
             ).map(variant => {
                 return variant.imgs.map(img => (
-                    <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
+                    <Image alt="" height={300} width={300} style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
                 ))
             }) : null}
             {product.use_variants ? product.variants.filter(
                 variant => !variant.combination.every(value => value.name === "default")
             ).map(variant => {
                 return variant.imgs.map(img => (
-                    <img style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
+                    <Image alt="" height={300} width={300} style={{ maxHeight: 300, padding: 6, }} className={css.mainImage} src={img} key={img} />
                 ))
             }) : null}
         </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { FC } from 'react';
 import { InventoryTRPC } from '../pages/product/[id]';
+import Image from 'next/image';
 
 export const ProductList: FC<{
     product: InventoryTRPC
@@ -21,7 +22,7 @@ export const ProductList: FC<{
     const variantName = variant.combination.map(combination => combination.name).join(" / ")
     return <div className="product-card">
         <Link href={`/product/${product._id}`}>
-            <img style={{ display: "flex" }} className="img-product" src={variant.imgs[0]} />
+            <Image alt="" style={{ display: "flex" }} className="img-product" src={variant.imgs[0]} width={100} height={100} />
             <div className="name">{product.name}{product.use_variants ? ` (${variantName})` : ""}</div>
             <div className="price">
                 <span className={variant.use_discount ? "price-discounted" : ""}>${(variant.price / 100).toFixed(2)}</span>

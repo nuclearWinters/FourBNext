@@ -661,9 +661,9 @@ export const EditProduct: FC<{
                                                                                             }))
                                                                                         }}
                                                                                     >
-                                                                                        <Image src={cross} alt="" height={10} />
+                                                                                        <Image src={cross} alt="" height={10} width={10} />
                                                                                     </button>
-                                                                                    <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                                                                    <Image className="img-uploaded" alt="" style={{ width: "100%" }} width={100} height={100} src={item} />
                                                                                 </div>
                                                                             </div>
                                                                         )}
@@ -845,9 +845,9 @@ export const EditProduct: FC<{
                                                                                             }))
                                                                                         }}
                                                                                     >
-                                                                                        <Image src={cross} alt="" height={10} />
+                                                                                        <Image src={cross} alt="" height={10} width={10} />
                                                                                     </button>
-                                                                                    <img className="img-uploaded" alt="" width={"100%"} src={item} />
+                                                                                    <Image className="img-uploaded" alt="" height={100} width={100} style={{ width: "100%" }} src={item} />
                                                                                 </div>
                                                                             </div>
                                                                         )}
@@ -956,9 +956,9 @@ export const EditProduct: FC<{
                                                                                             }))
                                                                                         }}
                                                                                     >
-                                                                                        <Image src={cross} alt="" height={10} />
+                                                                                        <Image src={cross} alt="" height={10} width={10} />
                                                                                     </button>
-                                                                                    <img className="img-uploaded" alt="" width="100%" src={item} />
+                                                                                    <Image className="img-uploaded" alt="" style={{ width: "100%" }} height={100} width={100} src={item} />
                                                                                 </div>
                                                                             </div>
                                                                         )}

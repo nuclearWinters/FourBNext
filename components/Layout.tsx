@@ -265,7 +265,7 @@ export const Layout: FC<{
                         setShowSearchModal(true)
                     }}
                 >
-                    <Image className={css.searchIcon} src={search} alt="" />
+                    <Image className={css.searchIcon} src={search} alt="" height={24} width={24} />
                 </button>
                 <Link
                     href={`/`}
@@ -299,7 +299,7 @@ export const Layout: FC<{
                         setShowMobileMenu(false)
                     }}
                 >
-                    <Image className={css.searchIcon} src={userSVG} alt="" />
+                    <Image className={css.searchIcon} src={userSVG} alt="" height={24} width={24} />
                 </button>}
                 <Link
                     href="/cart"
@@ -307,7 +307,7 @@ export const Layout: FC<{
                         marginRight: 30,
                     }}
                 >
-                    <Image className={css.searchIcon} src={cart} alt="" />
+                    <Image className={css.searchIcon} src={cart} alt="" height={24} width={24} />
                 </Link>
             </div>
             <div className={css["fourb-header-mobile"]} style={{ width: '100%' }}>
@@ -405,7 +405,7 @@ export const Layout: FC<{
                     }}
                     className={css.menu}
                 >
-                    <Image src={menu} alt="" width={20} />
+                    <Image src={menu} alt="" width={20} height={20} />
                 </button>
                 <button
                     style={{
@@ -417,7 +417,7 @@ export const Layout: FC<{
                         setShowSearchModal(true)
                     }}
                 >
-                    <Image className={css.searchIcon} src={search} alt="" />
+                    <Image className={css.searchIcon} src={search} alt="" height={24} width={24} />
                 </button>
                 <Link
                     className={css.linkMobile}
@@ -442,12 +442,12 @@ export const Layout: FC<{
                         setShowMobileMenu(false)
                     }}
                 >
-                    <Image className={css.searchIcon} src={userSVG} alt="" />
+                    <Image className={css.searchIcon} src={userSVG} alt="" height={24} width={24} />
                 </button>}
-                <Link className={css.cartMobile} href={"/cart"}><Image src={cart} alt="" width={30} /></Link>
+                <Link className={css.cartMobile} href={"/cart"}><Image src={cart} alt="" width={30} height={30} /></Link>
             </div>
             <div className={css["fourb-header"]} style={{ width: '100%', paddingBottom: '24px' }}>
-                <Link className={css.cart} href={"/cart"}><Image src={cart} alt="" width={30} /></Link>
+                <Link className={css.cart} href={"/cart"}><Image src={cart} alt="" width={30} height={30} /></Link>
                 {[
                     {
                         tag: '',
@@ -587,9 +587,12 @@ export const Layout: FC<{
                     paddingBottom: 40,
                 }}
             >
-                <img alt=""
+                <Image
+                    alt=""
                     src={map.src}
-                    width={'100%'}
+                    style={{ width: "100%" }}
+                    width={800}
+                    height={800}
                 />
             </a>
             <InformationStreet>
