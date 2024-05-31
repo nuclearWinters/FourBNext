@@ -1542,6 +1542,13 @@ export const appRouter = router({
                     ...variant,
                     inventory_variant_oid: new ObjectId(),
                 }))
+                const skus = create_new_variants
+                    ? newVariants.reduce((curr, next) => {
+                        return curr + next.sku + " "
+                    }, '')
+                    : updateVariants.reduce((curr, next) => {
+                        return curr + next.sku + " "
+                    }, '')
                 const result = await inventory.findOneAndUpdate(
                     filter,
                     {
@@ -1552,6 +1559,7 @@ export const appRouter = router({
                             options: create_new_variants ? new_options : options,
                             variants: create_new_variants ? newVariants : updateVariants,
                             use_variants,
+                            skus,
                         }
                     },
                     {
