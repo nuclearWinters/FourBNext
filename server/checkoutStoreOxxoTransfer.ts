@@ -6,7 +6,7 @@ import { NextApiResponse } from "next"
 import cookie from "cookie"
 import sgMail from '@sendgrid/mail'
 import Handlebars from "handlebars"
-import { format } from "date-fns"
+import { formatInTimeZone } from 'date-fns-tz'
 import { spei_email } from "./bank_email"
 
 interface CheckoutStoreOxxoTransfer {
@@ -246,7 +246,7 @@ export const checkoutStoreOxxoTransfer = async ({
         const result = template({
             amount,
             clabe,
-            date: format(new Date(expire_date), 'dd/MM/yyyy hh:mm a')
+            date: formatInTimeZone(new Date(expire_date), 'America/Mexico_City', 'dd/MM/yyyy hh:mm a') + " hora centro de México"
         })
         await sgMail.send({
             to: email,

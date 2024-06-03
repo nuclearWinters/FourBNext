@@ -156,7 +156,7 @@ export const spei_email = `
 					<li>Al confirmar tu pago, el portal de tu banco generará un comprobante digital. <strong>En el podrás verificar que se haya realizado correctamente.</strong> Conserva este comprobante de pago.</li>
 					<li>Expira en: {{date}}</li>
 				</ol>
-				<div class="ps-footnote">Al completar estos pasos recibirás un correo de <strong>Nombre del negocio</strong> confirmando tu pago.</div>
+				<div class="ps-footnote">Al completar estos pasos recibirás un correo de <strong>FourB</strong> confirmando tu pago.</div>
 			</div>
 		</div>	
 	</body>

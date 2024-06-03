@@ -222,6 +222,7 @@ export const checkoutStoreCash = async ({
                 : "Recoger en tienda",
         paymentMethod: 'Pago en tienda',
         address: cart?.address || '',
+        code: cart?._id.toHexString(),
     };
     const result = template(data)
     const resultNotification = templateNotification(data)

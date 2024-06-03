@@ -6,8 +6,8 @@ import { ACCESSSECRET, REFRESHSECRET, jwt, sessionToBase64 } from "./utils"
 import cookie from "cookie"
 import sgMail from '@sendgrid/mail'
 import Handlebars from "handlebars"
-import { format } from "date-fns"
 import { spei_email } from "./bank_email"
+import { formatInTimeZone } from 'date-fns-tz'
 
 interface CheckoutNationalCityOxxoTransfer {
     cartsByUser: Collection<CartsByUserMongo>
@@ -332,7 +332,7 @@ export const checkoutNationalCityOxxoTransfer = async ({
         const result = template({
             amount,
             clabe,
-            date: format(new Date(expire_date), 'dd/MM/yyyy hh:mm a')
+            date: formatInTimeZone(new Date(expire_date), 'America/Mexico_City', 'dd/MM/yyyy hh:mm a') + " hora centro de México"
         })
         await sgMail.send({
             to: email,
