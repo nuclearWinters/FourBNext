@@ -63,7 +63,7 @@ export default function Cart() {
                     <div>
                         Expira en: {" "}
                         <strong>
-                            {expireTime.days ? `${expireTime.days} Día,` : ''} {expireTime.hours} Horas, {expireTime.minutes} Minutos, {expireTime.seconds} Segundos
+                            {expireTime.days ? `${expireTime.days} Día,` : ''} {expireTime.hours ? `${expireTime.hours} ${expireTime.hours === 1 ? 'Hora' : 'Horas'},` : ''} {expireTime.minutes ? `${expireTime.minutes} ${expireTime.hours === 1 ? 'Minuto' : 'Minutos'},` : ''} {expireTime.seconds ? `${expireTime.seconds} ${expireTime.seconds === 1 ? 'Segundo' : 'Segundos'}` : ''}
                         </strong>
                     </div>
                 )
