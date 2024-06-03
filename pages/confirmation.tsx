@@ -59,7 +59,7 @@ export default function Payment() {
                 <div>
                     <div style={{ textAlign: 'center', margin: 30 }}>Por favor, realiza el pago en una tienda OXXO cercana:</div>
                     <div className="payBox" style={{ display: "flex", justifyContent: 'center', margin: 'auto', background: '#e7ebee', flexDirection: 'column' }}>
-                        <Image alt="" src={oxxo_info.barcode_url} width={100} height={100} />
+                        <Image alt="" src={oxxo_info.barcode_url} width={100} height={100} style={{ width: '100%', height: '100%' }} />
                         <div style={{ display: 'flex', padding: 20, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                             <div style={{ fontSize: 16, fontWeight: 500 }}>{oxxo_info.reference}</div>
                         </div>

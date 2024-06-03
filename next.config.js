@@ -11,6 +11,11 @@ module.exports = {
         hostname: 'fourb-imgs.s3.us-west-2.amazonaws.com',
         port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'barcodes.conekta.com',
+        port: '',
+      }
     ],
   }
 }
