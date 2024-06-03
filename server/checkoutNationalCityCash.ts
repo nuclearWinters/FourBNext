@@ -1,7 +1,7 @@
 import { Collection, Filter, ObjectId } from "mongodb"
 import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, SessionJWT, UserMongo } from "./types"
 import sgMail from '@sendgrid/mail'
-import { ACCESSSECRET, REFRESHSECRET, jwt, sessionToBase64 } from "./utils"
+import { ACCESSSECRET, OWNER_EMAIL_ACCOUNT, REFRESHSECRET, jwt, sessionToBase64 } from "./utils"
 import { NextApiResponse } from "next"
 import cookie from "cookie"
 import { payInStore } from "./pay_in_store"
@@ -168,7 +168,7 @@ export const checkoutNationalCityCash = async ({
     const shipment = cart?.delivery === "city" ? 3500 : 11900
     const data = {
         productsList,
-        total: '$ ' + ((subtotal + shipment) /100).toFixed(2),
+        total: '$ ' + ((subtotal + shipment) / 100).toFixed(2),
         subtotal: '$ ' + (subtotal / 100).toFixed(2),
         shipment: '$ ' + (shipment / 100).toFixed(2),
         name: cart?.name || '',
@@ -189,15 +189,13 @@ export const checkoutNationalCityCash = async ({
         text: 'Por favor, realiza el pago pendiente en la tienda',
         html: result,
     });
-    if (process.env.NODE_ENV === "production") {
-        await sgMail.send({
-            to: "fourboutiquemx@gmail.com",
-            from: 'asistencia@fourb.mx',
-            subject: 'Reserva confirmada',
-            text: 'El pago del carrito se realizara en tienda',
-            html: resultNotification,
-        });
-    }
+    await sgMail.send({
+        to: OWNER_EMAIL_ACCOUNT,
+        from: 'asistencia@fourb.mx',
+        subject: 'Reserva confirmada',
+        text: 'El pago del carrito se realizara en tienda',
+        html: resultNotification,
+    });
     const new_cart_oid = new ObjectId()
     const new_cart_id = new_cart_oid.toHexString()
     if (userData) {

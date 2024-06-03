@@ -15,6 +15,7 @@ export const SECRET_KEY = process.env.SECRET_KEY || ""
 export const REGION = process.env.REGION || ""
 export const CONEKTA_API_KEY = process.env.CONEKTA_API_KEY || ""
 export const BUCKET_NAME = process.env.BUCKET_NAME || ""
+export const OWNER_EMAIL_ACCOUNT = process.env.OWNER_EMAIL_ACCOUNT || ""
 
 export const jwt = {
   decode: (token: string): DecodeJWT | null => {

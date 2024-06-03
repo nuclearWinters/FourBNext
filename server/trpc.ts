@@ -2,7 +2,7 @@ import { TRPCError, initTRPC } from '@trpc/server';
 import { CartsByUserMongo, ContextLocals, InventoryVariantsMongo, VariantMongo } from './types';
 import { z } from 'zod';
 import { Filter, ObjectId } from 'mongodb';
-import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, SENDGRID_API_KEY, jwt, revalidateHome, revalidateProduct, sessionToBase64 } from './utils';
+import { ACCESSSECRET, ACCESS_KEY, ACCESS_TOKEN_EXP_NUMBER, BUCKET_NAME, OWNER_EMAIL_ACCOUNT, REFRESHSECRET, REFRESH_TOKEN_EXP_NUMBER, SECRET_KEY, SENDGRID_API_KEY, jwt, revalidateHome, revalidateProduct, sessionToBase64 } from './utils';
 import { InventoryMongo, ItemsByCartMongo, PurchasesMongo, UserMongo } from './types';
 import bcrypt from "bcryptjs"
 import cookie from "cookie"
@@ -1744,15 +1744,13 @@ export const appRouter = router({
                                 text: 'Tu pago ha sido procesado exitosamente',
                                 html: result,
                             });
-                            if (process.env.NODE_ENV === "production") {
-                                await sgMail.send({
-                                    to: "fourboutiquemx@gmail.com",
-                                    from: 'asistencia@fourb.mx',
-                                    subject: 'Compra confirmada',
-                                    text: 'El pago del carrito se realizo correctamente',
-                                    html: resultNotification,
-                                });
-                            }
+                            await sgMail.send({
+                                to: OWNER_EMAIL_ACCOUNT,
+                                from: 'asistencia@fourb.mx',
+                                subject: 'Compra confirmada',
+                                text: 'El pago del carrito se realizo correctamente',
+                                html: resultNotification,
+                            });
                         }
                     }
                 }
