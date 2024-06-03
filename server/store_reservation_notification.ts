@@ -1,4 +1,4 @@
-export const confirmationEmailNotification = `
+export const storeReservationNotification = `
 <table style="height:100%!important;width:100%!important;border-spacing:0;border-collapse:collapse">
     <tbody>
         <tr>
@@ -18,7 +18,7 @@ export const confirmationEmailNotification = `
                                                     style="font-family:-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;Roboto&quot;,&quot;Oxygen&quot;,&quot;Ubuntu&quot;,&quot;Cantarell&quot;,&quot;Fira Sans&quot;,&quot;Droid Sans&quot;,&quot;Helvetica Neue&quot;,sans-serif">
 
                                                     <h2 style="font-weight:normal;font-size:24px;margin:0 0 10px">
-                                                        ¡Compra confirmada!
+                                                        ¡Reserva confirmada!
                                                     </h2>
                                                 </td>
                                             </tr>

@@ -6,7 +6,7 @@ import { NextApiResponse } from "next"
 import cookie from "cookie"
 import { payInStore } from "./pay_in_store"
 import Handlebars from "handlebars"
-import { confirmationEmailNotification } from "./card_confirmation_notification"
+import { storeReservationNotification } from "./store_reservation_notification"
 
 interface CheckoutNationalCityCash {
     cartsByUser: Collection<CartsByUserMongo>
@@ -147,7 +147,7 @@ export const checkoutNationalCityCash = async ({
         }
     )
     const template = Handlebars.compile(payInStore);
-    const templateNotification = Handlebars.compile(confirmationEmailNotification);
+    const templateNotification = Handlebars.compile(storeReservationNotification);
     const productsList = products.map(
         product => {
             const total = product.price * product.qty
@@ -165,7 +165,7 @@ export const checkoutNationalCityCash = async ({
         const total = curr + next.totalCents
         return total
     }, 0)
-    const shipment = cart?.delivery === "city" ? 3500 : 11900
+    const shipment = cart?.delivery === "city" ? 3500 : cart?.delivery === "national" ? 11900 : 0
     const data = {
         productsList,
         total: '$ ' + ((subtotal + shipment) / 100).toFixed(2),

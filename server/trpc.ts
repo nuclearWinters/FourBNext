@@ -1714,7 +1714,11 @@ export const appRouter = router({
                                 const total = curr + next.totalCents
                                 return total
                             }, 0)
-                            const shipment = cart?.delivery === "city" ? 3500 : 11900
+                            const shipment = cart.delivery === "city"
+                                ? 3500
+                                : cart.delivery === "national"
+                                    ? 11900
+                                    : 0
                             const data = {
                                 productsList,
                                 total: '$ ' + amountParsed,
