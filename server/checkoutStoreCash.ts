@@ -208,7 +208,7 @@ export const checkoutStoreCash = async ({
         const total = curr + next.totalCents
         return total
     }, 0)
-    const shipment = cart?.delivery === "city" ? 3500 : cart?.delivery === "national" ? 11900 : 0
+    const shipment = cart?.delivery === "city" ? 4000 : cart?.delivery === "national" ? 11900 : 0
     const data = {
         productsList,
         total: '$ ' + ((subtotal + shipment) / 100).toFixed(2),

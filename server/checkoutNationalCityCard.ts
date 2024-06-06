@@ -216,7 +216,7 @@ export const checkoutNationalCityCard = async ({
     const shipping_lines = [
         {
             carrier: "Envio",
-            amount: delivery === "city" ? 3500 : 11900
+            amount: delivery === "city" ? 4000 : 11900
         }
     ]
     const order = await orderClient.createOrder({

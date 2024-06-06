@@ -105,7 +105,7 @@ export default function Checkout() {
         const total = ((product.use_discount ? product.discount_price : product.price) * product.qty) / 100
         return curr + total
     }, 0)
-    const deliveryCost = delivery === "city" ? 35 : delivery === "national" ? 119 : 0
+    const deliveryCost = delivery === "city" ? 40 : delivery === "national" ? 119 : 0
     const totalWithDelivery = (total || 0) + deliveryCost
     return <div>
         <Head>
@@ -218,7 +218,7 @@ export default function Checkout() {
                     </div>
                 </div>
                 {delivery === "city" || delivery === "national" ? <div className="input-container-checkout">
-                    El costo de entrega seran: {delivery === "city" ? '$35' : '$119'}
+                    El costo de entrega seran: {delivery === "city" ? '$40' : '$119'}
                 </div> : null}
                 {!user.data?._id
                     ? <div className="input-container-checkout">

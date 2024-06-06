@@ -1715,7 +1715,7 @@ export const appRouter = router({
                                 return total
                             }, 0)
                             const shipment = cart.delivery === "city"
-                                ? 3500
+                                ? 4000
                                 : cart.delivery === "national"
                                     ? 11900
                                     : 0

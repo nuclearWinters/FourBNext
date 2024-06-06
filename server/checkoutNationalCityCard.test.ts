@@ -199,7 +199,7 @@ describe("CheckoutPhase tests", () => {
                 },
                 shipping_lines: [
                     {
-                        amount: 3500,
+                        amount: 4000,
                         carrier: "Envio",
                     },
                 ],
@@ -674,7 +674,7 @@ describe("CheckoutPhase tests", () => {
                 },
                 shipping_lines: [
                     {
-                        amount: 3500,
+                        amount: 4000,
                         carrier: "Envio",
                     },
                 ],
