@@ -1,7 +1,10 @@
 
 import jsonwebtoken, { SignOptions } from 'jsonwebtoken'
-import { DecodeJWT, OldSessionJWT, SessionJWT, UserJWT } from '../server/types';
-import { ObjectId } from 'mongodb';
+import { DecodeJWT, OldSessionJWT, SessionJWT, UserJWT, UserMongo } from '../server/types';
+import { Collection, ObjectId } from 'mongodb';
+import { CustomersApi, OrderRequest, OrdersApi, Customer, OrderResponse } from 'conekta';
+import { NextApiResponse } from 'next';
+import { AxiosResponse, isAxiosError } from 'axios';
 
 export const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || ""
 export const VIRTUAL_HOST = process.env.VIRTUAL_HOST || ""
@@ -25,7 +28,7 @@ export const jwt = {
         throw new Error("payload is not string")
       }
       return payload as DecodeJWT;
-    } catch(e) {
+    } catch (e) {
       return null
     }
   },
@@ -185,4 +188,51 @@ export const revalidateProduct = (product_id: string) => {
 
 export const revalidateHome = () => {
   fetch(`https://${VIRTUAL_HOST}/api/revalidate`)
+}
+
+export const createOrderHelper = async (
+  orderClientRequest: OrderRequest,
+  orderClient: OrdersApi,
+  customerClient: CustomersApi,
+  customerRequest: Customer,
+  res: NextApiResponse,
+  userData: DecodeJWT | undefined,
+  users: Collection<UserMongo>,
+  sessionData: SessionJWT,
+): Promise<AxiosResponse<OrderResponse, any>> => {
+  try {
+    const order = await orderClient.createOrder(orderClientRequest)
+    return order
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.data?.details?.[0].message.includes("Not found customer_id")) {
+      const new_conekta_id = (await customerClient.createCustomer(customerRequest)).data.id
+      if ('customer_id' in orderClientRequest.customer_info) {
+        orderClientRequest.customer_info.customer_id = new_conekta_id
+      }
+      const order = await orderClient.createOrder(orderClientRequest)
+      if (new_conekta_id) {
+        if (userData) {
+          const user_oid = new ObjectId(userData.user._id)
+          await users.updateOne(
+            {
+              _id: user_oid,
+            },
+            {
+              $set: {
+                conekta_id: new_conekta_id,
+              }
+            },
+          )
+        } else {
+          const session = sessionToBase64({
+            ...sessionData,
+            ck: new_conekta_id,
+          })
+          res.setHeader("Session-Token", session)
+        }
+      }
+      return order
+    }
+    throw error
+  }
 }

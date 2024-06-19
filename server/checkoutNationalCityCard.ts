@@ -2,7 +2,7 @@ import { Collection, Filter, ObjectId } from "mongodb"
 import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, SessionJWT, UserMongo } from "./types"
 import { NextApiResponse } from "next"
 import { CustomersApi, OrdersApi } from "conekta"
-import { sessionToBase64 } from "./utils"
+import { createOrderHelper, sessionToBase64 } from "./utils"
 
 interface CheckoutNationalCityCard {
     cartsByUser: Collection<CartsByUserMongo>
@@ -219,18 +219,31 @@ export const checkoutNationalCityCard = async ({
             amount: delivery === "city" ? 4000 : 11900
         }
     ]
-    const order = await orderClient.createOrder({
-        currency: "MXN",
-        shipping_lines,
-        customer_info: {
-            customer_id: conekta_id,
+    const order = await createOrderHelper(
+        {
+            currency: "MXN",
+            shipping_lines,
+            customer_info: {
+                customer_id: conekta_id,
+            },
+            line_items,
+            checkout: {
+                type: 'Integration',
+                allowed_payment_methods: ['card'],
+            },
         },
-        line_items,
-        checkout: {
-            type: 'Integration',
-            allowed_payment_methods: ['card'],
+        orderClient,
+        customerClient,
+        {
+            phone,
+            name: `${name} ${apellidos}`,
+            email,
         },
-    })
+        res,
+        userData,
+        users,
+        sessionData,
+    )
     await cartsByUser.updateOne(
         {
             _id: cart_oid

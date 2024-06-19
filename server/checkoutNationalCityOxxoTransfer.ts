@@ -2,7 +2,7 @@ import { Collection, Filter, ObjectId } from "mongodb"
 import { CartsByUserMongo, DecodeJWT, InventoryMongo, InventoryVariantsMongo, ItemsByCartMongo, PurchasesMongo, SessionJWT, UserMongo } from "./types"
 import { NextApiResponse } from "next"
 import { CustomersApi, OrdersApi } from "conekta"
-import { ACCESSSECRET, REFRESHSECRET, jwt, sessionToBase64 } from "./utils"
+import { ACCESSSECRET, REFRESHSECRET, createOrderHelper, jwt, sessionToBase64 } from "./utils"
 import cookie from "cookie"
 import sgMail from '@sendgrid/mail'
 import Handlebars from "handlebars"
@@ -273,20 +273,33 @@ export const checkoutNationalCityOxxoTransfer = async ({
     expire_date.setUTCSeconds(0)
     const expirationTimeMiliseconds = expire_date.getTime()
     const expirationTimeSeconds = Math.round(expirationTimeMiliseconds / 1000)
-    const order = await orderClient.createOrder({
-        currency: "MXN",
-        shipping_lines,
-        customer_info: {
-            customer_id: conekta_id,
+    const order = await createOrderHelper(
+        {
+            currency: "MXN",
+            shipping_lines,
+            customer_info: {
+                customer_id: conekta_id,
+            },
+            line_items,
+            charges: [{
+                payment_method: {
+                    type: payment_method === "bank_transfer" ? "spei" : "cash",
+                    expires_at: expirationTimeSeconds
+                }
+            }]
         },
-        line_items,
-        charges: [{
-            payment_method: {
-                type: payment_method === "bank_transfer" ? "spei" : "cash",
-                expires_at: expirationTimeSeconds
-            }
-        }]
-    })
+        orderClient,
+        customerClient,
+        {
+            phone,
+            name: `${name} ${apellidos}`,
+            email,
+        },
+        res,
+        userData,
+        users,
+        sessionData,
+    )
     const payment_method_obj = order?.data?.charges?.data?.[0].payment_method
     const bank = payment_method_obj?.object === "bank_transfer_payment" ? (payment_method_obj.bank || "") : ""
     const clabe = payment_method_obj?.object === "bank_transfer_payment" ? (payment_method_obj.clabe || "") : ""
