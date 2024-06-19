@@ -44,7 +44,10 @@ export const checkoutStoreCash = async ({
     purchases,
 }: CheckoutStoreCash): Promise<string> => {
     const expire_date = new Date()
-    expire_date.setDate(expire_date.getDate() + 7)
+    expire_date.setHours(expire_date.getHours() + 168)
+    expire_date.setUTCHours(8)
+    expire_date.setUTCMinutes(0)
+    expire_date.setUTCSeconds(0)
     const products = await itemsByCart.find({ cart_id: cart_oid }).toArray()
     const line_items = products
         .filter(product => !product.disabled)

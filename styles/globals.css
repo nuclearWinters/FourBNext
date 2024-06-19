@@ -169,6 +169,7 @@ button {
   padding: 10px 20px;
   display: flex;
   flex-direction: column;
+  width: 280px;
 }
 
 .input-container-checkout {
@@ -353,29 +354,47 @@ a.fourb-button {
     margin-left: 20px;
     flex: 1;
   }
+
   .input-container {
     width: auto;
   }
+
   .payBox {
     width: 90%;
     margin: auto;
   }
+
   .table {
     margin: 0px
   }
+
   .checkoutList {
     flex-direction: column;
   }
+
   .checkout {
     width: 100%;
   }
+
   .input-container-checkout {
     margin: auto;
     flex: 1;
     width: 90%;
   }
+
   .input-container-checkout #phone {
     width: 50px;
+  }
+
+  .product-card {
+    margin: 0px 0px;
+    padding: 10px 10px;
+    width: 50%;
+  }
+
+  .img-product {
+    width: 100%;
+    height: 45vw;
   }
 }
 
@@ -400,7 +419,9 @@ a.fourb-button {
   margin: auto;
 }
 
-table.tallas, .tallas th, .tallas td {
+table.tallas,
+.tallas th,
+.tallas td {
   border: 1px solid black !important;
   padding: 5px;
   font-size: 16px;
@@ -412,7 +433,9 @@ table.tallas, .tallas th, .tallas td {
   font-size: 10px;
 }
 
-.tallas tr:nth-child(even) {background-color: #f2f2f2;}
+.tallas tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
 
 .link-button:hover {
   opacity: 0.5;

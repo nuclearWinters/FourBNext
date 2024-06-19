@@ -15,17 +15,7 @@ export default function Cart() {
             onSuccess: (data) => {
                 if (data?.expire_date) {
                     const expirationTime = new Date(data.expire_date)
-                    const expirationTimeUTC = new Date(
-                        Date.UTC(
-                            expirationTime.getUTCFullYear(),
-                            expirationTime.getUTCMonth(),
-                            expirationTime.getUTCDate(),
-                            8,
-                            0,
-                            0,
-                        )
-                    )
-                    setExpireDate(expirationTimeUTC)
+                    setExpireDate(expirationTime)
                 }
             }
         }

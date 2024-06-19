@@ -267,7 +267,10 @@ export const checkoutNationalCityOxxoTransfer = async ({
         }
     ]
     const expire_date = new Date()
-    expire_date.setDate(expire_date.getDate() + 3)
+    expire_date.setHours(expire_date.getHours() + 72)
+    expire_date.setUTCHours(8)
+    expire_date.setUTCMinutes(0)
+    expire_date.setUTCSeconds(0)
     const expirationTimeMiliseconds = expire_date.getTime()
     const expirationTimeSeconds = Math.round(expirationTimeMiliseconds / 1000)
     const order = await orderClient.createOrder({

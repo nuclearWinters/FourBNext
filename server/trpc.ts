@@ -171,8 +171,11 @@ export const appRouter = router({
                         }
                     }
                 )
-                const expireDate = new Date()
-                expireDate.setDate(expireDate.getDate() + 1)
+                const expire_date = new Date()
+                expire_date.setHours(expire_date.getHours() + 24)
+                expire_date.setUTCHours(8)
+                expire_date.setUTCMinutes(0)
+                expire_date.setUTCSeconds(0)
                 //crear carrito si no existe
                 await cartsByUser.updateOne(
                     {
@@ -180,7 +183,7 @@ export const appRouter = router({
                     },
                     {
                         $set: {
-                            expire_date: expireDate
+                            expire_date,
                         },
                         $setOnInsert: {
                             _id: user.cart_id,
@@ -597,9 +600,12 @@ export const appRouter = router({
                 if (!product) {
                     throw new Error("Product not found.")
                 }
-                revalidateProduct(product._id.toHexString())
-                const expireDate = new Date()
-                expireDate.setDate(expireDate.getDate() + 1)
+                revalidateProduct(product._id.toHexString())                
+                const expire_date = new Date()
+                expire_date.setHours(expire_date.getHours() + 24)
+                expire_date.setUTCHours(8)
+                expire_date.setUTCMinutes(0)
+                expire_date.setUTCSeconds(0)
                 const variant = Object.values(product.variants).find(variant => variant.inventory_variant_oid.toHexString() === product_variant_id)
                 if (!variant) {
                     throw new Error('Variant not found.')
@@ -642,7 +648,7 @@ export const appRouter = router({
                     },
                     {
                         $set: {
-                            expire_date: expireDate
+                            expire_date,
                         },
                         $setOnInsert: {
                             _id: cart_oid,
@@ -797,8 +803,11 @@ export const appRouter = router({
                     },
                 )
                 /* ---- Crear item en el carrito ---- */
-                const expireDate = new Date()
-                expireDate.setDate(expireDate.getDate() + 1)
+                const expire_date = new Date()
+                expire_date.setHours(expire_date.getHours() + 24)
+                expire_date.setUTCHours(8)
+                expire_date.setUTCMinutes(0)
+                expire_date.setUTCSeconds(0)
                 /* ---- Actualizar carrito ---- */
                 await cartsByUser.updateOne(
                     {
@@ -806,7 +815,7 @@ export const appRouter = router({
                     },
                     {
                         $set: {
-                            expire_date: expireDate
+                            expire_date,
                         },
                         $setOnInsert: {
                             _id: cart_oid,
@@ -1897,8 +1906,11 @@ export const appRouter = router({
                 }
                 const { cart_id, status, delivered, sent } = input
                 const cart_oid = new ObjectId(cart_id)
-                const new_expire_date = new Date()
-                new_expire_date.setDate(new_expire_date.getDate() + 7)
+                const expire_date = new Date()
+                expire_date.setHours(expire_date.getHours() + 168)
+                expire_date.setUTCHours(8)
+                expire_date.setUTCMinutes(0)
+                expire_date.setUTCSeconds(0)
                 await cartsByUser.updateOne(
                     {
                         _id: cart_oid
@@ -1911,7 +1923,7 @@ export const appRouter = router({
                             ...(typeof status === "string" && status === "paid" ? {
                                 expire_date: null,
                             } : typeof status === "string" && status === "waiting" ? {
-                                expire_date: new_expire_date,
+                                expire_date,
                             } : {})
                         }
                     }
