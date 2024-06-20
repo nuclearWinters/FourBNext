@@ -5,7 +5,6 @@ import css from './Layout.module.css'
 import Link from "next/link"
 import Image from 'next/image'
 import { ModalClose } from "./ModalClose"
-import { ModalField } from "./ModalField"
 import menu from '../public/menu.svg'
 import cart from '../public/cart.svg'
 import search from '../public/search.svg'
@@ -20,6 +19,33 @@ import { useMediaQuery } from "../hooks/mediaQuery"
 import facebook from '../public/facebook.svg'
 import instagram from '../public/instagram.svg'
 import map from '../public/map.png'
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod";
+import cssModalField from '../components/ModalField.module.css'
+
+const loginSchema = z.object({
+    email: z.string().email({ message: "El email no es válido" }),
+    password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
+})
+
+const registerSchema = z.object({
+    email: z.string().email({ message: "El email no es válido" }),
+    password: z.string().min(8, { message: 'La contraseña debe tener al menos 8 caracteres' }),
+    name: z.string().min(1, { message: 'El nombre no debe estar vacío' }),
+    apellidos: z.string().min(1, { message: 'El apellido no debe estar vacío' }),
+    confirm_password: z.string(),
+    phone: z.string(),
+    phone_prefix: z.string(),
+}).superRefine(({ confirm_password, password }, ctx) => {
+    if (confirm_password !== password) {
+        ctx.addIssue({
+            code: "custom",
+            path: ["confirm_password"],
+            message: "La contraseña no coincide",
+        });
+    }
+})
 
 export const Layout: FC<{
     children: ReactNode,
@@ -32,24 +58,6 @@ export const Layout: FC<{
     const [showMobileMenu, setShowMobileMenu] = useState(false)
     const [showSearchModal, setShowSearchModal] = useState(false)
     const [showLogin, setShowLogin] = useState(false);
-    const [registerForm, setRegisterForm] = useState<{
-        name: string;
-        apellidos: string,
-        email: string;
-        password: string;
-        confirmPassword: string
-        phonePrefix: '+52'
-        phone: string
-    }>({
-        name: '',
-        apellidos: '',
-        password: '',
-        email: '',
-        confirmPassword: '',
-        phonePrefix: '+52',
-        phone: '',
-    })
-    const [loginForm, setLoginForm] = useState<{ email: string; password: string; }>({ email: '', password: '' })
     const logIn = trpc.logIn.useMutation({
         onSuccess: () => {
             setShowLogin(false)
@@ -78,6 +86,31 @@ export const Layout: FC<{
         }
     })
     const isMobile = useMediaQuery('(max-width: 800px)')
+    const {
+        register: registerFn,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<{
+        email: string;
+        password: string;
+    }>({
+        resolver: zodResolver(loginSchema),
+    });
+    const {
+        register: registerRegisterFn,
+        handleSubmit: handleSubmitRegister,
+        formState: { errors: errorsRegister },
+    } = useForm<{
+        email: string;
+        password: string;
+        confirm_password: string;
+        name: string;
+        apellidos: string;
+        phone_prefix: '+52';
+        phone: string;
+    }>({
+        resolver: zodResolver(registerSchema),
+    });
     return <>
         <div
             className={css.fourbHeaderContainer}
@@ -92,91 +125,96 @@ export const Layout: FC<{
                 <ModalClose onClose={() => {
                     setShowRegister(false)
                 }} title={"Registrarse"}>
-                    <form className={css["auth-form"]}>
+                    <form className={css["auth-form"]} onSubmit={handleSubmitRegister((data) => {
+                        register.mutate(data)
+                    })}>
                         <div className={css["input-container-modal"]}>
-                            <ModalField
-                                id="name"
-                                label={"Nombre"}
-                                required
-                                name="name"
-                                type="text"
-                                value={registerForm.name}
-                                onChange={(e) => {
-                                    setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <ModalField
-                                id="apellidos"
-                                label={"Apellidos"}
-                                required
-                                name="apellidos"
-                                type="text"
-                                value={registerForm.apellidos}
-                                onChange={(e) => {
-                                    setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <ModalField
-                                id="email"
-                                label={"Email"}
-                                required
-                                name="email"
-                                type="text"
-                                value={registerForm.email}
-                                onChange={(e) => {
-                                    setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                }}
-                            />
-                        </div>
-                        <div className={css["input-container-modal"]}>
-                            <label htmlFor="phone">Teléfono</label>
-                            <div style={{ display: 'flex', flexDirection: 'row' }}>
-                                <select name="phonePrefix" required onChange={(e) => {
-                                    setRegisterForm(({ phonePrefix, ...rest }) => ({ ...rest, phonePrefix: e.target.value as '+52' }))
-                                }}>
-                                    <option value="+52">🇲🇽 Mexico (+52)</option>
-                                </select>
-                                <input style={{ flex: 1, width: 10 }} type="text" id="phone" name="phone" required onChange={(e) => {
-                                    setRegisterForm(({ phone, ...rest }) => ({ ...rest, phone: e.target.value }))
-                                }} />
+                            <div className={cssModalField.container}>
+                                <label htmlFor={"name"} className={css.label}>Nombre</label>
+                                {errorsRegister.name && <div style={{ color: 'salmon', marginBottom: 10 }}>{errorsRegister.name.message}</div>}
+                                <input
+                                    id="name"
+                                    type="text"
+                                    required
+                                    className={cssModalField.input}
+                                    {...registerRegisterFn("name")}
+                                />
                             </div>
                         </div>
                         <div className={css["input-container-modal"]}>
-                            <ModalField
-                                id="password"
-                                label={"Contraseña"}
-                                required
-                                name="password"
-                                type="password"
-                                value={registerForm.password}
-                                onChange={(e) => {
-                                    setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                }}
-                            />
+                            <div className={cssModalField.container}>
+                                <label htmlFor={"apellidos"} className={css.label}>Apellidos</label>
+                                {errorsRegister.apellidos && <div style={{ color: 'salmon', marginBottom: 10 }}>{errorsRegister.apellidos.message}</div>}
+                                <input
+                                    id="apellidos"
+                                    type="text"
+                                    required
+                                    className={cssModalField.input}
+                                    {...registerRegisterFn("apellidos")}
+                                />
+                            </div>
                         </div>
                         <div className={css["input-container-modal"]}>
-                            <ModalField
-                                id="confirmPassword"
-                                label={"Confirmar Contraseña"}
-                                required
-                                name="confirmPassword"
-                                type="password"
-                                value={registerForm.confirmPassword}
-                                onChange={(e) => {
-                                    setRegisterForm(state => ({ ...state, [e.target.name]: e.target.value }))
-                                }}
-                            />
+                            <div className={cssModalField.container}>
+                                <label htmlFor={"email"} className={css.label}>Email</label>
+                                {errorsRegister.email && <div style={{ color: 'salmon', marginBottom: 10 }}>{errorsRegister.email.message}</div>}
+                                <input
+                                    id="email"
+                                    type="text"
+                                    required
+                                    className={cssModalField.input}
+                                    {...registerRegisterFn("email")}
+                                />
+                            </div>
+                        </div>
+                        <div className={css["input-container-modal"]}>
+                            <label htmlFor="phone">Teléfono</label>
+                            {errorsRegister.phone && <div style={{ color: 'salmon', marginBottom: 10 }}>{errorsRegister.phone.message}</div>}
+                            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                <select
+                                    id="phone_prefix"
+                                    required
+                                    {...registerRegisterFn("phone_prefix")}
+                                >
+                                    <option value="+52">🇲🇽 Mexico (+52)</option>
+                                </select>
+                                <input
+                                    id="phone"
+                                    style={{ flex: 1, width: 10 }}
+                                    type="text"
+                                    required
+                                    {...registerRegisterFn("phone")}
+                                />
+                            </div>
+                        </div>
+                        <div className={css["input-container-modal"]}>
+                            <div className={cssModalField.container}>
+                                <label htmlFor={"password"} className={css.label}>Contraseña</label>
+                                {errorsRegister.password && <div style={{ color: 'salmon', marginBottom: 10 }}>{errorsRegister.password.message}</div>}
+                                <input
+                                    id="password"
+                                    type="password"
+                                    required
+                                    className={cssModalField.input}
+                                    {...registerRegisterFn("password")}
+                                />
+                            </div>
+                        </div>
+                        <div className={css["input-container-modal"]}>
+                            <div className={cssModalField.container}>
+                                <label htmlFor={"confirm_password"} className={css.label}>Confirmar Contraseña</label>
+                                {errorsRegister.confirm_password && <div style={{ color: 'salmon', marginBottom: 10 }}>{errorsRegister.confirm_password.message}</div>}
+                                <input
+                                    id="confirm_password"
+                                    type="password"
+                                    required
+                                    className={cssModalField.input}
+                                    {...registerRegisterFn("confirm_password")}
+                                />
+                            </div>
                         </div>
                         <button
                             className={css["fourb-button"]}
-                            onClick={(e) => {
-                                e.preventDefault()
-                                register.mutate(registerForm)
-                            }}
                             type="submit"
                         >
                             Registrarse
@@ -204,34 +242,29 @@ export const Layout: FC<{
                     setShowLogin(false)
                 }} title={"Iniciar sesión"}>
                     <form
-                        onSubmit={async (e) => {
-                            e.preventDefault()
-                            logIn.mutate({ email: loginForm.email, password: loginForm.password });
-                        }}
+                        onSubmit={handleSubmit(async ({ email, password }) => {
+                            logIn.mutate({ email, password });
+                        })}
                         className={css["auth-form"]}
                     >
                         <div className={css["input-container-modal"]}>
                             <label htmlFor="email">Email</label>
+                            {errors.email && <div style={{ color: 'salmon', marginBottom: 10 }}>{errors.email.message}</div>}
                             <input
                                 type="text"
                                 id="email"
-                                name="email"
                                 required
-                                onChange={(e) => {
-                                    setLoginForm(({ password }) => ({ password, email: e.target.value }))
-                                }}
+                                {...registerFn("email")}
                             />
                         </div>
                         <div className={css["input-container-modal"]}>
                             <label htmlFor="password">Contraseña</label>
+                            {errors.password && <div style={{ color: 'salmon', marginBottom: 10 }}>{errors.password.message}</div>}
                             <input
                                 type="password"
                                 id="password"
-                                name="password"
                                 required
-                                onChange={(e) => {
-                                    setLoginForm(({ email }) => ({ email, password: e.target.value }))
-                                }}
+                                {...registerFn("password")}
                             />
                         </div>
                         {logIn.error?.message ? <div>{logIn.error.message}</div> : null}

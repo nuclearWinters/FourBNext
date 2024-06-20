@@ -273,11 +273,11 @@ export const appRouter = router({
             password: z.string().min(8),
             name: z.string(),
             apellidos: z.string(),
-            confirmPassword: z.string(),
+            confirm_password: z.string(),
             phone: z.string(),
-            phonePrefix: z.string(),
-        }).superRefine(({ confirmPassword, password }, ctx) => {
-            if (confirmPassword !== password) {
+            phone_prefix: z.literal('+52'),
+        }).superRefine(({ confirm_password, password }, ctx) => {
+            if (confirm_password !== password) {
                 ctx.addIssue({
                     code: "custom",
                     message: "The passwords did not match"
@@ -290,7 +290,7 @@ export const appRouter = router({
                 const password = input.password
                 const name = input.name
                 const apellidos = input.apellidos
-                const phonePrefix = input.phonePrefix
+                const phonePrefix = input.phone_prefix
                 const phone = input.phone
                 const { users, res, sessionData } = ctx
                 const cart_id = new ObjectId(sessionData.ci);
