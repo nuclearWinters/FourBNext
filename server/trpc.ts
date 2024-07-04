@@ -2277,6 +2277,7 @@ export const appRouter = router({
                     }
                 )
                 /* ---- Actualizar inventario duplicado ---- */
+                revalidateProduct(variantProduct.inventory_id.toHexString())
                 return
             } catch (e) {
                 if (e instanceof Error) {
