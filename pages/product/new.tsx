@@ -116,7 +116,7 @@ const NewProduct = () => {
         <Head>
             <title>New Product</title>
         </Head>
-        <div className="product-card" style={{ background: 'rgb(240,240,240)' }}>
+        <div className="product-card" style={{ background: 'rgb(240,240,240)', width: 'unset' }}>
             <form onSubmit={(e) => {
                 e.preventDefault()
                 addProduct.mutate({

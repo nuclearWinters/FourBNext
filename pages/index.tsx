@@ -170,7 +170,7 @@ export const Home: FC<{
           {answer1 ? answer1.description : 'Descripción de materiales (titanio, acero quirurjico)'}
         </HomeSubtitle>
         {lastProducts.isLoading ? <div className="loading" /> : lastProducts.data?.items.length ? <Carousel>
-          {(lastProducts.data?.items || []).map(product => (
+          {(lastProducts.data?.items.filter(product => !product.disabled) || []).map(product => (
             <CarouselItem product={product} key={product._id} />
           )) || []}
         </Carousel> : null}
@@ -216,7 +216,7 @@ export const Home: FC<{
           {answer2 ? answer2.description : 'Descripción de materiales (titanio, acero quirurjico)'}
         </HomeSubtitle>
         {piercingProducts.data?.items.length ? <Carousel>
-          {(piercingProducts.data?.items || []).map(product => (
+          {(piercingProducts.data?.items.filter(product => !product.disabled) || []).map(product => (
             <CarouselItem product={product} key={product._id} />
           )) || []}
         </Carousel> : null}
@@ -293,7 +293,7 @@ export const Home: FC<{
           {answer4 ? answer4.description : 'Descripción de materiales (titanio, acero quirurjico)'}
         </HomeSubtitle>
         {waterproofProducts.isLoading ? <div className="loading" /> : waterproofProducts.data?.items.length ? <Carousel>
-          {(waterproofProducts.data?.items || []).map(product => (
+          {(waterproofProducts.data?.items.filter(product => !product.disabled) || []).map(product => (
             <CarouselItem product={product} key={product._id} />
           )) || []}
         </Carousel> : null}

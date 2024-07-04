@@ -29,7 +29,7 @@ export default function Search(props: {
                     refContainer={props.footerRef}
                 >
                     {searchProducts.data?.pages.map((pages, index) => {
-                        return <Fragment key={index}>{pages.items.map(product => (
+                        return <Fragment key={index}>{pages.items.filter(product => !product.disabled).map(product => (
                             <ProductList product={product} key={product._id} />
                         ))}
                         </Fragment>
