@@ -475,7 +475,7 @@ export const appRouter = router({
                 };
             } else if (discounts) {
                 const filter: Filter<InventoryMongo> = {
-                    use_discount: true,
+                    'variants.use_discount': true,
                 }
                 if (!is_admin) {
                     filter.disabled = {
