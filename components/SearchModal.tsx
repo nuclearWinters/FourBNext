@@ -32,7 +32,11 @@ export const SearchModal: FC<{
             onSubmit={(e) => {
                 e.preventDefault()
                 setShowSearchModal(false)
-                router.push('/search?search=' + input)
+                if (input.toLowerCase() === "descuento" || input.toLowerCase() === "descuentos") {
+                    router.push('/search?discounts=true')
+                } else {
+                    router.push('/search?search=' + input)
+                }
             }}
         >
             <input
