@@ -22,7 +22,7 @@ export const ProductList: FC<{
     const variantName = variant.combination.map(combination => combination.name).join(" / ")
     return <div className="product-card">
         <Link href={`/product/${product._id}`}>
-            <Image alt="" style={{ display: "flex" }} className="img-product" src={variant.imgs[0]} width={100} height={100} />
+            <Image alt="" style={{ display: "flex" }} className="img-product" src={variant.imgs[0]} width={240} height={240} />
             <div className="name">{product.name}{product.use_variants ? ` (${variantName})` : ""}</div>
             <div className="price">
                 <span className={variant.use_discount ? "price-discounted" : ""}>${(variant.price / 100).toFixed(2)}</span>
