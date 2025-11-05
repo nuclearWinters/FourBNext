@@ -590,11 +590,12 @@ export const Layout: FC<{
                     <InformationTitle>
                         HORARIO
                     </InformationTitle>
-                    <InformationText>PERFORACIONES</InformationText>
-                    <InformationText>LUNES - SÁBADO</InformationText>
-                    <InformationText>TIENDA</InformationText>
-                    <InformationText>LUNES - SÁBADO: 11 A 9 PM</InformationText>
-                    <InformationText>DOMINGO: 11 A 7 PM</InformationText>
+                     <InformationText><strong>TIENDA</strong></InformationText>
+                    <InformationText>LUNES - SÁBADO: 12:30 -  8:30 PM</InformationText>
+                    <InformationText>DOMINGO: 1 PM - 6 PM</InformationText>
+                    <InformationText><strong>PERFORACIONES</strong></InformationText>
+                    <InformationText>LUNES - SÁBADO: 12:30 -  8:30 PM</InformationText>
+                   
                 </div>
             </div>
             <div
