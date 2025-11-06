@@ -194,7 +194,6 @@ export const Home: FC<{
           isAdmin={isAdmin}
           src={portadaNuevo2?.url || homeProduct.src}
           moreButtonLink={link3?.description}
-          title={<HomeTitleHalf>ACERO INOXIDABLE</HomeTitleHalf>}
           nameLink='link3'
         />
       </div>
@@ -233,7 +232,6 @@ export const Home: FC<{
           isAdmin={isAdmin}
           src={portadaPiercing1?.url || homeEnvio.src}
           moreButtonLink={link4?.description}
-          title={<HomeTitleHalf>ENVÍO GRATIS</HomeTitleHalf>}
           nameLink='link4'
         />
         <HomeHalf
@@ -241,7 +239,6 @@ export const Home: FC<{
           isAdmin={isAdmin}
           src={portadaPiercing2?.url || homeHuggie.src}
           moreButtonLink={link5?.description}
-          title={<HomeTitleHalf>HUGGIES</HomeTitleHalf>}
           nameLink='link5'
         />
       </div>

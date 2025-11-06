@@ -3,7 +3,7 @@ import { FC } from "react"
 export const PrivacyPolicy: FC = () => {
     return <div style={{ margin: '0px auto', maxWidth: 800, display: 'flex', flexDirection: 'column', gap: '20px', padding: '0px 30px' }}>
         <h1 style={{ margin: 'auto' }}>Política de Privacidad</h1>
-        <p><strong>FOURB</strong> es una marca registrada y titular del sitio web ubicado en el nombre de dominio <strong>fourb.mx</strong> (el “Sitio Web”) con domicilio Av insurgentes S/N , col emancipación Infonavit, 77084, Chetumal, Quintana Roo, con dirección electrónica de contacto <a href="mailto:fourboutiquemx@gmail.com">fourboutiquemx@gmail.com</a></p>
+        <p><strong>FOURB</strong> es una marca registrada y titular del sitio web ubicado en el nombre de dominio <strong>fourb.mx</strong> (el “Sitio Web”) con domicilio Av insurgentes S/N , col emancipación Infonavit, 77084, Chetumal, Quintana Roo, con dirección electrónica de contacto <a href="mailto:contactofourb@gmail.com">contactofourb@gmail.com</a></p>
         <p>La presente Política de Privacidad es aplicable al Sitio Web, entendiendo como tal todas las páginas y subpáginas incluidas en el mismo.</p>
         <p>Toda la información proporcionada en tus visitas a fourb.mx es estrictamente confidencial.</p>
         <p>Esta información podrá ser utilizada por nuestro servicio de logística para el tratamiento de su orden o bien para mantener la comunicación contigo.</p>
@@ -20,7 +20,7 @@ export const PrivacyPolicy: FC = () => {
         <p>Aceptamos método de pago vía Conekta, que es una empresa de mucha experiencia y gran reputación en el manejo de datos personales. No tenemos acceso ni recolectamos sus datos financieros como tarjetas de crédito y débito.</p>
         <p>Los usuarios deberán notificar a <strong>FOURB</strong>&nbsp;cualquier modificación que se produzca en los datos facilitados, respondiendo en cualquier caso de la veracidad y exactitud de los datos suministrados en cada momento.</p>
         <p>En el caso de que su pago sea con TARJETA DE CRÉDITO o DEBITO, <strong>FOURB</strong> puede solicitar a discreción Copia de su Credencial de Elector por ambos lados con la finalidad de verificar su identidad. Nos reservamos el derecho de negar el servicio en cualquier momento a quien no cumpla con nuestras políticas de verificación de identidad.</p>
-        <p>El usuario&nbsp;en cualquier momento podrá revocar el consentimiento al tratamiento de sus datos el siguiente medio:&nbsp;Enviando un correo electrónico a fourboutiquemx@gmail.com. Posteriormente se le informará el procedimiento a seguir.</p>
+        <p>El usuario&nbsp;en cualquier momento podrá revocar el consentimiento al tratamiento de sus datos el siguiente medio:&nbsp;Enviando un correo electrónico a contactofourb@gmail.com. Posteriormente se le informará el procedimiento a seguir.</p>
         <h1 style={{ margin: 'auto' }}>POLÍTICA DE COOKIES</h1>
         <p>En <strong>FOURB</strong>&nbsp;utilizamos cookies para facilitar la relación de los visitantes con nuestro contenido y para permitir elaborar estadísticas sobre las visitantes que recibimos.</p>
         <p>Las cookies web de <strong>fourb.mx</strong> tienen como finalidad la recolecta de información y comportamiento de navegación del usuario dentro de nuestra web. Esta información será usada para adaptar y mejorar la experiencia de navegación en nuestra web y otros medios.</p>
