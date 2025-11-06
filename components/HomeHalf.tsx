@@ -185,22 +185,6 @@ export const HomeHalf: FC<{
             Editar link
         </button> : null}
         {title}
-        {moreButtonLink ? <Link
-            href={moreButtonLink}
-            style={{
-                background: "rgb(253, 240, 224)",
-                border: "none",
-                color: "black",
-                fontSize: '24px',
-                lineHeight: '33px',
-                padding: '8px 60px',
-                cursor: "pointer",
-                textAlign: 'center',
-                borderRadius: '100px',
-                marginBottom: '66px',
-            }}
-        >
-            VER MÁS
-        </Link> : null}
+        
     </div>
 }
