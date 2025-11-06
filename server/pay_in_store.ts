@@ -30,10 +30,10 @@ export const payInStore = `
                                                         </a>
                                                          o por correo:
                                                         <a
-                                                            href="mailto:fourboutiquemx@gmail.com"
+                                                            href="mailto:contactofourb@gmail.com"
                                                             target="_blank"
                                                         >
-                                                            fourboutiquemx@gmail.com
+                                                            contactofourb@gmail.com
                                                         </a> con el código: {{code}}
                                                     </p>
                                                     <p style="font-weight: bold">
@@ -297,9 +297,9 @@ export const payInStore = `
 
                                                     <p style="color:#999;line-height:150%;font-size:14px;margin:0">Si
                                                         tienes alguna pregunta, responde este correo electrónico o
-                                                        contáctanos a través de <a href="mailto:fourboutiquemx@gmail.com"
+                                                        contáctanos a través de <a href="mailto:contactofourb@gmail.com"
                                                             style="font-size:14px;text-decoration:none;color:#1990c6"
-                                                            target="_blank">fourboutiquemx@gmail.com</a></p>
+                                                            target="_blank">contactofourb@gmail.com</a></p>
                                                 </td>
                                             </tr>
                                         </tbody>
