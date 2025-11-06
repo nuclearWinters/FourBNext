@@ -84,7 +84,7 @@ export const Shipments: FC<{ answers: DescriptionsDBTRPC[] }> = ({ answers }) =>
             {isAdmin ? (
                 <button onClick={() => setForm({
                     name: 'devolucion2',
-                    description: answer2?.description ?? 'Claro que sí, los accidentes pasan, podemos ayudarte a hacer el cambio correcto de tu talla siempre y cuando el producto sea el mismo, se regrese el producto original con los empaques originales y sin usar. Los costos de los envíos del cambio serán cubiertos por el cliente. Considera que se necesitarán dos envíos para realizar el cambio. Se tiene que notificar el cambio en las primeras 72 hrs de haber recibido el pedido. Escríbenos por correo a: fourboutiquemx@gmail.com En asunto agrega tu número de pedido para ayudarte con el cambio. No aplica garantía ni cambios para productos en venta final o regalos por promoción.',
+                    description: answer2?.description ?? 'Claro que sí, los accidentes pasan, podemos ayudarte a hacer el cambio correcto de tu talla siempre y cuando el producto sea el mismo, se regrese el producto original con los empaques originales y sin usar. Los costos de los envíos del cambio serán cubiertos por el cliente. Considera que se necesitarán dos envíos para realizar el cambio. Se tiene que notificar el cambio en las primeras 72 hrs de haber recibido el pedido. Escríbenos por correo a: contactofourb@gmail.com En asunto agrega tu número de pedido para ayudarte con el cambio. No aplica garantía ni cambios para productos en venta final o regalos por promoción.',
                 })}>
                     Editar
                 </button>
@@ -92,7 +92,7 @@ export const Shipments: FC<{ answers: DescriptionsDBTRPC[] }> = ({ answers }) =>
             {answer2
                 ? <p>{answer2.description}</p>
                 : <p>
-                    Claro que sí, los accidentes pasan, podemos ayudarte a hacer el cambio correcto de tu talla siempre y cuando el producto sea el mismo, se regrese el producto original con los empaques originales y sin usar. Los costos de los envíos del cambio serán cubiertos por el cliente. Considera que se necesitarán dos envíos para realizar el cambio. Se tiene que notificar el cambio en las primeras 72 hrs de haber recibido el pedido. Escríbenos por correo a: fourboutiquemx@gmail.com En asunto agrega tu número de pedido para ayudarte con el cambio. No aplica garantía ni cambios para productos en venta final o regalos por promoción.
+                    Claro que sí, los accidentes pasan, podemos ayudarte a hacer el cambio correcto de tu talla siempre y cuando el producto sea el mismo, se regrese el producto original con los empaques originales y sin usar. Los costos de los envíos del cambio serán cubiertos por el cliente. Considera que se necesitarán dos envíos para realizar el cambio. Se tiene que notificar el cambio en las primeras 72 hrs de haber recibido el pedido. Escríbenos por correo a: contactofourb@gmail.com En asunto agrega tu número de pedido para ayudarte con el cambio. No aplica garantía ni cambios para productos en venta final o regalos por promoción.
                 </p>
             }
             <p><strong>¿Qué pasa si mi paquete se regreso a FOURB?</strong></p>
