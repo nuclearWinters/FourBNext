@@ -580,7 +580,7 @@ export const Layout: FC<{
                     <a href="https://www.instagram.com/fourb_mx/"><InformationText>Instagram: fourb_mx</InformationText></a>
                     <a href="https://www.facebook.com/fourbmx/"><InformationText>Facebook: fourb</InformationText></a>
                     <a href="https://www.tiktok.com/@fourb_mx"><InformationText>Tiktok: fourb</InformationText></a>
-                    <a href="mailto:fourboutiquemx@gmail.com"><InformationText>Correo: fourboutiquemx@gmail.com</InformationText></a>
+                    <a href="mailto:contactofourb@gmail.com"><InformationText>Correo: contactofourb@gmail.com</InformationText></a>
                 </div>
                 <div
                     style={{
