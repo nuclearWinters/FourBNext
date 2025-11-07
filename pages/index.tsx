@@ -231,7 +231,7 @@ export const Home: FC<{
           name='piercing1'
           isAdmin={isAdmin}
           src={portadaPiercing1?.url || homeEnvio.src}
-          moreButtonLink={link4?.description}
+          moreButtonLink={''}
           nameLink='link4'
         />
         <HomeHalf
