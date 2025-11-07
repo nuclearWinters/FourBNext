@@ -194,7 +194,7 @@ export const Home: FC<{
           isAdmin={isAdmin}
           src={portadaNuevo2?.url || homeProduct.src}
           moreButtonLink={link3?.description}
-          title={<HomeTitleHalf>Favoritos</HomeTitleHalf>}
+          title={<HomeTitleHalf>Waterproof</HomeTitleHalf>}
           nameLink='link3'
         />
       </div>
